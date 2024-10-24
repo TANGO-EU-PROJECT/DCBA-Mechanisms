@@ -1,0 +1,7 @@
+name: DCBA
+dependencies:
+  - python=3.9.7
+  - pip=22.0.4
+  - pip:
+    - pip3
+    - -r requirements.txt

@@ -1,0 +1,28 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  annotations:
+    nginx.ingress.kubernetes.io/use-regex: "true"
+    nginx.ingress.kubernetes.io/rewrite-target: /$2
+    # nginx.ingress.kubernetes.io/ssl-redirect: "false"
+    cert-manager.io/cluster-issuer: "letsencrypt-prod" # it will generate the secret automatically once it obtains the certificate from Let's Encrypt.
+    kubernetes.io/ingress.class: "nginx"
+  name: dcba-ingress-rule # dcba ingress resource
+  namespace: tango-development
+spec:
+  ingressClassName: nginx
+  tls:
+  - hosts:
+    - k8s-cluster.tango.rid-intrasoft.eu
+    secretName: dcba-server-cert-tls #   The secretName is a reference to where the certificate and key will be stored.
+  rules:
+  - host: k8s-cluster.tango.rid-intrasoft.eu
+    http:
+      paths:
+      - backend:
+          service:
+            name: dcba-server # the service mentioned in dcba-server-deployment.yml file
+            port:
+              number: 80 # Port exposed by the NodePort in the Service
+        path: /development/dcba-server(/|$)(.*) # Path to dcba service
+        pathType: ImplementationSpecific
