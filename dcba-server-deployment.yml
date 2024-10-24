@@ -1,0 +1,44 @@
+---
+apiVersion: apps/v1
+kind: Deployment # Indicates the type of resource : a Deployment.
+metadata:
+  name: dcba-server
+  namespace: tango-development
+  labels:
+    app: dcba-server
+    type: back-end
+spec:
+  replicas: 2 # Defines how many identical pods to run. Set to 2, if the first POD receives death, the second one will be enabled and active!
+  selector:
+    matchLabels:
+      type: back-end
+  template:
+    metadata:
+      labels:
+        app: dcba-server
+        type: back-end
+    spec:
+      imagePullSecrets:
+      - name: regcred
+      containers:
+      - name:  dcba-server
+        image:  harbor.tango.rid-intrasoft.eu/dcba/dcba_server_image:latest_dev
+        imagePullPolicy: Always
+        ports:
+        # This is the container-port from where the dcba server is accessible
+        - containerPort: 3000 
+---
+apiVersion: v1
+kind: Service 
+metadata:
+  name: dcba-server
+  namespace: tango-development
+  labels:
+    app: dcba-server
+spec:
+  selector:
+    app: dcba-server
+  type: NodePort
+  ports:
+  - port: 80          # The port that the Service will expose externally 
+    targetPort: 3000  # The port on the container that the Service will forward traffic to 

@@ -1,0 +1,31 @@
+/* This file is a Jenkinfile.kill and defines a pipeline that deletes a Kubernetes deployment */
+
+pipeline {
+    /* Define the start of the Jenkins pipeline. It Contains all the stages and the steps to be executed in sequence. */
+    agent {
+        node {
+            /* Specify the label of the Jenkins agent that will execute the pipeline */
+            label 'Agent01'
+        }
+    }
+    
+    /* The stages block contains the sequence of stages that will be executed by the pipeline. Each stage typically corresponds to a step or series of steps in your CI/CD process. */
+    stages {
+        stage("Delete deployment") {
+            steps {
+                /* kubectl command to interact with a specific Kubernetes cluster. */
+                withKubeConfig([credentialsId: 'K8s-config-file',         /* refers to a Jenkins credential that stores the Kubernetes configuration file (the kubeconfig file), 
+                                                                             which grants access to the cluster. */
+                                serverUrl: 'https://167.235.66.115:6443', /* The URL of the Kubernetes API server. */
+                                namespace: 'tango-development'            /* Specifies that commands should be executed in the tango-development namespace. */
+                ]) {
+                    /* Run a shell command to delete the deployment specified in the YAML file */
+                    sh 'kubectl delete -f dcba-server-deployment.yml'
+                    
+                    /* Run a shell command to check the status of the pods after deletion */
+                    sh 'kubectl get pods'
+                }
+            }
+        }
+    }
+}

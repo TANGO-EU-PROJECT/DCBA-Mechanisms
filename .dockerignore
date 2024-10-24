@@ -1,0 +1,19 @@
+# Ignore node_modules, as it's installed within the container
+node_modules
+npm-debug.log
+yarn-error.log
+
+# Ignore Docker-related files
+Dockerfile
+.dockerignore
+
+# Ignore Jenkins-related files
+Jenkinsfile
+Jenkinsfile-functional-testing
+Jenkinsfile.kill
+node_modules
+
+# Ignore other common files
+.git
+.gitignore
+README.md
