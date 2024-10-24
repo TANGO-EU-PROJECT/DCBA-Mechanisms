@@ -10,7 +10,7 @@ This repository contains the deployment code for the TANGO project, specifically
 ## Branches
 
 - **development**: This branch is used for ongoing deployment work, where all new features and changes will be committed.
-- **stable**: This branch contains the finalized deployment code, which has been thoroughly tested and is ready for production use. The Jenkins pipeline will trigger deployments from this branch!
+- **stable**: This branch contains the finalized deployment code, which has been thoroughly tested and is ready for production use. **The Jenkins pipeline will trigger deployments from this branch!**
 
 ## .ignore Files
 
