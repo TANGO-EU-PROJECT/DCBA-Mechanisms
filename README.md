@@ -1,6 +1,7 @@
 # TANGO External Implementation
 
-This repository contains the deployment code for the TANGO project, specifically tailored for INTRASOFT.
+This repository contains the deployment code for the TANGO project, specifically tailored for INTRASOFT. 
+**NOTE**: Please note that this repository will receive weekly updates related to the server code(!)
 
 ## Repository Structure
 
