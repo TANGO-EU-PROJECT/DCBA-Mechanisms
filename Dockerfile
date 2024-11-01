@@ -25,4 +25,4 @@ EXPOSE 3000
 # Command to run the server with nodemon, ignoring the specified files and directories
 WORKDIR /deployment/SERVER
 
-CMD [ "npm", "run", "dev" ]
+CMD [ "npm", "run", "start" ]
