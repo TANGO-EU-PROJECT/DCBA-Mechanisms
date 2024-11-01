@@ -31,3 +31,4 @@ This repository contains the deployment code for the TANGO project, specifically
 
 - **dcba-server-deployment.yml**: This Kubernetes configuration file defines a Deployment and a Service for the dcba-server application within the tango-development namespace. It exposes containerPort 3000, allowing external access to the application. The Service is externally accessible on port 80 and forwards traffic to containerPort 3000 of the pod.
 - **dcba-server-ingress.yml**: This Kubernetes Ingress resource defines routing rules for external HTTP(currently) traffic to the dcba-server application within the tango-development namespace. It uses the nginx ingress controller and includes TLS configuration with a Let's Encrypt certificate for secure access. The Ingress rules route traffic from the host k8s-cluster.tango.rid-intrasoft.eu to the dcba-server service, specifically handling requests to the path /development/dcba-server. 
+
