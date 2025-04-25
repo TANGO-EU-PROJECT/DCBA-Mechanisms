@@ -157,5 +157,76 @@ paths:
                   statusMessage:
                     type: string
                     example: Error fetching offline devices.
+                    
+  /devices/behavioural-score:
+    post:
+      summary: Fetch behavioural score of a device
+      description: Returns the device's behavioural score based on the provided DIDs and JWT authorization.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                didSP:
+                  type: string
+                  example: "did:example:service-provider"
+                didRequester:
+                  type: string
+                  example: "did:example:123456789abcdefghi"
+                jwtAuth:
+                  type: string
+                  example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+      responses:
+        '200':
+          description: Successfully fetched behavioural score
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  behaviouralScore:
+                    type: number
+                    example: 78.5
+        '400':
+          description: Missing required fields or invalid data
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: false
+                  message:
+                    type: string
+                    example: Missing required fields: didSP, didRequester, or jwtAuth.
+        '401':
+          description: Unauthorized - Invalid or expired JWT
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: false
+                  message:
+                    type: string
+                    example: Invalid or expired JWT token.
+        '404':
+          description: Device not found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: false
+                  message:
+                    type: string
+                    example: Device not found.
 
   
