@@ -229,6 +229,83 @@ paths:
                     type: string
                     example: "Device not found."
 
+  /devices/last-location:
+    post:
+      summary: Fetch last known geographic coordinates of a device
+      description: Returns the device's last known location using the provided DIDs and JWT authorization.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                didSP:
+                  type: string
+                  example: "did:example:service-provider"
+                didRequester:
+                  type: string
+                  example: "did:example:device-abc123"
+                jwtAuth:
+                  type: string
+                  example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+      responses:
+        '200':
+          description: Successfully fetched last known coordinates
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  lastCoordinates:
+                    type: object
+                    properties:
+                      latitude:
+                        type: number
+                        example: 37.7749
+                      longitude:
+                        type: number
+                        example: -122.4194
+        '400':
+          description: Missing required fields or invalid data
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: false
+                  message:
+                    type: string
+                    example: "Missing required fields: didSP, didRequester, or jwtAuth."
+        '401':
+          description: Unauthorized - Invalid or expired JWT
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: false
+                  message:
+                    type: string
+                    example: "Invalid or expired JWT token."
+        '404':
+          description: Device not found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: false
+                  message:
+                    type: string
+                    example: "Device not found."
+
 
 
   
