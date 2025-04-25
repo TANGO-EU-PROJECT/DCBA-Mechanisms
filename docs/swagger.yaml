@@ -25,7 +25,7 @@ paths:
                     example: success
                   message:
                     type: string
-                    example: Devices fetched successfully
+                    example: Devices fetched successfully.
                   data:
                     type: array
                     items:
@@ -52,7 +52,309 @@ paths:
                     example: error
                   message:
                     type: string
-                    example: Error fetching device data
+                    example: Error fetching device data.
                   error:
                     type: string
                     example: Internal server error
+
+  /devices/online-shifts:
+    get:
+      summary: Fetch online devices
+      description: Retrieves devices that are currently online.
+      responses:
+        '200':
+          description: Successfully fetched online devices
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  statusCode:
+                    type: integer
+                    example: 200
+                  statusMessage:
+                    type: string
+                    example: Fetched online devices successfully.
+                  data:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        device_id:
+                          type: string
+                          example: "a4e4cf21ab7e"
+                        did:
+                          type: string
+                          example: "did:example:123456789abcdefghi"
+                        sub:
+                          type: string
+                          example: "user@example.com"
+        '500':
+          description: Server error while fetching online devices
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: false
+                  statusCode:
+                    type: integer
+                    example: 500
+                  statusMessage:
+                    type: string
+                    example: Error fetching online devices.
+
+  /devices/offline-shifts:
+    get:
+      summary: Fetch offline devices
+      description: Retrieves devices that are currently offline.
+      responses:
+        '200':
+          description: Successfully fetched offline devices
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  statusCode:
+                    type: integer
+                    example: 200
+                  statusMessage:
+                    type: string
+                    example: Fetched offline devices successfully.
+                  data:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        device_id:
+                          type: string
+                          example: "a4e4cf21ab7e"
+                        did:
+                          type: string
+                          example: "did:example:123456789abcdefghi"
+                        sub:
+                          type: string
+                          example: "user@example.com"
+        '500':
+          description: Server error while fetching offline devices
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: false
+                  statusCode:
+                    type: integer
+                    example: 500
+                  statusMessage:
+                    type: string
+                    example: Error fetching offline devices.
+
+  /devices/behavioural-score:
+    post:
+      summary: Returns the device's behavioural score
+      description: Retrieves the behavioural score of a device based on provided DIDs and authorization. Requires JWT authentication.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                didSP:
+                  type: string
+                  description: The DID of the service provider.
+                  example: "did:example:service-provider"
+                didRequester:
+                  type: string
+                  description: The DID of the requester device.
+                  example: "did:example:requester-device"
+                jwtAuth:
+                  type: string
+                  description: The JWT authorization token.
+                  example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+      responses:
+        '200':
+          description: Successfully fetched behavioural score
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  statusCode:
+                    type: integer
+                    example: 200
+                  statusMessage:
+                    type: string
+                    example: Fetched behavioural score successfully.
+                  behaviouralScore:
+                    type: number
+                    example: 75.5
+        '400':
+          description: Missing required fields or invalid data
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: false
+                  message:
+                    type: string
+                    example: Missing required fields: didSP, didRequester, or jwtAuth.
+        '401':
+          description: Invalid or expired JWT token
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: false
+                  message:
+                    type: string
+                    example: Invalid or expired JWT token.
+        '404':
+          description: Device not found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: false
+                  message:
+                    type: string
+                    example: Device not found.
+        '500':
+          description: Server error while fetching the behavioural score
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: false
+                  message:
+                    type: string
+                    example: Error fetching the behavioural score.
+
+  /devices/last-location:
+    post:
+      summary: Returns the device's last known geographic coordinates
+      description: Retrieves the last known location of a device based on provided DIDs and authorization. Requires JWT authentication.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                didSP:
+                  type: string
+                  description: The DID of the service provider.
+                  example: "did:example:service-provider"
+                didRequester:
+                  type: string
+                  description: The DID of the requester device.
+                  example: "did:example:requester-device"
+                jwtAuth:
+                  type: string
+                  description: The JWT authorization token.
+                  example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+      responses:
+        '200':
+          description: Successfully fetched last known location
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  statusCode:
+                    type: integer
+                    example: 200
+                  statusMessage:
+                    type: string
+                    example: Fetched last location successfully.
+                  lastCoordinates:
+                    type: object
+                    properties:
+                      latitude:
+                        type: number
+                        example: 40.7128
+                      longitude:
+                        type: number
+                        example: -74.0060
+        '400':
+          description: Missing required fields or invalid data
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: false
+                  message:
+                    type: string
+                    example: Missing required fields: didSP, didRequester, or jwtAuth.
+        '401':
+          description: Invalid or expired JWT token
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: false
+                  message:
+                    type: string
+                    example: Invalid or expired JWT token.
+        '404':
+          description: Device not found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: false
+                  message:
+                    type: string
+                    example: Device not found.
+        '500':
+          description: Server error while fetching the last known location
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: false
+                  message:
+                    type: string
+                    example: Error fetching the last location.
