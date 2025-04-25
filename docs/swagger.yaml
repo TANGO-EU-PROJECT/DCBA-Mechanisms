@@ -85,7 +85,7 @@ paths:
                     status: "failed"
                     message: "Authorization token is malformed. It should start with 'Bearer '."
         '403':
-          description: Authorization token is invalid or expired
+          description: Unauthorized - Authorization token is invalid or expired
           content:
             application/json:
               schema:
@@ -183,7 +183,7 @@ paths:
                     status: "failed"
                     message: "Authorization token is malformed. It should start with 'Bearer '."
         '403':
-          description: Authorization token is invalid or expired
+          description: Unauthorized - Authorization token is invalid or expired
           content:
             application/json:
               schema:
@@ -282,7 +282,7 @@ paths:
                     status: "failed"
                     message: "Authorization token is malformed. It should start with 'Bearer '."
         '403':
-          description: Authorization token is invalid or expired
+          description: Unauthorized - Authorization token is invalid or expired
           content:
             application/json:
               schema:
