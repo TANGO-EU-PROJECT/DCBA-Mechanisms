@@ -7,6 +7,13 @@ info:
 servers:
   - url: https://tango-eu-project.github.io/DCBA-Mechanisms/
 
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
 paths:
   /devices:
     get:
@@ -781,9 +788,3 @@ paths:
                     statusCode: 500
                     statusMessage: 'Authentication failed'
                     details: 'Error during authentication callback processing'
-components:
-  securitySchemes:
-    BearerAuth:
-      type: http
-      scheme: bearer
-      bearerFormat: JWT
