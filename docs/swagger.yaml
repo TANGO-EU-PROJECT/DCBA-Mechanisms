@@ -386,7 +386,7 @@ paths:
                     type: string
                     example: "Missing required fields: didSP, didRequester, or jwtAuth."
         '401':
-          description: Unauthorized - Invalid or expired JWT token
+          description: Unauthorized - Authorization token is invalid or expired
           content:
             application/json:
               schema:
