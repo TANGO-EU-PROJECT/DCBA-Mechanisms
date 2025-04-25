@@ -336,7 +336,7 @@ paths:
                   description: The JWT session token verifying the request source.
       responses:
         '200':
-          description: Returns status for all cases, success or error.
+          description: Always returns HTTP 200 with a success or error status in the response body. This prevents the application from crashing due to "Network Axios Error" caused by non-200 responses.
           content:
             application/json:
               schema:
