@@ -31,7 +31,7 @@ paths:
       tags:
         - Service API Endpoints  # Tag for service-facing endpoints
       summary: Fetch all devices
-      description: Retrieves all device entries from the database. This route requires a valid JWT authorization token to access.
+      description: Retrieves all device entries from the database. This route requires a valid JWT Bearer token in the Authorization header to access.
       security:
         - BearerAuth: []  # Requires Bearer token in Authorization header
       responses:
@@ -129,7 +129,7 @@ paths:
       tags:
         - Service API Endpoints  # Tag for service-facing endpoints
       summary: Fetch online devices
-      description: Retrieves devices that are currently online. This route requires a valid JWT authorization token to access.
+      description: Retrieves devices that are currently online. This route requires a valid JWT Bearer token in the Authorization header to access.
       security:
         - BearerAuth: []  # This specifies that the request requires a Bearer token
       responses:
@@ -222,14 +222,13 @@ paths:
 
 
 
-
   # [3] GET /devices/offline-shifts
   /devices/offline-shifts:
     get:
       tags:
         - Service API Endpoints
       summary: Fetch offline devices
-      description: Retrieves devices that are currently offline. Requires a valid JWT Bearer token in the Authorization header.
+      description: Retrieves devices that are currently offline. This route requires a valid JWT Bearer token in the Authorization header to access.
       security:
         - BearerAuth: []
       responses:
@@ -240,13 +239,10 @@ paths:
               schema:
                 type: object
                 properties:
-                  success:
-                    type: boolean
-                    example: true
-                  statusCode:
-                    type: integer
-                    example: 200
-                  statusMessage:
+                  status:
+                    type: string
+                    example: "success"
+                  message:
                     type: string
                     example: "Fetched offline devices successfully."
                   data:
@@ -314,15 +310,13 @@ paths:
               schema:
                 type: object
                 properties:
-                  success:
-                    type: boolean
-                    example: false
-                  statusCode:
-                    type: integer
-                    example: 500
-                  statusMessage:
+                  status:
                     type: string
-                    example: "Error fetching offline devices."
+                    example: "failed"
+                  message:
+                    type: string
+                    example: "Error fetching online devices."
+
 
 
   /devices/behavioural-score:
