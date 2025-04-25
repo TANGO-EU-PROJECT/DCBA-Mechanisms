@@ -491,4 +491,64 @@ paths:
                     statusCode: 200
                     statusMessage: Internal server error. Please try again later.
 
-    
+  /devices/logout:
+    post:
+      summary: Handle devices logout requests by invalidating the access token.
+      tags:
+        - Authenticator Endpoints
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - accessToken
+                - did
+              properties:
+                accessToken:
+                  type: string
+                  example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+                  description: The JWT access token to be invalidated.
+                did:
+                  type: string
+                  example: "device-123"
+                  description: Decentralized Identifier (DID) of the device requesting logout.
+      responses:
+        '200':
+          description: Logout process result.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  statusCode:
+                    type: integer
+                    example: 200
+                  statusMessage:
+                    type: string
+                    example: 'Device logged out successfully'
+              examples:
+                Success:
+                  value:
+                    success: true
+                    statusCode: 200
+                    statusMessage: 'Device logged out successfully'
+                MissingAccessToken:
+                  value:
+                    success: false
+                    statusCode: 400
+                    statusMessage: 'Missing required accessToken parameter.'
+                MissingDid:
+                  value:
+                    success: false
+                    statusCode: 400
+                    statusMessage: 'Missing required did parameter.'
+                InternalError:
+                  value:
+                    success: false
+                    statusCode: 500
+                    statusMessage: 'Error handling logout'
