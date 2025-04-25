@@ -157,8 +157,8 @@ paths:
                   statusMessage:
                     type: string
                     example: Error fetching offline devices.
-                    
-  /devices/behavioural-score:
+
+    /devices/behavioural-score:
     post:
       summary: Fetch behavioural score of a device
       description: Returns the device's behavioural score based on the provided DIDs and JWT authorization.
@@ -188,7 +188,7 @@ paths:
                 properties:
                   behaviouralScore:
                     type: number
-                    example: 78.5
+                    example: 0.65
         '400':
           description: Missing required fields or invalid data
           content:
@@ -228,5 +228,6 @@ paths:
                   message:
                     type: string
                     example: Device not found.
+
 
   
