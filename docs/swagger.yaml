@@ -413,7 +413,6 @@ paths:
                     statusCode: 500
                     statusMessage: Internal Server Error
 
-
   /devices/access-token-validation:
     post:
       summary: Validate the provided JWT token to ensure it is active and valid.
