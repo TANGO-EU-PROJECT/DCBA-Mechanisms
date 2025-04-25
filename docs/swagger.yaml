@@ -11,7 +11,9 @@ paths:
   /devices:
     get:
       summary: Fetch all devices
-      description: Retrieves all device entries from the database.
+      description: Retrieves all device entries from the database. Requires a valid JWT Authorization token.
+      security:
+        - BearerAuth: []  # Indicating that this endpoint requires Bearer token authentication
       responses:
         '200':
           description: Successfully fetched devices
@@ -40,6 +42,32 @@ paths:
                         sub:
                           type: string
                           example: "user@example.com"
+        '401':
+          description: Authorization token missing or malformed
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: error
+                  message:
+                    type: string
+                    example: Authorization token is missing or malformed.
+        '403':
+          description: Invalid or expired authorization token
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: error
+                  message:
+                    type: string
+                    example: Invalid or expired token.
         '500':
           description: Server error while fetching devices
           content:
@@ -53,7 +81,7 @@ paths:
                   message:
                     type: string
                     example: Error fetching device data.
-
+            
   /devices/online-shifts:
     get:
       summary: Fetch online devices
@@ -731,3 +759,10 @@ paths:
                     statusCode: 500
                     statusMessage: 'Authentication failed'
                     details: 'Error during authentication callback processing'
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
