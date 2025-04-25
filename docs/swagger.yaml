@@ -399,12 +399,12 @@ paths:
                     type: string
               examples:
                 TokenExpired:
-                  summary: JWT token has expired
+                  summary: Token has expired
                   value:
                     status: "failed"
                     message: "Authorization token has expired."
                 InvalidToken:
-                  summary: JWT token is invalid
+                  summary: Token is invalid
                   value:
                     status: "failed"
                     message: "Invalid authorization token."
@@ -422,7 +422,7 @@ paths:
                     type: string
                     example: "Device not found."
         '500':
-          description: Internal server error
+          description: Internal server error while retrieving behavioural score 
           content:
             application/json:
               schema:
@@ -433,7 +433,7 @@ paths:
                     example: "failed"
                   message:
                     type: string
-                    example: "Internal server error."
+                    example: "Error retrieving behavioural score."
 
 
   /devices/last-location:
