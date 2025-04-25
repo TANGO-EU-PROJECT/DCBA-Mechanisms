@@ -7,36 +7,52 @@ info:
 servers:
   - url: https://tango-eu-project.github.io/DCBA-Mechanisms/
 
-
 paths:
-  /employees/behavioural-score:
-    post:
-      summary: Get behavioural score
-      description: Returns the employee's behavioural score based on DIDs and JWT
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              properties:
-                didSP:
-                  type: string
-                didRequester:
-                  type: string
-                jwtAuth:
-                  type: string
+  /devices:
+    get:
+      summary: Fetch all devices
+      description: Retrieves all device entries from the database.
       responses:
         '200':
-          description: Success
+          description: Successfully fetched devices
           content:
             application/json:
               schema:
                 type: object
                 properties:
-                  behaviouralScore:
-                    type: number
-        '401':
-          description: Unauthorized
-        '404':
-          description: Employee not found
+                  status:
+                    type: string
+                    example: success
+                  message:
+                    type: string
+                    example: Devices fetched successfully
+                  data:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        device_id:
+                          type: string
+                          example: "a4e4cf21ab7e"
+                        did:
+                          type: string
+                          example: "did:example:123456789abcdefghi"
+                        sub:
+                          type: string
+                          example: "user@example.com"
+        '500':
+          description: Server error while fetching devices
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: error
+                  message:
+                    type: string
+                    example: Error fetching device data
+                  error:
+                    type: string
+                    example: Internal server error
