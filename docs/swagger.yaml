@@ -7,7 +7,7 @@ info:
 
     To interact with **Service API Endpoints**, you must authorize first using a JWT Authorization token:
     1. Click the **Authorize** button at the top-right of this page.
-    2. Paste the JWT Authorization token.
+    2. Paste your JWT token without the word "Bearer".
     3. Click **Authorize** and close the dialog.
     4. You can now make authorized requests using the **Try it out** button below.
 
