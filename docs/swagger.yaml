@@ -310,7 +310,7 @@ paths:
     post:
       summary: Capture Android device logs and perform optional localization.
       tags:
-        - Logs
+        - Autenticator Endpoints
       requestBody:
         required: true
         content:
