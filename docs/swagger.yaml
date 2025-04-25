@@ -306,6 +306,111 @@ paths:
                     type: string
                     example: "Device not found."
 
-
+  /post-logs:
+    post:
+      summary: Capture Android device logs and perform optional localization.
+      tags:
+        - Logs
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - did
+                - log
+                - accessToken
+              properties:
+                did:
+                  type: string
+                  example: "device-123"
+                  description: Decentralized identifier of the device.
+                log:
+                  type: string
+                  example: "12-01 12:00:00.000 I/WifiNetworkScannerN: Found network"
+                  description: The raw log data captured from the device.
+                accessToken:
+                  type: string
+                  example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+                  description: The JWT session token verifying the request source.
+      responses:
+        '200':
+          description: Returns status for all cases, success or error.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  statusCode:
+                    type: integer
+                    example: 200
+                  statusMessage:
+                    type: string
+                    example: Logs processed successfully.
+              examples:
+                Success:
+                  value:
+                    success: true
+                    statusCode: 200
+                    statusMessage: Logs processed successfully.
+                MalformedLog:
+                  value:
+                    success: false
+                    statusCode: 400
+                    statusMessage: Malformed log detected
+                MissingLogData:
+                  value:
+                    success: false
+                    statusCode: 400
+                    statusMessage: Log data cannot be empty.
+                MissingTimestamp:
+                  value:
+                    success: false
+                    statusCode: 400
+                    statusMessage: Invalid log data. Missing timestamp.
+                MissingAccessToken:
+                  value:
+                    success: false
+                    statusCode: 400
+                    statusMessage: Session token is required.
+                InvalidTokenFormat:
+                  value:
+                    success: false
+                    statusCode: 401
+                    statusMessage: Invalid session token format.
+                TokenDecodeFailed:
+                  value:
+                    success: false
+                    statusCode: 401
+                    statusMessage: Invalid session token.
+                TokenExpired:
+                  value:
+                    success: false
+                    statusCode: 401
+                    statusMessage: Session token has expired.
+                TokenMismatch:
+                  value:
+                    success: false
+                    statusCode: 401
+                    statusMessage: Token did does not match the provided did.
+                LocalizationError:
+                  value:
+                    success: false
+                    statusCode: 500
+                    statusMessage: Failed to perform localization.
+                InfluxStorageError:
+                  value:
+                    success: false
+                    statusCode: 500
+                    statusMessage: Failed to store logs in the Influx Database.
+                ProcessingError:
+                  value:
+                    success: false
+                    statusCode: 500
+                    statusMessage: Internal Server Error
 
   
