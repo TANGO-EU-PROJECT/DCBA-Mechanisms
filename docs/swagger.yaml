@@ -26,7 +26,7 @@ components:
 paths:
 
   # [1] GET /devices
-  /devices: 
+  /devices:
     get:
       tags:
         - Service API Endpoints  # Tag for service-facing endpoints
@@ -44,10 +44,10 @@ paths:
                 properties:
                   status:
                     type: string
-                    example: success
+                    example: "success"
                   message:
                     type: string
-                    example: Devices fetched successfully.
+                    example: "Devices fetched successfully."
                   data:
                     type: array
                     items:
@@ -71,20 +71,21 @@ paths:
                 properties:
                   status:
                     type: string
-                    example: error
+                    example: "failed"
                   message:
                     type: string
-              examples:
-                missingToken:
-                  summary: Missing Authorization header
-                  value:
-                    status: error
-                    message: Authorization token is missing.
-                malformedToken:
-                  summary: Malformed Authorization header
-                  value:
-                    status: error
-                    message: Authorization token is malformed. It should start with "Bearer ".
+                    example: "Authorization token is missing or malformed. It should start with 'Bearer '."
+                examples:
+                  missingToken:
+                    summary: Missing Authorization header
+                    value:
+                      status: "failed"
+                      message: "Authorization token is missing."
+                  malformedToken:
+                    summary: Malformed Authorization header
+                    value:
+                      status: "failed"
+                      message: "Authorization token is malformed. It should start with 'Bearer '."
         '403':
           description: Invalid or expired authorization token
           content:
@@ -94,21 +95,21 @@ paths:
                 properties:
                   status:
                     type: string
-                    example: error
+                    example: "failed"
                   message:
                     type: string
-              examples:
-                expiredToken:
-                  summary: Token is expired
-                  value:
-                    status: error
-                    message: Authorization token has expired.
-                invalidToken:
-                  summary: Token is invalid
-                  value:
-                    status: error
-                    message: Invalid Authorization token.
-
+                    example: "Invalid or expired Authorization token."
+                examples:
+                  expiredToken:
+                    summary: Token is expired
+                    value:
+                      status: "failed"
+                      message: "Authorization token has expired."
+                  invalidToken:
+                    summary: Token is invalid
+                    value:
+                      status: "failed"
+                      message: "Invalid Authorization token."
         '500':
           description: Server error while fetching devices
           content:
@@ -118,16 +119,17 @@ paths:
                 properties:
                   status:
                     type: string
-                    example: error
+                    example: "failed"
                   message:
                     type: string
-                    example: Error fetching device data.
+                    example: "Error fetching device data."
+
 
   # [2] GET /devices/online-shifts  
   /devices/online-shifts:
     get:
       tags:
-          - Service API Endpoints  # Tag for service-facing endpoints
+        - Service API Endpoints  # Tag for service-facing endpoints
       summary: Fetch online devices
       description: Retrieves devices that are currently online. This route requires a valid JWT authorization token to access.
       security:
@@ -140,15 +142,12 @@ paths:
               schema:
                 type: object
                 properties:
-                  success:
-                    type: boolean
-                    example: true
-                  statusCode:
-                    type: integer
-                    example: 200
-                  statusMessage:
+                  status:
                     type: string
-                    example: Fetched online devices successfully.
+                    example: "success"
+                  message:
+                    type: string
+                    example: 'Fetched online devices successfully.'
                   data:
                     type: array
                     items:
@@ -172,10 +171,10 @@ paths:
                 properties:
                   status:
                     type: string
-                    example: error
+                    example: "failed"
                   message:
                     type: string
-                    example: Authorization token is missing or malformed. It should start with "Bearer ".
+                    example: 'Authorization token is missing or malformed. It should start with "Bearer ".'
         '403':
           description: Invalid or expired authorization token
           content:
@@ -185,10 +184,10 @@ paths:
                 properties:
                   status:
                     type: string
-                    example: error
+                    example: "failed"
                   message:
                     type: string
-                    example: Invalid Authorization token.
+                    example: 'Invalid or expired Authorization token.'
         '500':
           description: Server error while fetching online devices
           content:
@@ -196,15 +195,13 @@ paths:
               schema:
                 type: object
                 properties:
-                  success:
-                    type: boolean
-                    example: false
-                  statusCode:
-                    type: integer
-                    example: 500
-                  statusMessage:
+                  status:
                     type: string
-                    example: Error fetching online devices.
+                    example: "failed"
+                  message:
+                    type: string
+                    example: 'Error fetching online devices.'
+
 
 
   /devices/offline-shifts:
