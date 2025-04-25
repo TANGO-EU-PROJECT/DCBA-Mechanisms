@@ -24,6 +24,7 @@ components:
       bearerFormat: JWT
 
 paths:
+
   # [1] GET /devices
   /devices: 
     get:
@@ -125,6 +126,8 @@ paths:
   # [2] GET /devices/online-shifts  
   /devices/online-shifts:
     get:
+      tags:
+          - Service API Endpoints  # Tag for service-facing endpoints
       summary: Fetch online devices
       description: Retrieves devices that are currently online. This route requires a valid JWT authorization token to access.
       security:
