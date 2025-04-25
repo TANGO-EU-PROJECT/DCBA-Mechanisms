@@ -85,7 +85,7 @@ paths:
                     status: "failed"
                     message: "Authorization token is malformed. It should start with 'Bearer '."
         '403':
-          description: Invalid or expired authorization token
+          description: Authorization token is invalid or expired
           content:
             application/json:
               schema:
@@ -107,7 +107,7 @@ paths:
                     status: "failed"
                     message: "Invalid Authorization token."
         '500':
-          description: Server error while fetching devices
+          description: Internal server error while fetching devices
           content:
             application/json:
               schema:
