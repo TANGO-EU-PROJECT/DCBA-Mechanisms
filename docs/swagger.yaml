@@ -2,13 +2,11 @@ openapi: 3.0.0
 info:
   title: DCBA Mechanisms API
   version: 1.0.0
-  description: API documentation for the DCBA backend services
+  description: API documentation for the DCBA Services
 
 servers:
-  - url: https://your-real-api-url.com/api
-    description: Production server
-  - url: http://localhost:3000/api
-    description: Local development server
+  - url: https://tango-eu-project.github.io/DCBA-Mechanisms/
+
 
 paths:
   /employees/behavioural-score:
