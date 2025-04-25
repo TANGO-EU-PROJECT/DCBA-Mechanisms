@@ -222,10 +222,16 @@ paths:
 
 
 
+
+  # [3] GET /devices/offline-shifts
   /devices/offline-shifts:
     get:
+      tags:
+        - Service API Endpoints
       summary: Fetch offline devices
-      description: Retrieves devices that are currently offline.
+      description: Retrieves devices that are currently offline. Requires a valid JWT Bearer token in the Authorization header.
+      security:
+        - BearerAuth: []
       responses:
         '200':
           description: Successfully fetched offline devices
@@ -242,7 +248,7 @@ paths:
                     example: 200
                   statusMessage:
                     type: string
-                    example: Fetched offline devices successfully.
+                    example: "Fetched offline devices successfully."
                   data:
                     type: array
                     items:
@@ -250,15 +256,59 @@ paths:
                       properties:
                         device_id:
                           type: string
-                          example: "a4e4cf21ab7e"
+                          example: "b7f2de59c8e1"
                         did:
                           type: string
-                          example: "did:example:123456789abcdefghi"
+                          example: "did:example:987654321zyxwvu"
                         sub:
                           type: string
-                          example: "user@example.com"
+                          example: "anotheruser@example.com"
+        '401':
+          description: Authorization token is missing or malformed
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                  message:
+                    type: string
+              examples:
+                MissingAuthorizationToken:
+                  summary: Missing Authorization header
+                  value:
+                    status: "failed"
+                    message: "Authorization token is missing."
+                MalformedAuthorizationToken:
+                  summary: Malformed Authorization header
+                  value:
+                    status: "failed"
+                    message: "Authorization token is malformed. It should start with 'Bearer '."
+        '403':
+          description: Authorization token is invalid or expired
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                  message:
+                    type: string
+              examples:
+                ExpiredToken:
+                  summary: Token has expired
+                  value:
+                    status: "failed"
+                    message: "Authorization token has expired."
+                InvalidToken:
+                  summary: Token is invalid
+                  value:
+                    status: "failed"
+                    message: "Invalid Authorization token."
         '500':
-          description: Server error while fetching offline devices
+          description: Internal server error while fetching offline devices
           content:
             application/json:
               schema:
@@ -272,7 +322,8 @@ paths:
                     example: 500
                   statusMessage:
                     type: string
-                    example: Error fetching offline devices.
+                    example: "Error fetching offline devices."
+
 
   /devices/behavioural-score:
     post:
