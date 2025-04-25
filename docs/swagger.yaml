@@ -30,7 +30,7 @@ paths:
       tags:
         - Service API Endpoints  # Tag for service-facing endpoints
       summary: Fetch all devices
-      description: Retrieves all device entries from the database. Requires a valid JWT Authorization token.
+      description: Retrieves all device entries from the database. This route requires a valid JWT authorization token to access.
       security:
         - BearerAuth: []  # Requires Bearer token in Authorization header
       responses:
@@ -122,11 +122,13 @@ paths:
                     type: string
                     example: Error fetching device data.
 
-            
+  # [2] GET /devices/online-shifts  
   /devices/online-shifts:
     get:
       summary: Fetch online devices
-      description: Retrieves devices that are currently online.
+      description: Retrieves devices that are currently online. This route requires a valid JWT authorization token to access.
+      security:
+        - BearerAuth: []  # This specifies that the request requires a Bearer token
       responses:
         '200':
           description: Successfully fetched online devices
@@ -158,6 +160,32 @@ paths:
                         sub:
                           type: string
                           example: "user@example.com"
+        '401':
+          description: Authorization token is missing or malformed
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: error
+                  message:
+                    type: string
+                    example: Authorization token is missing or malformed. It should start with "Bearer ".
+        '403':
+          description: Invalid or expired authorization token
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: error
+                  message:
+                    type: string
+                    example: Invalid Authorization token.
         '500':
           description: Server error while fetching online devices
           content:
@@ -174,6 +202,7 @@ paths:
                   statusMessage:
                     type: string
                     example: Error fetching online devices.
+
 
   /devices/offline-shifts:
     get:
