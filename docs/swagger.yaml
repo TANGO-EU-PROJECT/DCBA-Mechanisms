@@ -13,7 +13,7 @@ paths:
       summary: Fetch all devices
       description: Retrieves all device entries from the database. Requires a valid JWT Authorization token.
       security:
-        - BearerAuth: []  # Indicating that this endpoint requires Bearer token authentication
+        - BearerAuth: []  # Requires Bearer token in Authorization header
       responses:
         '200':
           description: Successfully fetched devices
@@ -43,7 +43,7 @@ paths:
                           type: string
                           example: "user@example.com"
         '401':
-          description: Authorization token missing or malformed
+          description: Authorization token is missing or malformed
           content:
             application/json:
               schema:
@@ -54,7 +54,17 @@ paths:
                     example: error
                   message:
                     type: string
-                    example: Authorization token is missing or malformed.
+              examples:
+                missingToken:
+                  summary: Missing Authorization header
+                  value:
+                    status: error
+                    message: Authorization token is missing.
+                malformedToken:
+                  summary: Malformed Authorization header
+                  value:
+                    status: error
+                    message: Authorization token is malformed. It should start with "Bearer ".
         '403':
           description: Invalid or expired authorization token
           content:
@@ -67,7 +77,18 @@ paths:
                     example: error
                   message:
                     type: string
-                    example: Invalid or expired token.
+              examples:
+                expiredToken:
+                  summary: Token is expired
+                  value:
+                    status: error
+                    message: Authorization token has expired.
+                invalidToken:
+                  summary: Token is invalid
+                  value:
+                    status: error
+                    message: Invalid Authorization token.
+
         '500':
           description: Server error while fetching devices
           content:
@@ -81,6 +102,7 @@ paths:
                   message:
                     type: string
                     example: Error fetching device data.
+
             
   /devices/online-shifts:
     get:
@@ -759,7 +781,6 @@ paths:
                     statusCode: 500
                     statusMessage: 'Authentication failed'
                     details: 'Error during authentication callback processing'
-
 components:
   securitySchemes:
     BearerAuth:
