@@ -71,20 +71,19 @@ paths:
                 properties:
                   status:
                     type: string
-                    example: "failed"
                   message:
                     type: string
-                    examples:
-                      MissingAuthorizationToken:
-                        summary: Missing Authorization header
-                        value:
-                          status: "failed"
-                          message: "Authorization token is missing."
-                      MalformedAuthorizationToken:
-                        summary: Malformed Authorization header
-                        value:
-                          status: "failed"
-                          message: "Authorization token is malformed. It should start with 'Bearer '."
+              examples:
+                MissingAuthorizationToken:
+                  summary: Missing Authorization header
+                  value:
+                    status: "failed"
+                    message: "Authorization token is missing."
+                MalformedAuthorizationToken:
+                  summary: Malformed Authorization header
+                  value:
+                    status: "failed"
+                    message: "Authorization token is malformed. It should start with 'Bearer '."
         '403':
           description: Invalid or expired authorization token
           content:
@@ -94,20 +93,19 @@ paths:
                 properties:
                   status:
                     type: string
-                    example: "failed"
                   message:
                     type: string
-                    examples:
-                      ExpiredToken:
-                        summary: Token is expired
-                        value:
-                          status: "failed"
-                          message: "Authorization token has expired."
-                      InvalidToken:
-                        summary: Token is invalid
-                        value:
-                          status: "failed"
-                          message: "Invalid Authorization token."
+              examples:
+                ExpiredToken:
+                  summary: Token is expired
+                  value:
+                    status: "failed"
+                    message: "Authorization token has expired."
+                InvalidToken:
+                  summary: Token is invalid
+                  value:
+                    status: "failed"
+                    message: "Invalid Authorization token."
         '500':
           description: Server error while fetching devices
           content:
