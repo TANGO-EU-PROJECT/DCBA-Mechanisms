@@ -578,258 +578,49 @@ paths:
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
   # Authenticator Endpoints #
-
-  /devices/post-logs:
-    post:
-      summary: Capture Android device logs and perform optional localization.
-      tags:
-        - Authenticator Endpoints
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              required:
-                - did
-                - log
-                - accessToken
-              properties:
-                did:
-                  type: string
-                  example: "device-123"
-                  description: Decentralized identifier of the device.
-                log:
-                  type: string
-                  example: "12-01 12:00:00.000 I/WifiNetworkScannerN: Found network"
-                  description: The raw log data captured from the device.
-                accessToken:
-                  type: string
-                  example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
-                  description: The JWT session token verifying the request source.
-      responses:
-        '200':
-          description: Always returns HTTP 200 with a success or error status in the response body. This prevents the application from crashing due to "Network Axios Error" caused by non-200 responses.
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  success:
-                    type: boolean
-                    example: true
-                  statusCode:
-                    type: integer
-                    example: 200
-                  statusMessage:
-                    type: string
-                    example: Logs processed successfully.
-              examples:
-                Success:
-                  value:
-                    success: true
-                    statusCode: 200
-                    statusMessage: Logs processed successfully.
-                MalformedLog:
-                  value:
-                    success: false
-                    statusCode: 400
-                    statusMessage: Malformed log detected
-                MissingLogData:
-                  value:
-                    success: false
-                    statusCode: 400
-                    statusMessage: Log data cannot be empty.
-                MissingTimestamp:
-                  value:
-                    success: false
-                    statusCode: 400
-                    statusMessage: Invalid log data. Missing timestamp.
-                MissingAccessToken:
-                  value:
-                    success: false
-                    statusCode: 400
-                    statusMessage: Session token is required.
-                InvalidTokenFormat:
-                  value:
-                    success: false
-                    statusCode: 401
-                    statusMessage: Invalid session token format.
-                TokenDecodeFailed:
-                  value:
-                    success: false
-                    statusCode: 401
-                    statusMessage: Invalid session token.
-                TokenExpired:
-                  value:
-                    success: false
-                    statusCode: 401
-                    statusMessage: Session token has expired.
-                TokenMismatch:
-                  value:
-                    success: false
-                    statusCode: 401
-                    statusMessage: Token did does not match the provided did.
-                LocalizationError:
-                  value:
-                    success: false
-                    statusCode: 500
-                    statusMessage: Failed to perform localization.
-                InfluxStorageError:
-                  value:
-                    success: false
-                    statusCode: 500
-                    statusMessage: Failed to store logs in the Influx Database.
-                ProcessingError:
-                  value:
-                    success: false
-                    statusCode: 500
-                    statusMessage: Internal Server Error
-
-  /devices/access-token-validation:
-    post:
-      summary: Validate the provided JWT token to ensure it is active and valid.
-      tags:
-        - Authenticator Endpoints
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              required:
-                - accessToken
-              properties:
-                accessToken:
-                  type: string
-                  example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
-                  description: The JWT session token to be validated.
-      responses:
-        '200':
-          description: Token validation result.
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  success:
-                    type: boolean
-                    example: true
-                  statusCode:
-                    type: integer
-                    example: 200
-                  statusMessage:
-                    type: string
-                    example: Valid
-                  did:
-                    type: string
-                    example: "device-123"
-                    description: Decentralized Identifier of the device (if valid).
-                  sub:
-                    type: string
-                    example: "auth-subject"
-                    description: Subject claim from the token.
-                  verifiableCredential:
-                    type: object
-                    description: Verifiable credential object from the token.
-              examples:
-                Success:
-                  value:
-                    success: true
-                    statusCode: 200
-                    statusMessage: Valid
-                    did: "device-123"
-                    sub: "auth-subject"
-                    verifiableCredential:
-                      id: "device-123"
-                      issuer: "issuer.example"
-                MissingToken:
-                  value:
-                    success: false
-                    statusCode: 200
-                    statusMessage: No access token provided. Please log in again.
-                InvalidFormat:
-                  value:
-                    success: false
-                    statusCode: 200
-                    statusMessage: Invalid token format. Please log in again.
-                ExpiredToken:
-                  value:
-                    success: false
-                    statusCode: 200
-                    statusMessage: Token expired. Please log in again.
-                InternalError:
-                  value:
-                    success: false
-                    statusCode: 200
-                    statusMessage: Internal server error. Please try again later.
-
-  /devices/logout:
-    post:
-      summary: Handle devices logout requests by invalidating the access token.
-      tags:
-        - Authenticator Endpoints
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              required:
-                - accessToken
-                - did
-              properties:
-                accessToken:
-                  type: string
-                  example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
-                  description: The JWT access token to be invalidated.
-                did:
-                  type: string
-                  example: "device-123"
-                  description: Decentralized Identifier (DID) of the device requesting logout.
-      responses:
-        '200':
-          description: Logout process result.
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  success:
-                    type: boolean
-                    example: true
-                  statusCode:
-                    type: integer
-                    example: 200
-                  statusMessage:
-                    type: string
-                    example: 'Device logged out successfully'
-              examples:
-                Success:
-                  value:
-                    success: true
-                    statusCode: 200
-                    statusMessage: 'Device logged out successfully'
-                MissingAccessToken:
-                  value:
-                    success: false
-                    statusCode: 400
-                    statusMessage: 'Missing required accessToken parameter.'
-                MissingDid:
-                  value:
-                    success: false
-                    statusCode: 400
-                    statusMessage: 'Missing required did parameter.'
-                InternalError:
-                  value:
-                    success: false
-                    statusCode: 500
-                    statusMessage: 'Error handling logout'
 
   /devices/begin-session:
     post:
-      summary: Handle device initiation process using QR scanner.
+      summary: Handle device initiation process (QR SCANNER)
+      description: This endpoint initiates a device session request. It consistently returns an **HTTP 200** response code, regardless of the operation result, to maintain client-side stability. The success or failure of the request is determined by the **status** field within the JSON response payload.
       tags:
         - Authenticator Endpoints
       requestBody:
@@ -844,165 +635,48 @@ paths:
               properties:
                 device_id:
                   type: string
-                  example: "device-123"
-                  description: The device ID initiating the session.
+                  description: The ID of the device initiating the session.
                 qr_scanner_state_request:
                   type: string
-                  example: "qr-scanner-state-abc123"
-                  description: The state request generated by the QR scanner.
+                  description: The state parameter for QR scanner.
                 log_file_uri:
                   type: string
-                  example: "http://example.com/logfile"
-                  description: URI to the log file associated with the session.
+                  description: Optional log file URI.
       responses:
         '200':
-          description: Session initiation process result.
+          description: Always returns 200 status. Check the `status` field inside response body.
           content:
             application/json:
               schema:
                 type: object
-                properties:
-                  message:
-                    type: string
-                    example: 'QR Code generated successfully.'
-                  DEVICE_AUTHENTICATION_QR_CODE:
-                    type: string
-                    description: The base64 encoded QR code for authentication.
-                  SESSION_REQUEST:
-                    type: object
-                    description: The saved session request object containing session details.
-              examples:
-                Success:
-                  value:
-                    message: 'QR Code generated successfully.'
-                    DEVICE_AUTHENTICATION_QR_CODE: "data:image/png;base64, ...base64encodedQR..."
-                    SESSION_REQUEST:
-                      device_id: "device-123"
-                      qr_scanner_state_request: "qr-scanner-state-abc123"
-                      log_file_uri: "http://example.com/logfile"
-                MissingDeviceId:
-                  value:
-                    message: 'Device ID is missing, session request failed.'
-                MissingQrScannerStateRequest:
-                  value:
-                    message: 'QR scanner state request is missing, session request failed.'
-                ErrorHandlingSessionRequest:
-                  value:
-                    message: 'Error handling session request, but proceeding with the process.'
-                ErrorReadingCertificate:
-                  value:
-                    message: 'Error reading the certificate, proceeding with limited access.'
-                QRCodeNotFound:
-                  value:
-                    message: 'QR code not found, but session continues without it.'
-                ErrorExtractingQRCode:
-                  value:
-                    message: 'Failed to extract QR code, but session is still active.'
-  
-  /devices/auth-callback:
-    get:
-      summary: Handle authentication callback and retrieve the access token.
-      tags:
-        - Authenticator Endpoints
-      parameters:
-        - in: query
-          name: code
-          required: true
-          schema:
-            type: string
-            example: "authorization-code-xyz123"
-          description: The authorization code received after the user has authenticated.
-        - in: query
-          name: state
-          required: true
-          schema:
-            type: string
-            example: "qr-scanner-state-abc123"
-          description: The state parameter to validate the request.
-      responses:
-        '200':
-          description: Authentication callback handling result.
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  success:
-                    type: boolean
-                    example: true
-                  statusCode:
-                    type: integer
-                    example: 200
-                  statusMessage:
-                    type: string
-                    example: 'Authentication successful!'
-                  decodedPayload:
-                    type: object
+                oneOf:
+                  - type: object
+                    required:
+                      - status
+                      - message
+                      - deviceAuthQRCode
+                      - sessionRequest
                     properties:
-                      did:
+                      status:
                         type: string
-                        example: "device-id-123"
-                      sub:
+                        enum: [success]
+                      message:
                         type: string
-                        example: "user-id-456"
-        '400':
-          description: Missing required parameters.
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  success:
-                    type: boolean
-                    example: false
-                  statusCode:
-                    type: integer
-                    example: 400
-                  statusMessage:
-                    type: string
-                    example: 'Missing required parameters: code or state.'
-        '500':
-          description: Server error during authentication callback.
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  success:
-                    type: boolean
-                    example: false
-                  statusCode:
-                    type: integer
-                    example: 500
-                  statusMessage:
-                    type: string
-                    example: 'Authentication failed'
-                  details:
-                    type: string
-                    example: 'Detailed error message here.'
-              examples:
-                CertificateLoadFailure:
-                  value:
-                    success: false
-                    statusCode: 500
-                    statusMessage: 'Failed to load certificate'
-                    details: 'Error occurred while reading the certificate file'
-                AccessTokenNotReceived:
-                  value:
-                    success: false
-                    statusCode: 500
-                    statusMessage: 'Access token not received'
-                    details: 'No access token in response'
-                InvalidTokenPayload:
-                  value:
-                    success: false
-                    statusCode: 500
-                    statusMessage: 'Invalid token payload'
-                    details: 'Failed to extract necessary fields from the token payload'
-                AuthenticationFailed:
-                  value:
-                    success: false
-                    statusCode: 500
-                    statusMessage: 'Authentication failed'
-                    details: 'Error during authentication callback processing'
+                      deviceAuthQRCode:
+                        type: string
+                        description: The QR code in base64 or URL format.
+                      sessionRequest:
+                        type: object
+                        description: The saved session request data.
+                  - type: object
+                    required:
+                      - status
+                      - message
+                    properties:
+                      status:
+                        type: string
+                        enum: [failed]
+                      message:
+                        type: string
+
   # Authenticator Endpoints #
