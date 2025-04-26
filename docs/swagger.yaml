@@ -436,70 +436,104 @@ paths:
                     type: string
                     example: "Error retrieving behavioural score."
 
-
+  # [5] POST /devices/last-location
   /devices/last-location:
     post:
-      summary: Fetch last known geographic coordinates of a device
-      description: Returns the device's last known location using the provided DIDs and JWT authorization.
+      tags:
+        - Service API Endpoints
+      summary: Retrieve device last known coordinates
+      description: >
+        Returns the last known geographic coordinates (latitude and longitude) of a device
+        based on the provided DIDs and a valid JWT authorization token.
+        Requires a valid JWT passed in the request body.
       requestBody:
         required: true
         content:
-          application/json:
+          application/x-www-form-urlencoded:
             schema:
               type: object
+              required:
+                - didSP
+                - didRequester
+                - jwtAuth
               properties:
                 didSP:
                   type: string
-                  example: "did:example:service-provider"
+                  example: "did:example:serviceprovider123"
                 didRequester:
                   type: string
-                  example: "did:example:device-abc123"
+                  example: "did:example:device456"
                 jwtAuth:
                   type: string
                   example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+            examples:
+              validRequest:
+                summary: Valid request example
+                value:
+                  didSP: "did:example:serviceprovider123"
+                  didRequester: "did:example:device456"
+                  jwtAuth: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
       responses:
         '200':
-          description: Successfully fetched last known coordinates
+          description: Last known coordinates retrieved successfully
           content:
             application/json:
               schema:
                 type: object
                 properties:
+                  status:
+                    type: string
+                    example: "success"
+                  message:
+                    type: string
+                    example: "Device found"
                   lastCoordinates:
                     type: object
                     properties:
                       latitude:
                         type: number
+                        format: float
                         example: 37.7749
                       longitude:
                         type: number
+                        format: float
                         example: -122.4194
         '400':
-          description: Missing required fields or invalid data
+          description: Bad Request - Missing required fields
           content:
             application/json:
               schema:
                 type: object
                 properties:
-                  success:
-                    type: boolean
-                    example: false
+                  status:
+                    type: string
+                    example: "failed"
                   message:
                     type: string
                     example: "Missing required fields: didSP, didRequester, or jwtAuth."
         '401':
-          description: Unauthorized - Invalid or expired JWT
+          description: Unauthorized - Authorization token is invalid or expired
           content:
             application/json:
               schema:
                 type: object
                 properties:
-                  success:
-                    type: boolean
-                    example: false
+                  status:
+                    type: string
+                    example: "failed"
                   message:
                     type: string
-                    example: "Invalid or expired JWT token."
+                examples:
+                  TokenExpired:
+                    summary: Token has expired
+                    value:
+                      status: "failed"
+                      message: "Authorization token has expired."
+                  InvalidToken:
+                    summary: Token is invalid
+                    value:
+                      status: "failed"
+                      message: "Invalid authorization token."
         '404':
           description: Device not found
           content:
@@ -507,12 +541,26 @@ paths:
               schema:
                 type: object
                 properties:
-                  success:
-                    type: boolean
-                    example: false
+                  status:
+                    type: string
+                    example: "failed"
                   message:
                     type: string
                     example: "Device not found."
+        '500':
+          description: Internal server error while retrieving last coordinates
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: "failed"
+                  message:
+                    type: string
+                    example: "Error retrieving last coordinates."
+
 
   /devices/post-logs:
     post:
