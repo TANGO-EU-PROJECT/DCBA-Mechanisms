@@ -674,9 +674,9 @@ paths:
                     message: QR Code generated successfully.
                     deviceAuthQRCode: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAUA..."
                     sessionRequest:
-                      device_id: "DEVICE123"
-                      qr_scanner_state_request: "state123"
-                      log_file_uri: "https://example.com/logfile.log"
+                      device_id: "b7f2de59c8e1"
+                      qr_scanner_state_request: "a6f3fn529i2a0"
+                      log_file_uri: "https://dcbaauthenticator.com/logfile.log"
                       createdAt: "2025-04-26T12:34:56.789Z"
                 MissingDeviceID:
                   summary: Missing device_id
