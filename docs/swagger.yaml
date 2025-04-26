@@ -616,7 +616,8 @@ paths:
 
 
   # Authenticator Endpoints #
-
+  
+  # [1] POST /devices/begin-session
   /devices/begin-session:
     post:
       summary: Handle device initiation process (QR SCANNER)
