@@ -616,7 +616,7 @@ paths:
 
 
   # Authenticator Endpoints #
-  
+
   # [1] POST /devices/begin-session
   /devices/begin-session:
     post:
@@ -645,7 +645,7 @@ paths:
                   example: a6f3fn529i2a0
                 log_file_uri:
                   type: string
-                  description: Optional log file URI.
+                  description: Log file URI, where offline logs will be appended for future transmission.
                   example: https://dcbaauthenticator.com/logfile.log
       responses:
         '200':
