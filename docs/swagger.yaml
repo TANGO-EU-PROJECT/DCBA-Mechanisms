@@ -26,6 +26,7 @@ components:
       bearerFormat: JWT
 
 paths:
+  # Service API Endpoints #
 
   # [1] GET /devices
   /devices:
@@ -99,7 +100,7 @@ paths:
                     type: string
               examples:
                 ExpiredToken:
-                  summary: Token is expired
+                  summary: Token has expired
                   value:
                     status: "failed"
                     message: "Authorization token has expired."
@@ -565,7 +566,19 @@ paths:
                     type: string
                     example: "Error retrieving last coordinates."
 
+  # Service API Endpoints # 
 
+
+
+
+
+
+
+
+
+
+
+  # Authenticator Endpoints #
 
   /devices/post-logs:
     post:
@@ -992,3 +1005,4 @@ paths:
                     statusCode: 500
                     statusMessage: 'Authentication failed'
                     details: 'Error during authentication callback processing'
+  # Authenticator Endpoints #
