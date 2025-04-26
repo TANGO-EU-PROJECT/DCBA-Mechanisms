@@ -515,25 +515,27 @@ paths:
           description: Unauthorized - Authorization token is invalid or expired
           content:
             application/json:
-              schema:
-                type: object
-                properties:
-                  status:
-                    type: string
-                    example: "failed"
-                  message:
-                    type: string
-                examples:
-                  TokenExpired:
-                    summary: Token has expired
-                    value:
-                      status: "failed"
-                      message: "Authorization token has expired."
-                  InvalidToken:
-                    summary: Token is invalid
-                    value:
-                      status: "failed"
-                      message: "Invalid authorization token."
+              oneOf:
+                - description: Token has expired
+                  schema:
+                    type: object
+                    properties:
+                      status:
+                        type: string
+                        example: "failed"
+                      message:
+                        type: string
+                        example: "Authorization token has expired."
+                - description: Token is invalid
+                  schema:
+                    type: object
+                    properties:
+                      status:
+                        type: string
+                        example: "failed"
+                      message:
+                        type: string
+                        example: "Invalid authorization token."
         '404':
           description: Device not found
           content:
@@ -560,6 +562,7 @@ paths:
                   message:
                     type: string
                     example: "Error retrieving last coordinates."
+
 
 
   /devices/post-logs:
