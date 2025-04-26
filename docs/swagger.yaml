@@ -714,7 +714,7 @@ paths:
   /devices/auth-callback:
     get:
       summary: Handles the authentication callback after the employee scans the QR code with his/her privacy wallet.
-      description: This endpoint handles the authentication callback from the IPS verifier service. It receives the authorization `code` and `state`, exchanges the code for an access token, and processes the token to verify the employee and return the necessary information.
+      description: This endpoint handles the authentication callback from the IPS verifier service. It receives the authorization `code` and `state`, exchanges the code for an access token, and processes the token to verify the employee and return the necessary information. It consistently returns an **HTTP 200** status code, regardless of the operation result, to maintain client-side stability. The success or failure is indicated inside the JSON `status` field.
       tags:
         - Authenticator Endpoints
       parameters:
@@ -732,7 +732,7 @@ paths:
             type: string
       responses:
         '200':
-          description: A successful response containing the authentication status and any relevant data, such as the decoded JWT payload.
+          description: A successful response containing the authentication status and any relevant data, such as the decoded JWT payload. Always returns 200. Check the `status` field in the response body.
           content:
             application/json:
               schema:
