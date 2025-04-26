@@ -763,42 +763,41 @@ paths:
                             type: string
                             description: The unique identifier for the verifiable credential.
                             example: "did:example:12345"
-          examples:
-            Success:
-              summary: Successful authentication callback
-              value:
-                status: success
-                message: Authentication successful!
-                decodedPayload:
-                  sub: "user123"
-                  verifiableCredential:
-                    id: "did:example:12345"
-            MissingParameters:
-              summary: Missing required parameters
-              value:
-                status: failed
-                message: Missing required parameters: code or state.
-            CertificateLoadError:
-              summary: Error reading the certificate file
-              value:
-                status: failed
-                message: Failed to load certificate.
-            TokenNotReceived:
-              summary: Failed to receive access token
-              value:
-                status: failed
-                message: Access token not received.
-            InvalidTokenPayload:
-              summary: Invalid token payload
-              value:
-                status: failed
-                message: Invalid token payload.
-            AuthenticationFailed:
-              summary: Authentication failed
-              value:
-                status: failed
-                message: Authentication failed.
-
+              examples:
+                Success:
+                  summary: Successful authentication callback
+                  value:
+                    status: success
+                    message: Authentication successful!
+                    decodedPayload:
+                      sub: "user123"
+                      verifiableCredential:
+                        id: "did:example:12345"
+                MissingParameters:
+                  summary: Missing required parameters
+                  value:
+                    status: failed
+                    message: Missing required parameters: code or state.
+                CertificateLoadError:
+                  summary: Error reading the certificate file
+                  value:
+                    status: failed
+                    message: Failed to load certificate.
+                TokenNotReceived:
+                  summary: Failed to receive access token
+                  value:
+                    status: failed
+                    message: Access token not received.
+                InvalidTokenPayload:
+                  summary: Invalid token payload
+                  value:
+                    status: failed
+                    message: Invalid token payload.
+                AuthenticationFailed:
+                  summary: Authentication failed
+                  value:
+                    status: failed
+                    message: Authentication failed.
 
 
   # Authenticator Endpoints #
