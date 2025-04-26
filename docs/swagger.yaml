@@ -722,7 +722,7 @@ paths:
       Upon successful authentication, the backend server will notify the corresponding device via WebSocket 
       with the following data:
 
-      ```javascript
+      
       const data = {
         status: "auth_success",                                        // Status message indicating the result (e.g., 'auth_success')
         qr_scanner_state_request: qr_scanner_state_request,            // The qr state request 
@@ -732,7 +732,7 @@ paths:
         logFileURI: log_file_uri,                                      // URI for the log file
         accessToken: accessToken                                       // The access token
       };
-      ```
+      
       Always returns HTTP 200 status. Check the `status` field in the response body for the operation result. 
       tags:
         - Authenticator Endpoints
