@@ -496,11 +496,11 @@ paths:
                       latitude:
                         type: number
                         format: float
-                        example: 37.7749
+                        example: 39.365858279847544
                       longitude:
                         type: number
                         format: float
-                        example: -122.4194
+                        example: 22.923886333496505
         '400':
           description: Bad Request - Missing required fields
           content:
