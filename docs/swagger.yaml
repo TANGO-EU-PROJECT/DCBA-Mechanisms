@@ -1,6 +1,6 @@
 openapi: 3.0.0
 info:
-  title: DCBA Mechanisms API
+  title: Devices Continuous Behavioural Authentication (DCBA) Mechanisms API
   version: 1.0.0
   description: |
     API documentation for the DCBA Services.
