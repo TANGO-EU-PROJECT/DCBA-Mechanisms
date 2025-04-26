@@ -447,8 +447,8 @@ paths:
       summary: Retrieve device last known coordinates
       description: >
         Returns the last known geographic coordinates (latitude and longitude) of a device
-        based on the provided DIDs and a valid JWT authorization token.
-        Requires a valid JWT passed in the request body.
+        based on provided DIDs.
+        Requires a valid JWT authorization token passed in the request body.
       requestBody:
         required: true
         content:
