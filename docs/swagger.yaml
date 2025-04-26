@@ -620,7 +620,7 @@ paths:
   /devices/begin-session:
     post:
       summary: Handle device initiation process (QR SCANNER)
-      description: This endpoint initiates a device session request. It consistently returns an **HTTP 200** response code, regardless of the operation result, to maintain client-side stability. The success or failure of the request is determined by the **status** field within the JSON response payload.
+      description: This endpoint initiates a device session request. It consistently returns an **HTTP 200** status code, regardless of the operation result, to maintain client-side stability. The success or failure is indicated inside the JSON `status` field.
       tags:
         - Authenticator Endpoints
       requestBody:
@@ -632,6 +632,7 @@ paths:
               required:
                 - device_id
                 - qr_scanner_state_request
+                - log_file_uri
               properties:
                 device_id:
                   type: string
@@ -642,41 +643,71 @@ paths:
                 log_file_uri:
                   type: string
                   description: Optional log file URI.
+            example:
+              device_id: "DEVICE123"
+              qr_scanner_state_request: "state123"
+              log_file_uri: "https://example.com/logfile.log"
       responses:
         '200':
-          description: Always returns 200 status. Check the `status` field inside response body.
+          description: Always returns 200. Check the `status` field in the response body.
           content:
             application/json:
               schema:
                 type: object
-                oneOf:
-                  - type: object
-                    required:
-                      - status
-                      - message
-                      - deviceAuthQRCode
-                      - sessionRequest
-                    properties:
-                      status:
-                        type: string
-                        enum: [success]
-                      message:
-                        type: string
-                      deviceAuthQRCode:
-                        type: string
-                        description: The QR code in base64 or URL format.
-                      sessionRequest:
-                        type: object
-                        description: The saved session request data.
-                  - type: object
-                    required:
-                      - status
-                      - message
-                    properties:
-                      status:
-                        type: string
-                        enum: [failed]
-                      message:
-                        type: string
+                properties:
+                  status:
+                    type: string
+                    enum: [success, failed]
+                  message:
+                    type: string
+                  deviceAuthQRCode:
+                    type: string
+                    description: The QR code in base64 or URL format (only on success).
+                  sessionRequest:
+                    type: object
+                    description: The saved session request data (only on success).
+              examples:
+                Success:
+                  summary: Successful QR code generation
+                  value:
+                    status: success
+                    message: QR Code generated successfully.
+                    deviceAuthQRCode: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAUA..."
+                    sessionRequest:
+                      device_id: "DEVICE123"
+                      qr_scanner_state_request: "state123"
+                      log_file_uri: "https://example.com/logfile.log"
+                      createdAt: "2025-04-26T12:34:56.789Z"
+                MissingDeviceID:
+                  summary: Missing device_id
+                  value:
+                    status: failed
+                    message: Device ID is missing, session request failed.
+                MissingQrScannerState:
+                  summary: Missing qr_scanner_state_request
+                  value:
+                    status: failed
+                    message: QR scanner state request is missing, session request failed.
+                CertificateReadError:
+                  summary: Error reading the certificate file
+                  value:
+                    status: failed
+                    message: Error reading the certificate, proceeding with limited access.
+                QrCodeNotFound:
+                  summary: QR code not found
+                  value:
+                    status: failed
+                    message: QR code not found, but session continues without it.
+                ExtractQrCodeError:
+                  summary: Error extracting QR code
+                  value:
+                    status: failed
+                    message: Failed to extract QR code, but session is still active.
+                SessionHandlingError:
+                  summary: Error handling session request
+                  value:
+                    status: failed
+                    message: Error handling session request, but proceeding with the process.
+
 
   # Authenticator Endpoints #
