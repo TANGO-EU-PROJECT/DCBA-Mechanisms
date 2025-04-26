@@ -371,7 +371,7 @@ paths:
                     example: "success"
                   message:
                     type: string
-                    example: "Device found"
+                    example: "Device found."
                   behaviouralScore:
                     type: number
                     format: float
@@ -489,7 +489,7 @@ paths:
                     example: "success"
                   message:
                     type: string
-                    example: "Device found"
+                    example: "Device found."
                   lastCoordinates:
                     type: object
                     properties:
