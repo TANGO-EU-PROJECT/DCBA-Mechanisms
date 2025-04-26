@@ -771,6 +771,11 @@ paths:
                       sub: "user123"
                       verifiableCredential:
                         id: "did:example:12345"
+                MissingParameters:
+                  summary: Missing required parameters
+                  value:
+                    status: failed
+                    message: Missing required parameters: code or state.
                 
 
 
