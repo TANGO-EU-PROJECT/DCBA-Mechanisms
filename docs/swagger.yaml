@@ -626,7 +626,7 @@ paths:
       requestBody:
         required: true
         content:
-          application/json:
+          application/x-www-form-urlencoded:
             schema:
               type: object
               required:
@@ -637,15 +637,15 @@ paths:
                 device_id:
                   type: string
                   description: The ID of the device initiating the session.
-                  example: DEVICE123
+                  example: b7f2de59c8e1
                 qr_scanner_state_request:
                   type: string
                   description: The state parameter for QR scanner.
-                  example: state123
+                  example: a6f3fn529i2a0
                 log_file_uri:
                   type: string
                   description: Optional log file URI.
-                  example: https://example.com/logfile.log
+                  example: https://dcbaauthenticator.com/logfile.log
       responses:
         '200':
           description: Always returns 200. Check the `status` field in the response body.
