@@ -318,7 +318,7 @@ paths:
                     example: "failed"
                   message:
                     type: string
-                    example: "Error fetching online devices."
+                    example: "Error fetching offline devices."
 
 
   # [4] POST /devices/behavioural-score
