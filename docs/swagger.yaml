@@ -6,6 +6,7 @@ info:
     API documentation for the DCBA Services.
 
     The **Authenticator Endpoints** are exclusively utilized by the Android application, 'Authenticator', which is deployed on employees' devices. 
+    
     To interact with **Service API Endpoints**, you must authorize first using a JWT Authorization token:
     1. Click the **Authorize** button at the top-right of this page.
     2. Paste your JWT token without the word "Bearer".
