@@ -767,10 +767,6 @@ paths:
                   value:
                     status: success
                     message: Authentication successful!
-                    decodedPayload:
-                      sub: "user123"
-                      verifiableCredential:
-                        id: "did:example:12345"
                 MissingParameters:
                   summary: Missing required parameters
                   value:
