@@ -709,4 +709,97 @@ paths:
                     status: failed
                     message: Error handling session request, but proceeding with the process.
 
+
+
+  /devices/auth-callback:
+    get:
+      summary: Handles the authentication callback after the employee scans the QR code with his/her privacy wallet.
+      description: |
+        This endpoint handles the authentication callback from the IPS verifier service. It receives the authorization `code` and `state`, exchanges the code for an access token, and processes the token to verify the employee and return the necessary information.
+      operationId: handleAuthCallback
+      tags:
+        - Authenticator Endpoints
+      parameters:
+        - name: code
+          in: query
+          required: true
+          description: The authorization code received from the IPS verifier.
+          schema:
+            type: string
+        - name: state
+          in: query
+          required: true
+          description: The state parameter sent with the request to prevent CSRF attacks.
+          schema:
+            type: string
+      responses:
+        '200':
+          description: |
+            A successful response containing the authentication status and any relevant data, such as the decoded JWT payload.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    description: The status of the authentication callback.
+                    example: "success"
+                  message:
+                    type: string
+                    description: A human-readable message providing more context.
+                    example: "Authentication successful!"
+                  decodedPayload:
+                    type: object
+                    description: The decoded JWT payload containing user information.
+                    properties:
+                      sub:
+                        type: string
+                        description: The subject (user identifier) of the token.
+                        example: "user123"
+                      verifiableCredential:
+                        type: object
+                        properties:
+                          id:
+                            type: string
+                            description: The unique identifier for the verifiable credential.
+                            example: "did:example:12345"
+          examples:
+            Success:
+              summary: Successful authentication callback
+              value:
+                status: success
+                message: Authentication successful!
+                decodedPayload:
+                  sub: "user123"
+                  verifiableCredential:
+                    id: "did:example:12345"
+            MissingParameters:
+              summary: Missing required parameters
+              value:
+                status: failed
+                message: Missing required parameters: code or state.
+            CertificateLoadError:
+              summary: Error reading the certificate file
+              value:
+                status: failed
+                message: Failed to load certificate.
+            TokenNotReceived:
+              summary: Failed to receive access token
+              value:
+                status: failed
+                message: Access token not received.
+            InvalidTokenPayload:
+              summary: Invalid token payload
+              value:
+                status: failed
+                message: Invalid token payload.
+            AuthenticationFailed:
+              summary: Authentication failed
+              value:
+                status: failed
+                message: Authentication failed.
+
+
+
   # Authenticator Endpoints #
