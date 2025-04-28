@@ -802,7 +802,7 @@ paths:
     post:
       summary: Accepts Android Logs from devices for risk assessment or localization
       description: |
-        This endpoint accepts logs from Android devices along with a session `accessToken` and device identifier (`did`) for authentication and validation.
+        This endpoint accepts `logs` from Android devices along with a session `accessToken` and device identifier (`did`) for authentication and validation.
         It performs multiple checks, including validation of log format, session token validity, expiration, and DID match.
         Upon successful validation, the log is queued for processing.
         Always returns HTTP 200 status regardless of the operation result, to maintain client-side stability.. Check the `status` field in the response body for operation result.
