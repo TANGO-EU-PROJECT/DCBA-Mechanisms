@@ -849,10 +849,10 @@ paths:
                     example: "Log successfully captured and queued for processing."
               examples:
                 Success:
-                  summary: Successful log capture
+                  summary: Successful processing of logs
                   value:
                     status: success
-                    message: Log successfully captured and queued for processing.
+                    message: Logs stored, analyzed and processed successfully.
                 MissingLogData:
                   summary: Log data missing
                   value:
@@ -888,6 +888,26 @@ paths:
                   value:
                     status: failed
                     message: Invalid log data. Missing timestamp.
+                FailedToStoreLogs:
+                  summary: Failed to store logs
+                  value:
+                    status: failed
+                    message: Failed to store logs in the Influx Database.
+                FailedToPerformLocalization:
+                  summary: Localization execution failed
+                  value:
+                    status: failed
+                    message: Failed to perform localization
+                FailedToPerformRiskAssessmentEngine:
+                  summary: Risk assessment execution failed.
+                  value:
+                    status: failed
+                    message: Failed to perform risk assessment.
+                InternalServerError:
+                  summary: Internal server error
+                  value:
+                    status: failed
+                    message: Internal server error while processing session request.
 
 
 
