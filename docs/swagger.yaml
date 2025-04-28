@@ -1004,4 +1004,79 @@ paths:
                     status: failed
                     message: "Internal server error."
 
+
+  # [5] POST /devices/logout
+  /devices/logout:
+    post:
+      summary: Logs out a device by marking its status as "offline" in the database.
+      description: |
+        This endpoint allows a device to log out by providing an `authToken` and `did`. The request validates the authentication token and checks for the presence of a `did`. If the device is found, its status is updated to "offline". The system always returns HTTP 200 status to maintain client-side stability, but the operation result is indicated in the `status` field of the response.
+      tags:
+        - Authenticator Endpoints
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - authToken
+                - did
+              properties:
+                authToken:
+                  type: string
+                  description: The authentication token for verifying the session.
+                  example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+                did:
+                  type: string
+                  description: The Decentralized Identifier (DID) of the device.
+                  example: "did:example:12345"
+      responses:
+        '200':
+          description: The response will always be HTTP 200. The status of the logout operation is provided in the response body.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    description: The status of the logout operation.
+                    example: "success"
+                  message:
+                    type: string
+                    description: A human-readable message providing more context about the operation result.
+                    example: "Device logged out successfully."
+              examples:
+                Success:
+                  summary: Device logged out successfully
+                  value:
+                    status: success
+                    message: "Device logged out successfully."
+                MissingAuthToken:
+                  summary: Missing authentication token
+                  value:
+                    status: failed
+                    message: "Missing required authentication token."
+                MissingDid:
+                  summary: Missing device identifier (DID)
+                  value:
+                    status: failed
+                    message: "Missing required DID."
+                DeviceNotFound:
+                  summary: Device not found in the database
+                  value:
+                    status: failed
+                    message: "Device not found."
+                InternalServerError:
+                  summary: Internal server error during logout
+                  value:
+                    status: failed
+                    message: "Error handling logout."
+                FailedToUpdateDeviceStatus:
+                  summary: Failed to update device status
+                  value:
+                    status: failed
+                    message: "Failed to update device status."
+
   # Authenticator Endpoints #
