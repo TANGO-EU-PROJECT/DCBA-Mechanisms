@@ -978,19 +978,16 @@ paths:
                     sub: "user-123"
                     verifiableCredential:
                       id: "did:example:1234567890abcdef"
-                      credentialSubject:
-                        id: "user-123"
-                        name: "John Doe"
                 NoBearerToken:
                   summary: No bearer token provided
                   value:
                     status: failed
-                    message: "No authentication token provided."
+                    message: "Authentication token is missing."
                 InvalidTokenFormat:
                   summary: Invalid token format
                   value:
                     status: failed
-                    message: "Invalid authentication token format."
+                    message: "Authentication token is malformed. It should start with 'Bearer '."
                 TokenExpired:
                   summary: Token has expired
                   value:
@@ -1006,4 +1003,5 @@ paths:
                   value:
                     status: failed
                     message: "Internal server error."
+
   # Authenticator Endpoints #
