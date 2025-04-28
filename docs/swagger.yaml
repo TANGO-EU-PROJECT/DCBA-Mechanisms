@@ -904,7 +904,7 @@ paths:
                     status: failed
                     message: Failed to perform localization
                 FailedToPerformRiskAssessmentEngine:
-                  summary: Risk assessment execution failed.
+                  summary: Risk assessment execution failed
                   value:
                     status: failed
                     message: Failed to perform risk assessment.
