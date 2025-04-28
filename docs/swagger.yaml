@@ -935,7 +935,7 @@ paths:
         - in: header
           name: Authorization
           required: true
-          description: Bearer token to authenticate and validate.
+          description: Bearer token to authenticate.
           schema:
             type: string
             example: Bearer <your-jwt-token>
