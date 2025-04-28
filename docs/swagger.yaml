@@ -917,7 +917,7 @@ paths:
   # [4] GET /devices/auth-token-validation
   /devices/auth-token-validation:
     get:
-      summary: Validate the provided Bearer JWT authentication token to ensure the employee remains logged into the Authenticator Android Application.
+      summary: Validate the provided Bearer JWT authentication token to ensure the employee remains logged into the Authenticator Android Application
       description: |
         This endpoint validates the provided Bearer JWT token and checks if it is expired or malformed.
         Always returns HTTP 200 status regardless of the operation result, to maintain client-side stability. 
