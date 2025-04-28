@@ -1008,7 +1008,7 @@ paths:
   # [5] POST /devices/logout
   /devices/logout:
     post:
-      summary: Logs out a device by marking its status as "offline" in the database.
+      summary: Logs out a device by marking its status as "offline" in the database
       description: |
         This endpoint allows a device to log out by providing an `authToken` and `did`. The request validates the authentication token and checks for the presence of a `did`. If the device is found, its status is updated to "offline". The system always returns HTTP 200 status to maintain client-side stability, but the operation result is indicated in the `status` field of the response.
       tags:
@@ -1016,7 +1016,7 @@ paths:
       requestBody:
         required: true
         content:
-          application/json:
+          application/x-www-form-urlencoded:
             schema:
               type: object
               required:
