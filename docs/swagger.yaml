@@ -1002,7 +1002,7 @@ paths:
                   summary: Internal server error
                   value:
                     status: failed
-                    message: "Internal server error."
+                    message: "Internal server error while validating authentication token."
 
 
   # [5] POST /devices/logout
@@ -1054,7 +1054,7 @@ paths:
                     status: success
                     message: "Device logged out successfully."
                 MissingAuthToken:
-                  summary: Missing authentication token
+                  summary: Missing Authentication token
                   value:
                     status: failed
                     message: "Missing required authentication token."
@@ -1072,11 +1072,6 @@ paths:
                   summary: Internal server error during logout
                   value:
                     status: failed
-                    message: "Error handling logout."
-                FailedToUpdateDeviceStatus:
-                  summary: Failed to update device status
-                  value:
-                    status: failed
-                    message: "Failed to update device status."
+                    message: "Internal server error while handling logout."
 
   # Authenticator Endpoints #
