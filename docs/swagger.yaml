@@ -914,6 +914,92 @@ paths:
                     status: failed
                     message: Internal server error while processing session request.
 
-
-
+  # [4] GET /devices/auth-token-validation
+  /devices/auth-token-validation:
+    get:
+      summary: Validate the provided Bearer JWT authentication token to ensure the employee remains logged into the Authenticator Android Application.
+      description: |
+        This endpoint validates the provided Bearer JWT token and checks if it is expired or malformed.
+        Always returns HTTP 200 status regardless of the operation result, to maintain client-side stability. 
+        Check the `status` field in the response body for the operation result.
+      tags:
+        - Authenticator Endpoints
+      parameters:
+        - in: header
+          name: Authorization
+          required: true
+          description: Bearer token to authenticate and validate.
+          schema:
+            type: string
+            example: Bearer <your-jwt-token>
+      responses:
+        '200':
+          description: A successful response containing the status of token validation. Always returns 200 regardless of the operation result, to maintain client-side stability. Check the `status` field in the response body.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    description: The status of the token validation operation.
+                    example: success
+                  message:
+                    type: string
+                    description: A human-readable message providing more context.
+                    example: "Valid"
+                  did:
+                    type: string
+                    description: The DID (Decentralized Identifier) associated with the token.
+                    example: "did:example:1234567890abcdef"
+                  sub:
+                    type: string
+                    description: The subject associated with the token.
+                    example: "user-123"
+                  verifiableCredential:
+                    type: object
+                    description: The verifiable credential associated with the token.
+                    example:
+                      id: "did:example:1234567890abcdef"
+                      credentialSubject:
+                        id: "user-123"
+                        name: "John Doe"
+              examples:
+                Success:
+                  summary: Successful validation of token
+                  value:
+                    status: success
+                    message: Valid
+                    did: "did:example:1234567890abcdef"
+                    sub: "user-123"
+                    verifiableCredential:
+                      id: "did:example:1234567890abcdef"
+                      credentialSubject:
+                        id: "user-123"
+                        name: "John Doe"
+                NoBearerToken:
+                  summary: No bearer token provided
+                  value:
+                    status: failed
+                    message: "No authentication token provided."
+                InvalidTokenFormat:
+                  summary: Invalid token format
+                  value:
+                    status: failed
+                    message: "Invalid authentication token format."
+                TokenExpired:
+                  summary: Expired token
+                  value:
+                    status: failed
+                    message: "Authentication token expired."
+                DeviceNotFound:
+                  summary: Device not found in the database
+                  value:
+                    status: failed
+                    message: "Device not found."
+                InternalServerError:
+                  summary: Internal server error
+                  value:
+                    status: failed
+                    message: "Internal server error."
   # Authenticator Endpoints #
