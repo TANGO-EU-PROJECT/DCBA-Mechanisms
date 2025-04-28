@@ -7,23 +7,12 @@ info:
 
     The **Authenticator Endpoints** are exclusively utilized by the Android application, 'Authenticator', which is deployed on employees' devices. 
 
-    To interact with the **GET** endpoints of the **Service API Endpoints**, you must authorize first using a JWT Authorization token:
-    1. Click the **Authorize** button at the top-right of this page.
-    2. Paste your JWT token without the word "Bearer".
-    3. Click **Authorize** and close the dialog.
-    4. You can now make authorized requests using the **Try it out** button below.
+    To interact with the **GET** endpoints of the **Service API Endpoints**, you must authorize by providing a JWT Authorization token.
 
     **Note**: Currently, the server is not deployed but will be available in the future at the URL specified in the servers section. Therefore, the **Try it out** option is not available right now.
 
 servers:
   - url: https://tango-eu-project.github.io/DCBA-Mechanisms/
-
-components:
-  securitySchemes:
-    BearerAuth:
-      type: http
-      scheme: bearer
-      bearerFormat: JWT
 
 paths:
   # Service API Endpoints #
