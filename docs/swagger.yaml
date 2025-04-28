@@ -797,5 +797,98 @@ paths:
                     status: failed
                     message: Authentication failed.
 
+  # [3] POST /devices/post-logs
+  /devices/post-logs:
+    post:
+      summary: Accepts Android log captures from devices for processing or analysis.
+      description: |
+        This endpoint accepts logs from Android devices along with a session `accessToken` and device identifier (`did`) for authentication and validation. 
+        It performs multiple checks, including validation of log format, session token validity, expiration, and DID match. 
+        Upon successful validation, the log is queued for processing. 
+        Always returns HTTP 200 status. Check the `status` field in the response body for operation result.
+      tags:
+        - Device Endpoints
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                did:
+                  type: string
+                  description: The Decentralized Identifier (DID) of the Android device.
+                  example: "did:example:12345"
+                log:
+                  type: string
+                  description: The log data captured from the device.
+                  example: |
+                    {
+                      "timestamp": 1682145682,
+                      "level": "INFO",
+                      "message": "Device started successfully."
+                    }
+                accessToken:
+                  type: string
+                  description: The session token associated with the device authentication.
+                  example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+      responses:
+        '200':
+          description: A successful response containing the status of log processing. Always returns 200. Check the `status` field in the response body.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    description: The status of the log capture operation.
+                    example: "success"
+                  message:
+                    type: string
+                    description: A human-readable message providing more context.
+                    example: "Log successfully captured and queued for processing."
+              examples:
+                Success:
+                  summary: Successful log capture
+                  value:
+                    status: success
+                    message: Log successfully captured and queued for processing.
+                MissingLogData:
+                  summary: Log data missing
+                  value:
+                    status: failed
+                    message: Log data cannot be empty.
+                MalformedLogDetected:
+                  summary: Malformed log detected
+                  value:
+                    status: failed
+                    message: Malformed log detected
+                MissingAccessToken:
+                  summary: Access token missing
+                  value:
+                    status: failed
+                    message: Session token is required.
+                InvalidAccessTokenFormat:
+                  summary: Invalid access token format
+                  value:
+                    status: failed
+                    message: Invalid session token format.
+                AccessTokenExpired:
+                  summary: Access token expired
+                  value:
+                    status: failed
+                    message: Session token has expired.
+                AccessTokenDidMismatch:
+                  summary: Token DID mismatch
+                  value:
+                    status: failed
+                    message: Token did does not match the provided did.
+                MissingTimestampInLog:
+                  summary: Missing timestamp in log data
+                  value:
+                    status: failed
+                    message: Invalid log data. Missing timestamp.
+
 
   # Authenticator Endpoints #
