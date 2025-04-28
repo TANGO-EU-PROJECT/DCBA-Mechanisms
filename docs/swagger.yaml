@@ -954,7 +954,7 @@ paths:
                   message:
                     type: string
                     description: A human-readable message providing more context.
-                    example: "Valid"
+                    example: "valid"
                   did:
                     type: string
                     description: The DID (Decentralized Identifier) associated with the token.
@@ -968,15 +968,12 @@ paths:
                     description: The verifiable credential associated with the token.
                     example:
                       id: "did:example:1234567890abcdef"
-                      credentialSubject:
-                        id: "user-123"
-                        name: "John Doe"
               examples:
                 Success:
                   summary: Successful validation of token
                   value:
                     status: success
-                    message: Valid
+                    message: valid
                     did: "did:example:1234567890abcdef"
                     sub: "user-123"
                     verifiableCredential:
@@ -995,7 +992,7 @@ paths:
                     status: failed
                     message: "Invalid authentication token format."
                 TokenExpired:
-                  summary: Expired token
+                  summary: Token has expired
                   value:
                     status: failed
                     message: "Authentication token expired."
