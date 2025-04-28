@@ -873,6 +873,11 @@ paths:
                   value:
                     status: failed
                     message: Invalid access token format.
+                FailedToDecodeAccessToken:
+                  summary: Failed to decode access token
+                  value:
+                    status: failed
+                    message: Failed to decode access token.
                 AccessTokenExpired:
                   summary: Access token expired
                   value:
