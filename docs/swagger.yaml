@@ -802,16 +802,16 @@ paths:
     post:
       summary: Accepts Android log captures from devices for processing or analysis.
       description: |
-        This endpoint accepts logs from Android devices along with a session `accessToken` and device identifier (`did`) for authentication and validation. 
-        It performs multiple checks, including validation of log format, session token validity, expiration, and DID match. 
-        Upon successful validation, the log is queued for processing. 
+        This endpoint accepts logs from Android devices along with a session `accessToken` and device identifier (`did`) for authentication and validation.
+        It performs multiple checks, including validation of log format, session token validity, expiration, and DID match.
+        Upon successful validation, the log is queued for processing.
         Always returns HTTP 200 status. Check the `status` field in the response body for operation result.
       tags:
-        - Device Endpoints
+        - Authenticator Endpoints
       requestBody:
         required: true
         content:
-          application/json:
+          application/x-www-form-urlencoded:
             schema:
               type: object
               properties:
@@ -822,12 +822,7 @@ paths:
                 log:
                   type: string
                   description: The log data captured from the device.
-                  example: |
-                    {
-                      "timestamp": 1682145682,
-                      "level": "INFO",
-                      "message": "Device started successfully."
-                    }
+                  example: "11-22 13:11:21.537   799  1004 I WifiService: setWifiEnabled package=com.android.settings uid=1000 enable=true"
                 accessToken:
                   type: string
                   description: The session token associated with the device authentication.
@@ -883,12 +878,13 @@ paths:
                   summary: Token DID mismatch
                   value:
                     status: failed
-                    message: Token did does not match the provided did.
+                    message: Token did not match the provided did.
                 MissingTimestampInLog:
                   summary: Missing timestamp in log data
                   value:
                     status: failed
                     message: Invalid log data. Missing timestamp.
+
 
 
   # Authenticator Endpoints #
