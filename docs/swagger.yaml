@@ -979,12 +979,12 @@ paths:
                     verifiableCredential:
                       id: "did:example:1234567890abcdef"
                 NoBearerToken:
-                  summary: No bearer token provided
+                  summary: Missing Authentication header
                   value:
                     status: failed
                     message: "Authentication token is missing."
                 InvalidTokenFormat:
-                  summary: Invalid token format
+                  summary: Malformed Authentication header 
                   value:
                     status: failed
                     message: "Authentication token is malformed. It should start with 'Bearer '."
@@ -992,7 +992,7 @@ paths:
                   summary: Token has expired
                   value:
                     status: failed
-                    message: "Authentication token expired."
+                    message: "Authentication token has expired."
                 DeviceNotFound:
                   summary: Device not found in the database
                   value:
