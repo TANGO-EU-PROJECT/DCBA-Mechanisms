@@ -22,10 +22,16 @@ paths:
     get:
       tags:
         - Service API Endpoints  # Tag for service-facing endpoints
+      parameters:
+        - in: header
+          name: Authorization
+          required: true
+          description: Bearer token to get access.
+          schema:
+            type: string
+            example: Bearer <your-jwt-token>
       summary: Fetch all devices
       description: Retrieves all device entries from the database. This route requires a valid JWT Bearer token in the Authorization header to access.
-      security:
-        - BearerAuth: []  # Requires Bearer token in Authorization header
       responses:
         '200':
           description: Successfully fetched devices
