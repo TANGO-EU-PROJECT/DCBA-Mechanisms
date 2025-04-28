@@ -713,7 +713,7 @@ paths:
   # [2] GET /devices/auth-callback
   /devices/auth-callback:
     get:
-      summary: Handles the authentication callback after the employee scans the QR code with his/her privacy wallet.
+      summary: Handles the authentication callback after the employee scans the QR code with his/her privacy wallet
       description: This endpoint handles the authentication callback from the IPS verifier service. It receives the authorization `code` and `state`, exchanges the code for an access token, and processes the token to verify the employee and return the necessary information. Upon successful authentication, the backend server will notify the corresponding device via WebSocket. Always returns HTTP 200 status regardless of the operation result, to maintain client-side stability. Check the `status` field in the response body for the operation result. 
       tags:
         - Authenticator Endpoints
@@ -800,7 +800,7 @@ paths:
   # [3] POST /devices/post-logs
   /devices/post-logs:
     post:
-      summary: Accepts Android Logs from devices for risk assessment or localization.
+      summary: Accepts Android Logs from devices for risk assessment or localization
       description: |
         This endpoint accepts logs from Android devices along with a session `accessToken` and device identifier (`did`) for authentication and validation.
         It performs multiple checks, including validation of log format, session token validity, expiration, and DID match.
