@@ -800,7 +800,7 @@ paths:
   # [3] POST /devices/post-logs
   /devices/post-logs:
     post:
-      summary: Accepts Android log captures from devices for processing or analysis.
+      summary: Accepts Android Logs from devices for risk assessment or localization.
       description: |
         This endpoint accepts logs from Android devices along with a session `accessToken` and device identifier (`did`) for authentication and validation.
         It performs multiple checks, including validation of log format, session token validity, expiration, and DID match.
@@ -814,6 +814,10 @@ paths:
           application/x-www-form-urlencoded:
             schema:
               type: object
+              required:
+                - did
+                - log
+                - accessToken
               properties:
                 did:
                   type: string
