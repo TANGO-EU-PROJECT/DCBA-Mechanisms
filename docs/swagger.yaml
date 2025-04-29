@@ -809,7 +809,7 @@ paths:
     post:
       summary: Accepts Android Logs from devices for risk assessment or localization
       description: |
-        This endpoint accepts `logs` from Android devices along with a session `accessToken` and device identifier (`did`) for authentication and validation.
+        This endpoint accepts `logs` from Android devices along with a session `authToken` and device identifier (`did`) for authentication and validation.
         It performs multiple checks, including validation of log format, session token validity, expiration, and DID match.
         Upon successful validation, the log is queued for processing.
         Always returns HTTP 200 status regardless of the operation result, to maintain client-side stability.. Check the `status` field in the response body for operation result.
@@ -824,7 +824,7 @@ paths:
               required:
                 - did
                 - log
-                - accessToken
+                - authToken
               properties:
                 did:
                   type: string
@@ -834,9 +834,9 @@ paths:
                   type: string
                   description: The log data captured from the device.
                   example: "11-22 13:11:21.537   799  1004 I WifiService: setWifiEnabled package=com.android.settings uid=1000 enable=true"
-                accessToken:
+                authToken:
                   type: string
-                  description: The session token associated with the device authentication.
+                  description: The authentication token associated with the device session.
                   example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
       responses:
         '200':
