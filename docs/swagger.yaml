@@ -699,22 +699,22 @@ paths:
                   summary: Error reading the certificate file
                   value:
                     status: failed
-                    message: Error reading the certificate, proceeding with limited access.
+                    message: Error reading the certificate.
                 QrCodeNotFound:
                   summary: QR code not found
                   value:
                     status: failed
-                    message: QR code not found, but session continues without it.
+                    message: QR code not found.
                 ExtractQrCodeError:
-                  summary: Error extracting QR code
+                  summary: Failed to extract QR code
                   value:
                     status: failed
-                    message: Failed to extract QR code, but session is still active.
+                    message: Failed to extract QR code.
                 SessionHandlingError:
                   summary: Error handling session request
                   value:
                     status: failed
-                    message: Error handling session request, but proceeding with the process.
+                    message: Error handling session request.
 
 
   # [2] GET /devices/auth-callback
