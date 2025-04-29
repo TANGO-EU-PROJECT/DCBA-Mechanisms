@@ -653,7 +653,7 @@ paths:
                 log_file_uri:
                   type: string
                   description: Log file URI, where offline logs will be appended for future transmission.
-                  example: https://dcbaauthenticator.com/logfile.log
+                  example: file:///data/user/0/com.dcbaauthenticator/files/46299a77c27b0d4c/authenticator_logs.txt
       responses:
         '200':
           description: Always returns 200. Check the `status` field in the response body.
@@ -679,11 +679,11 @@ paths:
                   value:
                     status: success
                     message: QR Code generated successfully.
-                    deviceAuthQRCode: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAUA..."
+                    deviceAuthQRCode: "data:data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAQAAAAEAAQMAAABmvDolAAAABlBMVEX///8AAABVwtN+AAAExElEQVR42uyZMa7DKhOFD6KgCxuIzDZSWPKWXLqDzqW3ZIki2wBlA6SjsDi/xknuu32uXfzvUX9Fwsw5cwbjv/PvOopk8KW76nuFaj18Ke4ROReS60lAgg7Wqq03JBNuAPOD1ZQEfRaQGefF5g1mtk9uJnjbXAy+ZMY/BFiSI6tVDQMXlZOu09nAQrfp1ZcneQ+e7apJnAgk6Jm2u2pWa+XX4QL0puJXsY4GSM6L7a79bSrPHO/zcumu/TT9btrvADkmsF0HVjDpirF114Esv+R3MKAyGUbmx2aqtRQhwj3IWt6/8QQAnV4nXzroamzpAF9EgT7Y5La/ARS3oYLusQ4zbOuHeWnYLwUY1nOA/UcCcOtQLdS638bW783Y4xxAJR3ngKS3G17yL3BpYGVzb+kdD2SuJkClgbTPpFeMF5f0HNDUp2G+BOBWXT0FmOUGhEuOwVuVXrU4HlDc+mmkzLFqm1rlHtQjVtifwXo4gA5DHW3nNjOXy+4FTz5iNexUXP8GQA+/iOZuE4qLqy+KG0ywzG+TOxxQbeBcLFy81/KSXlGp93IdLys+AeCGSX6YHLjNiN9eX5obTgIAHYMFXBQXULH6RXF32p9ifQuoNmx+sdwwBKuaXqeRDXqebUOPcwBgYADStTeB0hym7LWozEmv5wAqrz1GNAx34tINFdin+sT8LtbXALpeV6DpdSCly0x5vhJpczwLwLBKHn5sN5Sm1tuE9nLanN4WczygYgxeXO7OotqwTqNsB/Ns0b0u6gSg62FCyQmmFrEgvKI7rHs3zNeAypEsBa+5Sa6eT6ahevLTMMcD5GoWqx7i9jJYTWmdeH5R7bMMHg/EOAeK9Kq1Od65SE+GqeT8dtqvAckPYtyRs1Xv6+dmWD5OewYQyYUJwz1IKr7PEmh0FSnwJADo+8mWpGWeF0mp47NBYnPXvZ32e0DHags3wNNKDPTP/Nimn5Y7AVBNb2YBk9h4A8wcnvsF0J0HJC2LPhxXYy9uNXW8yJCh/bT9CUCmGFu79vAivYpRMnk1FAX+CbA3/MJuHyhsA6u9qAdn2tz6kwBFSvE7vd6A1u2vSYoxAB+nPR6Qpqxg51gnFrfBLxLSqrGK8W8AlVdMI5KOd2Kv8Cg7r5lL9ynW8UAbYh2JqxaHybHCS8sFb5k/sfl4oO9hIT0pd7O/qu2p2PK98x4PQK1DsMjbrnUntguV4FlyflXze6Ab1skzPyhpqQ336lVycQ6lU+83kOMBt+kwMm/9zdh9Owiy2gcwvZagc4Dec5f/LLW4TVaWIBPK24G+B/b3yWCb5j3sryikYtKc4fJ2FiB7j7UdJCA95Z+Pb+BHeocDYnMV4j038CL7plV506ylvV+0jgfE7EwQz7sHyFALsNx0mMo/A+drQFrONh0r9phEqvyInMmX9E4A9nda2s5tMPtg9YGUFinq8wZyOLB/hRltfsQVfOaXBW39NJX86zPNd0CCnouVTOQLk77L1pl6TOUTkU8AdunRPUT4eypenky6Tv9sSecARcLCfS7kBl/U/jpf2q+PTScAAcnFu3DrMC8F136adkf4G+D1TU2WPForq1Ap3VW6MJ0HkJxl69JkgZIctUuPEq1OAv47/z/nfwEAAP//XAg6x/+2DJMAAAAASUVORK5CYII="
                     sessionRequest:
                       device_id: "b7f2de59c8e1"
                       qr_scanner_state_request: "a6f3fn529i2a0"
-                      log_file_uri: "https://dcbaauthenticator.com/logfile.log"
+                      log_file_uri: "file:///data/user/0/com.dcbaauthenticator/files/46299a77c27b0d4c/authenticator_logs.txt"
                       createdAt: "2025-04-26T12:34:56.789Z"
                 MissingDeviceID:
                   summary: Missing device_id
@@ -871,30 +871,30 @@ paths:
                     status: failed
                     message: Malformed log detected.
                 MissingAccessToken:
-                  summary: Access token missing
+                  summary: Authentication token missing
                   value:
                     status: failed
-                    message: Access token is required.
+                    message: Authentication token is required.
                 InvalidAccessTokenFormat:
-                  summary: Invalid access token format
+                  summary: Invalid authentication token format
                   value:
                     status: failed
-                    message: Invalid access token format.
+                    message: Invalid authentication token format.
                 FailedToDecodeAccessToken:
-                  summary: Failed to decode access token
+                  summary: Failed to decode authentication token
                   value:
                     status: failed
-                    message: Failed to decode access token.
-                AccessTokenExpired:
-                  summary: Access token expired
+                    message: Failed to decode authentication token.
+                AuthTokenExpired:
+                  summary: Authentication token expired
                   value:
                     status: failed
-                    message: Access token has expired.
-                AccessTokenDidMismatch:
-                  summary: Token DID mismatch
+                    message: Authentication token has expired.
+                AuthTokenDidMismatch:
+                  summary: Authentication token DID mismatch
                   value:
                     status: failed
-                    message: Token did not match the provided did.
+                    message: Authentication token did does not match the provided did.
                 MissingTimestampInLog:
                   summary: Missing timestamp in log data
                   value:
