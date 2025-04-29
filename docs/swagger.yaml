@@ -95,12 +95,12 @@ paths:
                     type: string
               examples:
                 ExpiredToken:
-                  summary: Token has expired
+                  summary: Authorization token has expired
                   value:
                     status: "failed"
                     message: "Authorization token has expired."
                 InvalidToken:
-                  summary: Token is invalid
+                  summary: Authorization token is invalid
                   value:
                     status: "failed"
                     message: "Invalid Authorization token."
@@ -199,12 +199,12 @@ paths:
                     type: string
               examples:
                 ExpiredToken:
-                  summary: Token has expired
+                  summary: Authorization token has expired
                   value:
                     status: "failed"
                     message: "Authorization token has expired."
                 InvalidToken:
-                  summary: Token is invalid
+                  summary: Authorization token is invalid
                   value:
                     status: "failed"
                     message: "Invalid Authorization token."
@@ -304,12 +304,12 @@ paths:
                     type: string
               examples:
                 ExpiredToken:
-                  summary: Token has expired
+                  summary: Authorization token has expired
                   value:
                     status: "failed"
                     message: "Authorization token has expired."
                 InvalidToken:
-                  summary: Token is invalid
+                  summary: Authorization token is invalid
                   value:
                     status: "failed"
                     message: "Invalid Authorization token."
@@ -410,12 +410,12 @@ paths:
                     type: string
               examples:
                 TokenExpired:
-                  summary: Token has expired
+                  summary: Authorization token has expired
                   value:
                     status: "failed"
                     message: "Authorization token has expired."
                 InvalidToken:
-                  summary: Token is invalid
+                  summary: Authorization token is invalid
                   value:
                     status: "failed"
                     message: "Invalid authorization token."
@@ -536,12 +536,12 @@ paths:
                     example: "Authorization error message"
               examples:
                 TokenExpired:
-                  summary: Token has expired
+                  summary: Authorization token has expired
                   value:
                     status: "failed"
                     message: "Authorization token has expired."
                 InvalidToken:
-                  summary: Token is invalid
+                  summary: Authorization token is invalid
                   value:
                     status: "failed"
                     message: "Invalid authorization token."
@@ -909,7 +909,7 @@ paths:
                   summary: Localization execution failed
                   value:
                     status: failed
-                    message: Failed to perform localization
+                    message: Failed to perform localization.
                 FailedToPerformRiskAssessmentEngine:
                   summary: Risk assessment execution failed
                   value:
@@ -989,7 +989,7 @@ paths:
                     status: failed
                     message: "Authentication token is malformed. It should start with 'Bearer '."
                 TokenExpired:
-                  summary: Token has expired
+                  summary: Authentication token has expired
                   value:
                     status: failed
                     message: "Authentication token has expired."
