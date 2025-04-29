@@ -752,7 +752,7 @@ paths:
                   message:
                     type: string
                     description: A human-readable message providing more context.
-                    example: "Authentication successful!"
+                    example: "Authentication successful."
                   decodedPayload:
                     type: object
                     description: The decoded JWT payload containing user information.
@@ -773,11 +773,11 @@ paths:
                   summary: Successful authentication callback
                   value:
                     status: success
-                    message: Authentication successful!
+                    message: Authentication successful.
                     decodedPayload:
-                      sub: "user123"
+                      sub: "string"
                       verifiableCredential:
-                        id: "did:example:12345"
+                        id: "string"
                 MissingParameters:
                   summary: Missing required parameters
                   value:
@@ -787,17 +787,17 @@ paths:
                   summary: Error reading the certificate file
                   value:
                     status: failed
-                    message: Failed to load certificate.
+                    message: Error reading the certificate.
                 TokenNotReceived:
-                  summary: Failed to receive access token
+                  summary: Failed to receive authentication token
                   value:
                     status: failed
-                    message: Access token not received.
+                    message: Authentication token not received.
                 InvalidTokenPayload:
-                  summary: Invalid token payload
+                  summary: Invalid authentication token payload
                   value:
                     status: failed
-                    message: Invalid token payload.
+                    message: Invalid authentication token payload.
                 AuthenticationFailed:
                   summary: Authentication failed
                   value:
