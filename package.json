@@ -1,0 +1,36 @@
+{
+  "comments": {
+    "dev": "This script is for development; uses nodemon to watch/monitor for file changes and automatically to start the Server whenever changes been made.",
+    "prod": "This script is for production; runs the server directly with Node.js."
+  },
+  "dependencies": {
+    "@datastructures-js/priority-queue": "^6.3.2",
+    "@influxdata/influxdb-client": "^1.35.0",
+    "@influxdata/influxdb-client-apis": "^1.35.0",
+    "@influxdata/influxdb3-client": "^0.12.0",
+    "async-mutex": "^0.5.0",
+    "axios": "^1.8.2",
+    "bcrypt": "^5.1.1",
+    "cheerio": "^1.0.0",
+    "cookie-parser": "^1.4.7",
+    "cors": "^2.8.5",
+    "csv-parser": "^3.2.0",
+    "dotenv": "^16.4.7",
+    "express": "^4.21.2",
+    "he": "^1.2.0",
+    "influx": "^5.9.3",
+    "jsdom": "^26.0.0",
+    "jsonwebtoken": "^9.0.2",
+    "moment": "^2.30.1",
+    "mongoose": "^8.9.3",
+    "morgan": "^1.10.0",
+    "puppeteer": "^24.4.0",
+    "qrcode": "^1.5.4",
+    "qs": "^6.14.0",
+    "ws": "^8.18.1"
+  },
+  "scripts": {
+    "dev": "nodemon --ignore SERVER.js",
+    "prod": "export NODE_ENV=PROD && node SERVER.js"
+  }
+}

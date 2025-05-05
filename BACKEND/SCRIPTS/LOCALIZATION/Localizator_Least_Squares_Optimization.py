@@ -1,5 +1,5 @@
 # Localization with LEAST SQUARES OPTIMIZATION
-
+# python3 "scripts/LOCALIZATION/Localizator_Least_Squares.py" "05-23 14:05:13.878  3415  3415 D WifiNetworkSelectorN: SSID: DIRECT-CJLAPTOP-63HL8KJOmsNX, BSSID: ea:f3:bc:bd:4a:63, Level: -49, SSID: ESPURNA-374E56, BSSID: de:4f:22:37:4e:56, Level: -51, SSID: nitlab, BSSID: c0:74:ad:9d:de:f6, Level: -52, SSID: nitlab, BSSID: c0:74:ad:9d:de:f5, Level: -54, SSID: nitlab-10.64.44.0/23, BSSID: b8:27:eb:73:d5:cc, Level: -63, SSID: nitlab, BSSID: 50:91:e3:11:37:50, Level: -66, SSID: U-WASH AP, BSSID: 9c:53:22:50:19:2a, Level: -75, SSID: Pet Stories, BSSID: 00:1d:1c:f5:81:37, Level: -78, SSID: dragino-27b70c, BSSID: aa:40:41:27:b7:0c, Level: -78, SSID: AUTOTERZIDIS, BSSID: 28:77:77:e2:45:c0, Level: -79, SSID: DIRECT-BF-HP DeskJet 5200 series, BSSID: 12:e7:c6:d4:6d:bf, Level: -79, SSID: DIRECT-38-HP PageWide 377dw MFP, BSSID: fe:3f:db:cf:8c:38, Level: -79, SSID: EYAGGELOU ELASTIKA, BSSID: a0:95:7f:ab:a6:31, Level: -82, SSID: tameiaki, BSSID: 62:95:7f:ab:a6:32, Level: -83, SSID: None, BSSID: None, Level: None " "sterlan"
 import numpy as np
 import sys
 import os
@@ -7,10 +7,14 @@ import csv
 import re
 import matplotlib.pyplot as plt
 from scipy.optimize import least_squares
-
+import json
 # Local coordinates. This is the reference point.
-lat0 = 39.36582263479573
-lon0 = 22.92377558170571
+#lat0 = 39.36582263479573
+#lon0 = 22.92377558170571
+
+# Manual retrieving the coordinates from Google Maps(the center of the building)
+lat0 = 39.365858279847544
+lon0 = 22.923886333496505
 
 # ANSI escape code for red color
 RED = "\033[91m"
@@ -167,17 +171,26 @@ def trilaterate(distances):
     return x, y
 
 
-def WiFiLocalization(log_data, user, dir):
+def WiFiLocalization(log_data, deviceDid, heatmap):
     """
-    Perform Wi-Fi localization based on a predefined map in WiFi_MAP_Trilateration.csv.
-    
+    Perform Wi-Fi localization using a predefined heatmap.
+
     Parameters:
     - log_data: String containing Wi-Fi log data
-    - user: Logged in user
-    - dir: Directory path where WiFi_MAP_Trilateration.csv is located
+    - deviceDid: Logged-in deviceDid
+    - heatmap: List of dictionaries containing AP data (SSID, BSSID, latitude, longitude, A)
     """
-    # Define the path to the WiFi_MAP.csv file
-    wifi_map_file = os.path.join(dir, 'WiFi_MAP_Trilateration.csv')
+    # Ensure heatmap is a list of dictionaries
+    if isinstance(heatmap, str):
+        try:
+            heatmap = json.loads(heatmap)  # Parse JSON string into a Python object
+        except json.JSONDecodeError as e:
+            print(f"Error parsing heatmap: {e}")
+            return None
+
+    if not isinstance(heatmap, list):
+        print(f"Invalid heatmap format for deviceDid {deviceDid}: Expected a list of dictionaries.")
+        return None
 
     # Extract BSSIDs and RSSI levels from log data
     matches = WiFi_BSSID_RSSI_extractor(log_data)
@@ -185,39 +198,49 @@ def WiFiLocalization(log_data, user, dir):
     # List to store coordinates and RSSI values
     coordinates_and_rssi = []
 
-    # Check if the WiFi_MAP.csv file exists
-    if os.path.exists(wifi_map_file):
-        # Open the WiFi_MAP.csv file for reading with DictReader
-        with open(wifi_map_file, 'r', newline='') as f:
-            reader = csv.DictReader(f)
-            # Iterate over each row in the CSV file
-            for row in reader:
-                # Extract BSSID from the row dictionary
-                BSSID = row['BSSID']
-                # Check if any BSSIDs from log data match with the BSSIDs in the CSV file
-                for match in matches:
-                    ssid, bssid, rssi = match
-                    if bssid == BSSID:  # Check if BSSID is in log data matches
-                        # Retrieve data from the CSV row
-                        latitude = float(row['latitude'])
-                        longitude = float(row['longitude'])
-                        A = float(row['A'])
-                        # Append coordinates and RSSI to the list
-                        APsCartesianCoordinateX, APsCartesianCoordinateY = lat_lon_to_local_cartesian(latitude, longitude, lat0, lon0)
-                        coordinates_and_rssi.append((ssid, bssid, APsCartesianCoordinateX, APsCartesianCoordinateY, rssi, A))
-               
-        # Convert RSSI values to distances
-        distances = [(ssid, bssid, APsCartesianCoordinateX, APsCartesianCoordinateY, rssi_to_distance(int(rssi), int(A))) for ssid, bssid, APsCartesianCoordinateX, APsCartesianCoordinateY, rssi, A in coordinates_and_rssi]
-        
-        # Perform trilateration
-        estimated_location = trilaterate(distances)
-        
-        # Convert estimated Cartesian coordinates to latitude and longitude
-        lat_est, lon_est = cartesian_to_lat_lon(estimated_location[0], estimated_location[1], lat0, lon0)
-        print(f"{RED}{user}: estimated Location (Latitude, Longitude) = {lat_est},{lon_est}{RESET}")
+    for ap in heatmap:
+        if isinstance(ap, dict):  # Ensure ap is a dictionary
+            BSSID = ap.get('AP_BSSID')
+            latitude = float(ap.get('latitude', 0))  # Default to 0 if missing
+            longitude = float(ap.get('longitude', 0))  # Default to 0 if missing
+            A = float(ap.get('A', 0))  # Default to 0 if missing
 
-    else:
-        print("Localization Trilateration Map is not defined")
+            # Check if any BSSIDs from log data match with the heatmap BSSID
+            for match in matches:
+                ssid, bssid, rssi = match
+                if bssid == BSSID:  
+                    # Convert latitude & longitude to local Cartesian coordinates
+                    APsCartesianCoordinateX, APsCartesianCoordinateY = lat_lon_to_local_cartesian(latitude, longitude, lat0, lon0)
+                    coordinates_and_rssi.append((ssid, bssid, APsCartesianCoordinateX, APsCartesianCoordinateY, rssi, A))
+
+    if not coordinates_and_rssi:
+        print(f"{RED}[----- deviceDid: {deviceDid}, No matching APs found in heatmap. Localization not possible. -----]{RESET}")
+        return None
+
+    # Convert RSSI values to distances
+    distances = [
+        (ssid, bssid, APsCartesianCoordinateX, APsCartesianCoordinateY, rssi_to_distance(int(rssi), int(A))) 
+        for ssid, bssid, APsCartesianCoordinateX, APsCartesianCoordinateY, rssi, A in coordinates_and_rssi
+    ]
+
+    # Perform trilateration
+    estimated_location = trilaterate(distances)
+
+    # Convert estimated Cartesian coordinates to latitude and longitude
+    lat_est, lon_est = cartesian_to_lat_lon(estimated_location[0], estimated_location[1], lat0, lon0)
+    # Write the result to stdout (the result will be captured in JS)
+    # Assume you have variables for lat_est and lon_est (latitude and longitude)
+    outputResult = {
+        "deviceDid": deviceDid,
+        "Estimated Location (Latitude)": lat_est,
+        "Estimated Location (Longitude)": lon_est
+    }
+
+    # Output only the valid JSON object
+    sys.stdout.write(json.dumps(outputResult))
+
+    return lat_est, lon_est  # Return estimated location
+
             
 
 ############################################ WIFI MAP LOCALIZATION ############################################
@@ -229,14 +252,22 @@ def main():
     
     # Get the log data from command line arguments
     log_data = sys.argv[1]
-    # Get the logged in user
-    user = sys.argv[2]
-    dir = f'ANDROID LOGS/{user}'
+    # Get the logged in deviceDid
+    deviceDid = sys.argv[2]
+    # Get the deviceDid heatmap
+    heatmap = sys.argv[3]
+
+    # Now parse the JSON string 
+    try:
+        heatmap = json.loads(heatmap)  # Convert string to Python object (list of dictionaries)
+    except json.JSONDecodeError as e:
+        print(f"Error parsing heatmap: {e}")
+        return
 
     # Need to declare if the RSSI values are Wifi or BLe 
-    if ("WifiNetworkSelectorN" in log_data):
+    if ("WifiNetworkScannerN" in log_data):
         # Wi-Fi RSSI VALUES
-        WiFiLocalization(log_data, user, dir)
+        WiFiLocalization(log_data, deviceDid, heatmap)
 
 # Entry point of the script
 if __name__ == "__main__":
