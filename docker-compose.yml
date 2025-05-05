@@ -1,0 +1,64 @@
+version: '3.8'
+services:
+  # **************************************** WORKERS DATABASE (MongoDB) **************************************** #
+  dcba_mongo_db:
+    image: mongo:latest
+    container_name: ${MONGO_CONTAINER}
+    ports:
+      - "${MONGO_INITDB_EXTERNAL_PORT}:${MONGO_INITDB_INTERNAL_PORT}" # Maps MongoDB to localhost
+    volumes:
+      - mongo_data:/data/db/workers # Persistent data storage
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=${MONGO_INITDB_ADMIN_USERNAME} 
+      - MONGO_INITDB_ROOT_PASSWORD=${MONGO_INITDB_ADMIN_PASSWORD}     
+      - MONGO_INITDB_DATABASE=${MONGO_INITDB_DATABASE}    
+    restart: always
+    env_file: 
+      - .env
+
+
+  # **************************************** ANDROID LOGS DATABASE (InfluxDB) **************************************** #
+  dcba_influx_db:
+    image: influxdb:latest
+    container_name: ${INFLUX_CONTAINER}
+    ports:
+      - "${INFLUXDB_EXTERNAL_PORT}:${INFLUXDB_INTERNAL_PORT}" # Maps InfluxDB to localhost
+    volumes:
+      - influx_data:/var/lib/influxdb  # Persistent storage for InfluxDB data
+    environment:
+      - DOCKER_INFLUXDB_INIT_MODE=setup
+      - DOCKER_INFLUXDB_INIT_USERNAME=${INFLUX_INITDB_ADMIN_USERNAME} # Specifies the ADMIN username during the initialization
+      - DOCKER_INFLUXDB_INIT_PASSWORD=${INFLUX_INITDB_ADMIN_PASSWORD} # Specifies the ADMIN password during the initialization
+      - DOCKER_INFLUXDB_INIT_ORG=${INFLUX_INITDB_ORG}                 # Specifies the organization(org) during the initialization
+      - DOCKER_INFLUXDB_INIT_BUCKET=${INFLUX_INITDB_BUCKET}           # Specifies the bucket during the initialization
+      - DOCKER_INFLUXDB_INIT_ADMIN_TOKEN=${INFLUX_INITDB_AUTH_TOKEN}  # Specifies the AUTH_TOKEN during the initialization
+    restart: always
+    env_file:
+      - .env
+
+
+    
+
+  # **************************************** BACKEND **************************************** #
+  dcba_backend:
+    build:
+      context: .                      # Use the root directory as the build context
+      dockerfile: BACKEND/Dockerfile  # Point to the Dockerfile inside the BACKEND directory
+    container_name: ${BACKEND_CONTAINER}
+    image: dcba-backend:latest
+    ports:
+      - "${SERVER_EXTERNAL_BIND_PORT}:${SERVER_INTERNAL_BIND_PORT}" # Maps Backend to localhost
+    depends_on:
+      - dcba_mongo_db  # Mongo container starts before the backend container
+      - dcba_influx_db # Influx container starts before the backend container
+    environment:
+      - MONGO_DB_URI=${MONGO_DB_URI}
+      - INFLUX_DB_URI=${INFLUX_DB_URI}
+    restart: always
+    env_file:
+      - .env
+
+volumes:
+  mongo_data:  # Volume for MongoDB
+  influx_data: # Volume for InfluxDB
+

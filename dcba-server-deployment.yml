@@ -1,6 +1,6 @@
 ---
 apiVersion: apps/v1
-kind: Deployment # Indicates the type of resource : a Deployment.
+kind: Deployment
 metadata:
   name: dcba-server
   namespace: tango-development
@@ -8,7 +8,7 @@ metadata:
     app: dcba-server
     type: back-end
 spec:
-  replicas: 2 # Defines how many identical pods to run. Set to 2, if the first POD receives death, the second one will be enabled and active!
+  replicas: 2  # Defines how many identical pods to run.
   selector:
     matchLabels:
       type: back-end
@@ -21,15 +21,39 @@ spec:
       imagePullSecrets:
       - name: regcred
       containers:
-      - name:  dcba-server
-        image:  harbor.tango.rid-intrasoft.eu/dcba/dcba_server_image:latest_dev
+      - name: dcba-server
+        image: harbor.tango.rid-intrasoft.eu/dcba/dcba_server_image:latest_dev
         imagePullPolicy: Always
         ports:
-        # This is the container-port from where the dcba server is accessible
-        - containerPort: 3000 
+        - containerPort: ${SERVER_INTERNAL_BIND_PORT}   # Port the container will expose
+        env:
+        - name: MONGO_DB_URI
+          value: "mongodb://dcba_mongo_db:${MONGO_INITDB_EXTERNAL_PORT}"  # MongoDB service URI
+        - name: INFLUX_DB_URI
+          value: "http://dcba_influx_db:${INFLUXDB_EXTERNAL_PORT}"  # InfluxDB service URI
+        - name: MONGO_INITDB_ROOT_USERNAME
+          valueFrom:
+            secretKeyRef:
+              name: mongo-secrets
+              key: root-username
+        - name: MONGO_INITDB_ROOT_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: mongo-secrets
+              key: root-password
+        - name: INFLUX_INITDB_ADMIN_USERNAME
+          valueFrom:
+            secretKeyRef:
+              name: influx-secrets
+              key: admin-username
+        - name: INFLUX_INITDB_ADMIN_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: influx-secrets
+              key: admin-password
 ---
 apiVersion: v1
-kind: Service 
+kind: Service
 metadata:
   name: dcba-server
   namespace: tango-development
@@ -38,7 +62,7 @@ metadata:
 spec:
   selector:
     app: dcba-server
-  type: NodePort
+  type: NodePort  # Service accessible via NodePort
   ports:
-  - port: 80          # The port that the Service will expose externally 
-    targetPort: 3000  # The port on the container that the Service will forward traffic to 
+  - port: ${SERVER_EXTERNAL_BIND_PORT}        # The port that the Service will expose externally
+    targetPort: ${SERVER_INTERNAL_BIND_PORT}  # The port on the container to forward traffic to

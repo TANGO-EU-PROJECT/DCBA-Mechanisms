@@ -1,2 +1,9 @@
-.vscode
-node_modules
+# Node.js dependencies
+/node_modules/
+
+# IDE configurations
+/.vscode/
+
+# npm package-lock file
+package-lock.json
+

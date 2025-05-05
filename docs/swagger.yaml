@@ -1,0 +1,1077 @@
+openapi: 3.0.0
+info:
+  title: Devices Continuous Behavioural Authentication (DCBA) Mechanisms API
+  version: 1.0.0
+  description: |
+    API documentation for the DCBA Services.
+
+    The **Authenticator Endpoints** are exclusively utilized by the Android application, 'Authenticator', which is deployed on employees' devices. 
+
+    To interact with the **GET** endpoints of the **Service API Endpoints**, you must authorize by providing a JWT Authorization token.
+
+    **Note**: Currently, the server is not deployed but will be available in the future at the URL specified in the servers section. Therefore, the **Try it out** option is not available right now.
+
+servers:
+  - url: https://tango-eu-project.github.io/DCBA-Mechanisms/
+
+paths:
+  # Service API Endpoints #
+
+  # [1] GET /devices
+  /devices:
+    get:
+      tags:
+        - Service API Endpoints  # Tag for service-facing endpoints
+      parameters:
+        - in: header
+          name: Authorization
+          required: true
+          description: Bearer token to get access.
+          schema:
+            type: string
+            example: Bearer <your-jwt-token>
+      summary: Fetch all devices
+      description: Retrieves all device entries from the database. This route requires a valid JWT Bearer token in the Authorization header to access.
+      responses:
+        '200':
+          description: Successfully fetched devices
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: "success"
+                  message:
+                    type: string
+                    example: "Devices fetched successfully."
+                  data:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        device_id:
+                          type: string
+                          example: "a4e4cf21ab7e"
+                        did:
+                          type: string
+                          example: "did:example:123456789abcdefghi"
+                        sub:
+                          type: string
+                          example: "user@example.com"
+        '401':
+          description: Authorization token is missing or malformed
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                  message:
+                    type: string
+              examples:
+                MissingAuthorizationToken:
+                  summary: Missing Authorization header
+                  value:
+                    status: "failed"
+                    message: "Authorization token is missing."
+                MalformedAuthorizationToken:
+                  summary: Malformed Authorization header
+                  value:
+                    status: "failed"
+                    message: "Authorization token is malformed. It should start with 'Bearer '."
+        '403':
+          description: Unauthorized - Authorization token is invalid or expired
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                  message:
+                    type: string
+              examples:
+                ExpiredToken:
+                  summary: Authorization token has expired
+                  value:
+                    status: "failed"
+                    message: "Authorization token has expired."
+                InvalidToken:
+                  summary: Authorization token is invalid
+                  value:
+                    status: "failed"
+                    message: "Invalid Authorization token."
+        '500':
+          description: Internal server error while fetching devices
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: "failed"
+                  message:
+                    type: string
+                    example: "Error fetching device data."
+
+
+
+
+  # [2] GET /devices/online-shifts  
+  /devices/online-shifts:
+    get:
+      tags:
+        - Service API Endpoints  # Tag for service-facing endpoints
+      parameters:
+        - in: header
+          name: Authorization
+          required: true
+          description: Bearer token to get access.
+          schema:
+            type: string
+            example: Bearer <your-jwt-token>
+      summary: Fetch online devices
+      description: Retrieves devices that are currently online. This route requires a valid JWT Bearer token in the Authorization header to access.
+      responses:
+        '200':
+          description: Successfully fetched online devices
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: "success"
+                  message:
+                    type: string
+                    example: "Fetched online devices successfully."
+                  data:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        device_id:
+                          type: string
+                          example: "a4e4cf21ab7e"
+                        did:
+                          type: string
+                          example: "did:example:123456789abcdefghi"
+                        sub:
+                          type: string
+                          example: "user@example.com"
+        '401':
+          description: Authorization token is missing or malformed
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                  message:
+                    type: string
+              examples:
+                MissingAuthorizationToken:
+                  summary: Missing Authorization header
+                  value:
+                    status: "failed"
+                    message: "Authorization token is missing."
+                MalformedAuthorizationToken:
+                  summary: Malformed Authorization header
+                  value:
+                    status: "failed"
+                    message: "Authorization token is malformed. It should start with 'Bearer '."
+        '403':
+          description: Unauthorized - Authorization token is invalid or expired
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                  message:
+                    type: string
+              examples:
+                ExpiredToken:
+                  summary: Authorization token has expired
+                  value:
+                    status: "failed"
+                    message: "Authorization token has expired."
+                InvalidToken:
+                  summary: Authorization token is invalid
+                  value:
+                    status: "failed"
+                    message: "Invalid Authorization token."
+        '500':
+          description: Internal server error while fetching online devices
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: "failed"
+                  message:
+                    type: string
+                    example: "Error fetching online devices."
+
+
+
+
+
+  # [3] GET /devices/offline-shifts
+  /devices/offline-shifts:
+    get:
+      tags:
+        - Service API Endpoints
+      parameters:
+        - in: header
+          name: Authorization
+          required: true
+          description: Bearer token to get access.
+          schema:
+            type: string
+            example: Bearer <your-jwt-token>
+      summary: Fetch offline devices
+      description: Retrieves devices that are currently offline. This route requires a valid JWT Bearer token in the Authorization header to access.
+      responses:
+        '200':
+          description: Successfully fetched offline devices
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: "success"
+                  message:
+                    type: string
+                    example: "Fetched offline devices successfully."
+                  data:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        device_id:
+                          type: string
+                          example: "b7f2de59c8e1"
+                        did:
+                          type: string
+                          example: "did:example:987654321zyxwvu"
+                        sub:
+                          type: string
+                          example: "anotheruser@example.com"
+        '401':
+          description: Authorization token is missing or malformed
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                  message:
+                    type: string
+              examples:
+                MissingAuthorizationToken:
+                  summary: Missing Authorization header
+                  value:
+                    status: "failed"
+                    message: "Authorization token is missing."
+                MalformedAuthorizationToken:
+                  summary: Malformed Authorization header
+                  value:
+                    status: "failed"
+                    message: "Authorization token is malformed. It should start with 'Bearer '."
+        '403':
+          description: Unauthorized - Authorization token is invalid or expired
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                  message:
+                    type: string
+              examples:
+                ExpiredToken:
+                  summary: Authorization token has expired
+                  value:
+                    status: "failed"
+                    message: "Authorization token has expired."
+                InvalidToken:
+                  summary: Authorization token is invalid
+                  value:
+                    status: "failed"
+                    message: "Invalid Authorization token."
+        '500':
+          description: Internal server error while fetching offline devices
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: "failed"
+                  message:
+                    type: string
+                    example: "Error fetching offline devices."
+
+
+  # [4] POST /devices/behavioural-score
+  /devices/behavioural-score:
+    post:
+      tags:
+        - Service API Endpoints
+      summary: Retrieve device behavioural score
+      description: >
+        Returns the behavioural score of a device based on provided DIDs.
+        Requires a valid JWT authorization token passed in the request body.
+      requestBody:
+        required: true
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              required:
+                - didSP
+                - didRequester
+                - jwtAuth
+              properties:
+                didSP:
+                  type: string
+                  example: "did:example:serviceprovider123"
+                didRequester:
+                  type: string
+                  example: "did:example:device456"
+                jwtAuth:
+                  type: string
+                  example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+
+            examples:
+              validRequest:
+                summary: Valid request example
+                value:
+                  didSP: "did:example:serviceprovider123"
+                  didRequester: "did:example:device456"
+                  jwtAuth: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+      responses:
+        '200':
+          description: Behavioural score retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: "success"
+                  message:
+                    type: string
+                    example: "Device found."
+                  behaviouralScore:
+                    type: number
+                    format: float
+                    example: 0.85
+        '400':
+          description: Bad Request - Missing required fields
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: "failed"
+                  message:
+                    type: string
+                    example: "Missing required fields: didSP, didRequester, or jwtAuth."
+        '401':
+          description: Unauthorized - Authorization token is invalid or expired
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: "failed"
+                  message:
+                    type: string
+              examples:
+                TokenExpired:
+                  summary: Authorization token has expired
+                  value:
+                    status: "failed"
+                    message: "Authorization token has expired."
+                InvalidToken:
+                  summary: Authorization token is invalid
+                  value:
+                    status: "failed"
+                    message: "Invalid authorization token."
+        '404':
+          description: Device not found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: "failed"
+                  message:
+                    type: string
+                    example: "Device not found."
+        '500':
+          description: Internal server error while retrieving behavioural score 
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: "failed"
+                  message:
+                    type: string
+                    example: "Error retrieving behavioural score."
+
+  # [5] POST /devices/last-location
+  /devices/last-location:
+    post:
+      tags:
+        - Service API Endpoints
+      summary: Retrieve device last known coordinates
+      description: >
+        Returns the last known geographic coordinates (latitude and longitude) of a device
+        based on provided DIDs.
+        Requires a valid JWT authorization token passed in the request body.
+      requestBody:
+        required: true
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              required:
+                - didSP
+                - didRequester
+                - jwtAuth
+              properties:
+                didSP:
+                  type: string
+                  example: "did:example:serviceprovider123"
+                didRequester:
+                  type: string
+                  example: "did:example:device456"
+                jwtAuth:
+                  type: string
+                  example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+            examples:
+              validRequest:
+                summary: Valid request example
+                value:
+                  didSP: "did:example:serviceprovider123"
+                  didRequester: "did:example:device456"
+                  jwtAuth: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+      responses:
+        '200':
+          description: Last known coordinates retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: "success"
+                  message:
+                    type: string
+                    example: "Device found."
+                  lastCoordinates:
+                    type: object
+                    properties:
+                      latitude:
+                        type: number
+                        format: float
+                        example: 39.365858279847544
+                      longitude:
+                        type: number
+                        format: float
+                        example: 22.923886333496505
+        '400':
+          description: Bad Request - Missing required fields
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: "failed"
+                  message:
+                    type: string
+                    example: "Missing required fields: didSP, didRequester, or jwtAuth."
+        '401':
+          description: Unauthorized - Authorization token is invalid or expired
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: "failed"
+                  message:
+                    type: string
+                    example: "Authorization error message"
+              examples:
+                TokenExpired:
+                  summary: Authorization token has expired
+                  value:
+                    status: "failed"
+                    message: "Authorization token has expired."
+                InvalidToken:
+                  summary: Authorization token is invalid
+                  value:
+                    status: "failed"
+                    message: "Invalid authorization token."
+
+        '404':
+          description: Device not found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: "failed"
+                  message:
+                    type: string
+                    example: "Device not found."
+        '500':
+          description: Internal server error while retrieving last coordinates
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: "failed"
+                  message:
+                    type: string
+                    example: "Error retrieving last coordinates."
+
+  # Service API Endpoints # 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  # Authenticator Endpoints #
+
+  # [1] POST /devices/begin-session
+  /devices/begin-session:
+    post:
+      summary: Handle device initiation process (QR SCANNER)
+      description: This endpoint initiates a device session request. It consistently returns an **HTTP 200** status code, regardless of the operation result, to maintain client-side stability. The success or failure is indicated inside the JSON `status` field.
+      tags:
+        - Authenticator Endpoints
+      requestBody:
+        required: true
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              required:
+                - device_id
+                - qr_scanner_state_request
+                - log_file_uri
+              properties:
+                device_id:
+                  type: string
+                  description: The ID of the device initiating the session.
+                  example: b7f2de59c8e1
+                qr_scanner_state_request:
+                  type: string
+                  description: The state parameter for QR scanner.
+                  example: a6f3fn529i2a0
+                log_file_uri:
+                  type: string
+                  description: Log file URI, where offline logs will be appended for future transmission.
+                  example: file:///data/user/0/com.dcbaauthenticator/files/46299a77c27b0d4c/authenticator_logs.txt
+      responses:
+        '200':
+          description: Always returns 200. Check the `status` field in the response body.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    enum: [success, failed]
+                  message:
+                    type: string
+                  deviceAuthQRCode:
+                    type: string
+                    description: The QR code (only on success).
+                  sessionRequest:
+                    type: object
+                    description: Saved session request data (only on success).
+              examples:
+                Success:
+                  summary: Successful QR code generation
+                  value:
+                    status: success
+                    message: QR Code generated successfully.
+                    deviceAuthQRCode: "data:data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAQAAAAEAAQMAAABmvDolAAAABlBMVEX///8AAABVwtN+AAAExElEQVR42uyZMa7DKhOFD6KgCxuIzDZSWPKWXLqDzqW3ZIki2wBlA6SjsDi/xknuu32uXfzvUX9Fwsw5cwbjv/PvOopk8KW76nuFaj18Ke4ROReS60lAgg7Wqq03JBNuAPOD1ZQEfRaQGefF5g1mtk9uJnjbXAy+ZMY/BFiSI6tVDQMXlZOu09nAQrfp1ZcneQ+e7apJnAgk6Jm2u2pWa+XX4QL0puJXsY4GSM6L7a79bSrPHO/zcumu/TT9btrvADkmsF0HVjDpirF114Esv+R3MKAyGUbmx2aqtRQhwj3IWt6/8QQAnV4nXzroamzpAF9EgT7Y5La/ARS3oYLusQ4zbOuHeWnYLwUY1nOA/UcCcOtQLdS638bW783Y4xxAJR3ngKS3G17yL3BpYGVzb+kdD2SuJkClgbTPpFeMF5f0HNDUp2G+BOBWXT0FmOUGhEuOwVuVXrU4HlDc+mmkzLFqm1rlHtQjVtifwXo4gA5DHW3nNjOXy+4FTz5iNexUXP8GQA+/iOZuE4qLqy+KG0ywzG+TOxxQbeBcLFy81/KSXlGp93IdLys+AeCGSX6YHLjNiN9eX5obTgIAHYMFXBQXULH6RXF32p9ifQuoNmx+sdwwBKuaXqeRDXqebUOPcwBgYADStTeB0hym7LWozEmv5wAqrz1GNAx34tINFdin+sT8LtbXALpeV6DpdSCly0x5vhJpczwLwLBKHn5sN5Sm1tuE9nLanN4WczygYgxeXO7OotqwTqNsB/Ns0b0u6gSg62FCyQmmFrEgvKI7rHs3zNeAypEsBa+5Sa6eT6ahevLTMMcD5GoWqx7i9jJYTWmdeH5R7bMMHg/EOAeK9Kq1Od65SE+GqeT8dtqvAckPYtyRs1Xv6+dmWD5OewYQyYUJwz1IKr7PEmh0FSnwJADo+8mWpGWeF0mp47NBYnPXvZ32e0DHags3wNNKDPTP/Nimn5Y7AVBNb2YBk9h4A8wcnvsF0J0HJC2LPhxXYy9uNXW8yJCh/bT9CUCmGFu79vAivYpRMnk1FAX+CbA3/MJuHyhsA6u9qAdn2tz6kwBFSvE7vd6A1u2vSYoxAB+nPR6Qpqxg51gnFrfBLxLSqrGK8W8AlVdMI5KOd2Kv8Cg7r5lL9ynW8UAbYh2JqxaHybHCS8sFb5k/sfl4oO9hIT0pd7O/qu2p2PK98x4PQK1DsMjbrnUntguV4FlyflXze6Ab1skzPyhpqQ336lVycQ6lU+83kOMBt+kwMm/9zdh9Owiy2gcwvZagc4Dec5f/LLW4TVaWIBPK24G+B/b3yWCb5j3sryikYtKc4fJ2FiB7j7UdJCA95Z+Pb+BHeocDYnMV4j038CL7plV506ylvV+0jgfE7EwQz7sHyFALsNx0mMo/A+drQFrONh0r9phEqvyInMmX9E4A9nda2s5tMPtg9YGUFinq8wZyOLB/hRltfsQVfOaXBW39NJX86zPNd0CCnouVTOQLk77L1pl6TOUTkU8AdunRPUT4eypenky6Tv9sSecARcLCfS7kBl/U/jpf2q+PTScAAcnFu3DrMC8F136adkf4G+D1TU2WPForq1Ap3VW6MJ0HkJxl69JkgZIctUuPEq1OAv47/z/nfwEAAP//XAg6x/+2DJMAAAAASUVORK5CYII="
+                    sessionRequest:
+                      device_id: "b7f2de59c8e1"
+                      qr_scanner_state_request: "a6f3fn529i2a0"
+                      log_file_uri: "file:///data/user/0/com.dcbaauthenticator/files/46299a77c27b0d4c/authenticator_logs.txt"
+                      createdAt: "2025-04-26T12:34:56.789Z"
+                MissingDeviceID:
+                  summary: Missing device_id
+                  value:
+                    status: failed
+                    message: Device ID is missing, session request failed.
+                MissingQrScannerState:
+                  summary: Missing qr_scanner_state_request
+                  value:
+                    status: failed
+                    message: QR scanner state request is missing, session request failed.
+                CertificateReadError:
+                  summary: Error reading the certificate file
+                  value:
+                    status: failed
+                    message: Error reading the certificate.
+                QrCodeNotFound:
+                  summary: QR code not found
+                  value:
+                    status: failed
+                    message: QR code not found.
+                ExtractQrCodeError:
+                  summary: Failed to extract QR code
+                  value:
+                    status: failed
+                    message: Failed to extract QR code.
+                SessionHandlingError:
+                  summary: Error handling session request
+                  value:
+                    status: failed
+                    message: Error handling session request.
+
+
+  # [2] GET /devices/auth-callback
+  /devices/auth-callback:
+    get:
+      summary: Handles the authentication callback after the employee scans the QR code with his/her privacy wallet
+      description: This endpoint handles the authentication callback from the IPS verifier service. It receives the authorization `code` and `state`, exchanges the code for an access token, and processes the token to verify the employee and return the necessary information. Upon successful authentication, the backend server will notify the corresponding device via WebSocket. Always returns HTTP 200 status regardless of the operation result, to maintain client-side stability. Check the `status` field in the response body for the operation result. 
+      tags:
+        - Authenticator Endpoints
+      parameters:
+        - name: code
+          in: query
+          required: true
+          description: The authorization code received from the IPS verifier.
+          schema:
+            type: string
+        - name: state
+          in: query
+          required: true
+          description: The state parameter sent with the request to prevent CSRF attacks.
+          schema:
+            type: string
+      responses:
+        '200':
+          description: A successful response containing the authentication status and any relevant data, such as the decoded JWT payload. Always returns 200 regardless of the operation result, to maintain client-side stability. Check the `status` field in the response body.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    description: The status of the authentication callback.
+                    example: "success"
+                  message:
+                    type: string
+                    description: A human-readable message providing more context.
+                    example: "Authentication successful."
+                  decodedPayload:
+                    type: object
+                    description: The decoded JWT payload containing user information.
+                    properties:
+                      sub:
+                        type: string
+                        description: The subject (user identifier) of the token.
+                        example: "user123"
+                      verifiableCredential:
+                        type: object
+                        properties:
+                          id:
+                            type: string
+                            description: The unique identifier for the verifiable credential.
+                            example: "did:example:12345"
+              examples:
+                Success:
+                  summary: Successful authentication callback
+                  value:
+                    status: success
+                    message: Authentication successful.
+                    decodedPayload:
+                      sub: "string"
+                      verifiableCredential:
+                        id: "string"
+                MissingParameters:
+                  summary: Missing required parameters
+                  value:
+                    status: failed
+                    message: "Missing required parameters: code or state."
+                CertificateLoadError:
+                  summary: Error reading the certificate file
+                  value:
+                    status: failed
+                    message: Error reading the certificate.
+                TokenNotReceived:
+                  summary: Failed to receive authentication token
+                  value:
+                    status: failed
+                    message: Authentication token not received.
+                InvalidTokenPayload:
+                  summary: Invalid authentication token payload
+                  value:
+                    status: failed
+                    message: Invalid authentication token payload.
+                AuthenticationFailed:
+                  summary: Authentication failed
+                  value:
+                    status: failed
+                    message: Authentication failed.
+
+  # [3] POST /devices/post-logs
+  /devices/post-logs:
+    post:
+      summary: Accepts Android Logs from devices for risk assessment or localization
+      description: |
+        This endpoint accepts `logs` from Android devices along with a session `authToken` and device identifier (`did`) for authentication and validation.
+        It performs multiple checks, including validation of log format, session token validity, expiration, and DID match.
+        Upon successful validation, the log is queued for processing.
+        Always returns HTTP 200 status regardless of the operation result, to maintain client-side stability.. Check the `status` field in the response body for operation result.
+      tags:
+        - Authenticator Endpoints
+      requestBody:
+        required: true
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              required:
+                - did
+                - log
+                - authToken
+              properties:
+                did:
+                  type: string
+                  description: The Decentralized Identifier (DID) of the Android device.
+                  example: "did:example:12345"
+                log:
+                  type: string
+                  description: The log data captured from the device.
+                  example: "11-22 13:11:21.537   799  1004 I WifiService: setWifiEnabled package=com.android.settings uid=1000 enable=true"
+                authToken:
+                  type: string
+                  description: The authentication token associated with the device session.
+                  example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+      responses:
+        '200':
+          description: A successful response containing the status of log processing. Always returns 200 regardless of the operation result, to maintain client-side stability. Check the `status` field in the response body.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    description: The status of the log capture operation.
+                    example: "success"
+                  message:
+                    type: string
+                    description: A human-readable message providing more context.
+                    example: "Log successfully captured and queued for processing."
+              examples:
+                Success:
+                  summary: Successful processing of logs
+                  value:
+                    status: success
+                    message: Logs stored, analyzed and processed successfully.
+                MissingLogData:
+                  summary: Log data missing
+                  value:
+                    status: failed
+                    message: Log data cannot be empty.
+                MalformedLogDetected:
+                  summary: Malformed log detected
+                  value:
+                    status: failed
+                    message: Malformed log detected.
+                MissingAccessToken:
+                  summary: Authentication token missing
+                  value:
+                    status: failed
+                    message: Authentication token is required.
+                InvalidAccessTokenFormat:
+                  summary: Invalid authentication token format
+                  value:
+                    status: failed
+                    message: Invalid authentication token format.
+                FailedToDecodeAccessToken:
+                  summary: Failed to decode authentication token
+                  value:
+                    status: failed
+                    message: Failed to decode authentication token.
+                AuthTokenExpired:
+                  summary: Authentication token expired
+                  value:
+                    status: failed
+                    message: Authentication token has expired.
+                AuthTokenDidMismatch:
+                  summary: Authentication token DID mismatch
+                  value:
+                    status: failed
+                    message: Authentication token did does not match the provided did.
+                MissingTimestampInLog:
+                  summary: Missing timestamp in log data
+                  value:
+                    status: failed
+                    message: Invalid log data. Missing timestamp.
+                FailedToStoreLogs:
+                  summary: Failed to store logs
+                  value:
+                    status: failed
+                    message: Failed to store logs in the Influx Database.
+                FailedToPerformLocalization:
+                  summary: Localization execution failed
+                  value:
+                    status: failed
+                    message: Failed to perform localization.
+                FailedToPerformRiskAssessmentEngine:
+                  summary: Risk assessment execution failed
+                  value:
+                    status: failed
+                    message: Failed to perform risk assessment.
+                InternalServerError:
+                  summary: Internal server error
+                  value:
+                    status: failed
+                    message: Internal server error while processing session request.
+
+  # [4] GET /devices/auth-token-validation
+  /devices/auth-token-validation:
+    get:
+      summary: Validate the provided Bearer JWT authentication token to ensure the employee remains logged into the Authenticator Android Application
+      description: |
+        This endpoint validates the provided Bearer JWT token and checks if it is expired or malformed.
+        Always returns HTTP 200 status regardless of the operation result, to maintain client-side stability. 
+        Check the `status` field in the response body for the operation result.
+      tags:
+        - Authenticator Endpoints
+      parameters:
+        - in: header
+          name: Authorization
+          required: true
+          description: Bearer token to authenticate.
+          schema:
+            type: string
+            example: Bearer <your-jwt-token>
+      responses:
+        '200':
+          description: A successful response containing the status of token validation. Always returns 200 regardless of the operation result, to maintain client-side stability. Check the `status` field in the response body.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    description: The status of the token validation operation.
+                    example: success
+                  message:
+                    type: string
+                    description: A human-readable message providing more context.
+                    example: "valid"
+                  did:
+                    type: string
+                    description: The DID (Decentralized Identifier) associated with the token.
+                    example: "did:example:1234567890abcdef"
+                  sub:
+                    type: string
+                    description: The subject associated with the token.
+                    example: "user-123"
+                  verifiableCredential:
+                    type: object
+                    description: The verifiable credential associated with the token.
+                    example:
+                      id: "did:example:1234567890abcdef"
+              examples:
+                Success:
+                  summary: Successful validation of token
+                  value:
+                    status: success
+                    message: valid
+                    did: "did:example:1234567890abcdef"
+                    sub: "user-123"
+                    verifiableCredential:
+                      id: "did:example:1234567890abcdef"
+                NoBearerToken:
+                  summary: Missing Authentication header
+                  value:
+                    status: failed
+                    message: "Authentication token is missing."
+                InvalidTokenFormat:
+                  summary: Malformed Authentication header 
+                  value:
+                    status: failed
+                    message: "Authentication token is malformed. It should start with 'Bearer '."
+                TokenExpired:
+                  summary: Authentication token has expired
+                  value:
+                    status: failed
+                    message: "Authentication token has expired."
+                DeviceNotFound:
+                  summary: Device not found in the database
+                  value:
+                    status: failed
+                    message: "Device not found."
+                InternalServerError:
+                  summary: Internal server error
+                  value:
+                    status: failed
+                    message: "Internal server error while validating authentication token."
+
+
+  # [5] POST /devices/logout
+  /devices/logout:
+    post:
+      summary: Logs out a device by marking its status as "offline" in the database
+      description: |
+        This endpoint allows a device to log out by providing an `authToken` and `did`. The request validates the authentication token and checks for the presence of a `did`. If the device is found, its status is updated to "offline". The system always returns HTTP 200 status to maintain client-side stability, but the operation result is indicated in the `status` field of the response.
+      tags:
+        - Authenticator Endpoints
+      requestBody:
+        required: true
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              required:
+                - authToken
+                - did
+              properties:
+                authToken:
+                  type: string
+                  description: The authentication token for verifying the session.
+                  example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+                did:
+                  type: string
+                  description: The Decentralized Identifier (DID) of the device.
+                  example: "did:example:12345"
+      responses:
+        '200':
+          description: The response will always be HTTP 200. The status of the logout operation is provided in the response body.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    description: The status of the logout operation.
+                    example: "success"
+                  message:
+                    type: string
+                    description: A human-readable message providing more context about the operation result.
+                    example: "Device logged out successfully."
+              examples:
+                Success:
+                  summary: Device logged out successfully
+                  value:
+                    status: success
+                    message: "Device logged out successfully."
+                MissingAuthToken:
+                  summary: Missing Authentication token
+                  value:
+                    status: failed
+                    message: "Missing required authentication token."
+                MissingDid:
+                  summary: Missing device identifier (DID)
+                  value:
+                    status: failed
+                    message: "Missing required DID."
+                DeviceNotFound:
+                  summary: Device not found in the database
+                  value:
+                    status: failed
+                    message: "Device not found."
+                InternalServerError:
+                  summary: Internal server error during logout
+                  value:
+                    status: failed
+                    message: "Internal server error while handling logout."
+
+  # Authenticator Endpoints #
