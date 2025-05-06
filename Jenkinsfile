@@ -38,7 +38,7 @@ pipeline {
                 echo 'Building all Docker images with Docker Compose'
                 script {
                     /* Use docker-compose to build all services */
-                    sh 'docker-compose -f docker-compose.yml build'
+                    sh 'docker-compose build'
                 }
             }
         }
