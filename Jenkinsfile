@@ -10,11 +10,31 @@ pipeline {
 
     /* Set up environment variables for the pipeline */
     environment {
+        // Backend
         APP_NAME = "dcba-backend"                                           /* Application Name */
         ARTIFACTORY_SERVER = "harbor.tango.rid-intrasoft.eu"                /* Docker registry server URL */
         ARTIFACTORY_DOCKER_REGISTRY = "harbor.tango.rid-intrasoft.eu/dcba/" /* Docker image registry path */
         BRANCH_NAME = "stable"                                              /* Git branch to checkout */
         DOCKER_IMAGE_TAG = "$APP_NAME:R${env.BUILD_ID}"                     /* Docker image tag using the application name and Jenkins build ID */
+
+        // MongoDB
+        MONGO_IMAGE = "mongo:latest"
+        MONGO_CONTAINER = "dcba-mongo-db"
+        MONGO_INITDB_EXTERNAL_PORT = "27018"
+        MONGO_INITDB_INTERNAL_PORT = "27017"
+        MONGO_INITDB_ADMIN_USERNAME = "admin-username"
+        MONGO_INITDB_ADMIN_PASSWORD = "admin-password"
+        MONGO_INITDB_DATABASE = "dcba-mongo-db-v1"
+        // InfluxDB
+        INFLUX_IMAGE = "influxdb:latest"
+        INFLUX_CONTAINER = "dcba-influx-db"
+        INFLUXDB_EXTERNAL_PORT = "8087"
+        INFLUXDB_INTERNAL_PORT = "8086"
+        INFLUX_INITDB_ADMIN_USERNAME = "admin-username"
+        INFLUX_INITDB_ADMIN_PASSWORD = "admin-password"
+        INFLUX_INITDB_ORG = "DCBA"
+        INFLUX_INITDB_BUCKET = "DCBA"
+        INFLUX_INITDB_AUTH_TOKEN = "QzaDsrfh8LkP0dnTmxj4fB4KAtQVZb-68BHqTTqWv2jie5daMLpEqeugbn1hIfbTcduNEuR8HAoUtVFjC2M3bw=="
     }
 
     stages {
@@ -32,30 +52,66 @@ pipeline {
         }
 
 
-        /* Stage 2: Build the Docker images for all services */
-        stage('Build DCBA Images (dcba-backend, dcba-mongo-db, dcba-influx-db)') {
+        /* Stage 2: Building the DCBA-Backend Image */
+        stage('Build DCBA-Backend Image') {
             steps {
-                echo 'Building all Docker images with Docker Compose'
+                echo 'Building Backend Docker Image'
                 script {
-                    /* Use docker-compose to build all services */
-                    sh 'docker-compose build'
-                }
-            }
-        }
-
-        /* Stage 3: Start Services with Docker Compose */
-        stage('Start Services with Docker Compose') {
-            steps {
-                echo 'Starting Services with Docker Compose'
-                script {
-                    /* Use docker-compose to start all services (MongoDB, InfluxDB, Backend) */
-                    sh 'docker-compose -f docker-compose.yml up -d'
+                    /* Build Backend image */
+                    def dockerImage = docker.build(ARTIFACTORY_DOCKER_REGISTRY + DOCKER_IMAGE_TAG, './BACKEND') 
                 }
             }
         }
 
 
-        /* Stage 4: Push the Docker image to the Docker registry */
+        /* Stage 3: Build the DCBA-MongoDB Image */
+        stage('Build DCBA-MongoDB Image') {
+            steps {
+                script {
+                    echo 'Pulling and Running MongoDB Container'
+                    sh """
+                    docker pull ${MONGO_IMAGE}
+                    docker run -d \\
+                    --name ${MONGO_CONTAINER} \\
+                    -p ${MONGO_INITDB_EXTERNAL_PORT}:${MONGO_INITDB_INTERNAL_PORT} \\
+                    -v mongo_data:/data/db/devices \\
+                    -e MONGO_INITDB_ROOT_USERNAME=${MONGO_INITDB_ADMIN_USERNAME} \\
+                    -e MONGO_INITDB_ROOT_PASSWORD=${MONGO_INITDB_ADMIN_PASSWORD} \\
+                    -e MONGO_INITDB_DATABASE=${MONGO_INITDB_DATABASE} \\
+                    ${MONGO_IMAGE}
+                    """
+
+                }
+            }
+        }
+
+
+        /* Stage 4: Build the DCBA-InfluxDB Image */
+        stage('Build DCBA-InfluxDB Image') {
+            steps {
+                script {
+                    echo 'Pulling and Running InfluxDB Container'
+                    sh """
+                    docker pull ${INFLUX_IMAGE}
+                    docker run -d \\
+                    --name ${INFLUX_CONTAINER} \\
+                    -p ${INFLUXDB_EXTERNAL_PORT}:${INFLUXDB_INTERNAL_PORT} \\
+                    -v influx_data:/var/lib/influxdb \\
+                    -e DOCKER_INFLUXDB_INIT_MODE=setup \\
+                    -e DOCKER_INFLUXDB_INIT_USERNAME=${INFLUX_INITDB_ADMIN_USERNAME} \\
+                    -e DOCKER_INFLUXDB_INIT_PASSWORD=${INFLUX_INITDB_ADMIN_PASSWORD} \\
+                    -e DOCKER_INFLUXDB_INIT_ORG=${INFLUX_INITDB_ORG} \\
+                    -e DOCKER_INFLUXDB_INIT_BUCKET=${INFLUX_INITDB_BUCKET} \\
+                    -e DOCKER_INFLUXDB_INIT_ADMIN_TOKEN="${INFLUX_INITDB_AUTH_TOKEN}" \\
+                    ${INFLUX_IMAGE}
+                    """
+                }
+            }
+        }
+
+
+
+        /* Stage 5: Push the DCBA-Backend image to the Docker registry */
         stage("Push Backend Image to Registry") {
             steps {
                 /* Use Jenkins credentials to log in to the Docker registry */
@@ -70,7 +126,7 @@ pipeline {
             }
         }
 
-        /* Stage 5: Remove Docker images locally to free up space */
+        /* Stage 6: Remove Docker images locally to free up space */
         stage('Docker Remove Image locally') {
             steps {
                 sh 'docker rmi "$ARTIFACTORY_DOCKER_REGISTRY$DOCKER_IMAGE_TAG"'    /* Remove the specific image by tag */
@@ -78,7 +134,7 @@ pipeline {
             }
         }
 
-        /* Stage 6: Deploy the application to Kubernetes */
+        /* Stage 7: Deploy the application to Kubernetes */
         stage("Deployment") {
             steps {
                 /* Use the kubeconfig file to interact with the Kubernetes cluster */
