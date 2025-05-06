@@ -1,13 +1,13 @@
 version: '3.8'
 services:
-  # **************************************** WORKERS DATABASE (MongoDB) **************************************** #
+  # **************************************** DEVICES DATABASE (MongoDB) **************************************** #
   dcba_mongo_db:
     image: mongo:latest
     container_name: ${MONGO_CONTAINER}
     ports:
       - "${MONGO_INITDB_EXTERNAL_PORT}:${MONGO_INITDB_INTERNAL_PORT}" # Maps MongoDB to localhost
     volumes:
-      - mongo_data:/data/db/workers # Persistent data storage
+      - mongo_data:/data/db/devices # Persistent data storage
     environment:
       - MONGO_INITDB_ROOT_USERNAME=${MONGO_INITDB_ADMIN_USERNAME} 
       - MONGO_INITDB_ROOT_PASSWORD=${MONGO_INITDB_ADMIN_PASSWORD}     

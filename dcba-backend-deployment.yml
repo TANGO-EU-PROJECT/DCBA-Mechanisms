@@ -1,0 +1,74 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: dcba-backend
+  namespace: tango-development
+  labels:
+    app: dcba-backend
+    type: back-end
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      type: back-end
+  template:
+    metadata:
+      labels:
+        app: dcba-backend
+        type: back-end
+    spec:
+      imagePullSecrets:
+        - name: regcred
+      containers:
+        - name: dcba-backend
+          image: dcba-backend:latest  # Use the latest image built via docker-compose or an image registry
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 3000
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: dcba-backend
+  namespace: tango-development
+  labels:
+    app: dcba-backend
+spec:
+  selector:
+    app: dcba-backend
+  type: NodePort
+  ports:
+    - port: 3001        # Backend External port 
+      targetPort: 3000  # Backend Internal port 
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: dcba-mongo-db
+  namespace: tango-development
+  labels:
+    app: dcba-mongo-db
+spec:
+  selector:
+    app: dcba-mongo-db
+  ports:
+    - port: 27018        # Mongo DB External port
+      targetPort: 27017  # Mongo DB Internal port
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: dcba-influx-db
+  namespace: tango-development
+  labels:
+    app: dcba-influx-db
+spec:
+  selector:
+    app: dcba-influx-db
+  ports:
+    - port: 8087        # Influx DB External port
+      targetPort: 8086  # Influx DB External port
