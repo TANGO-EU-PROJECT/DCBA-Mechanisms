@@ -5,20 +5,18 @@ FROM nikolaik/python-nodejs:python3.11-nodejs18
 WORKDIR /production
 
 # Copy package.json and package-lock.json to install Node.js DEPENDENCIES
-COPY ../package*.json ./
+COPY ./package*.json ./
 RUN npm install
 
 # Install nodemon globally to run the server script
 RUN npm install -g nodemon
 
 # Copy the Python requirements and install them
-COPY DEPENDENCIES/pip-requirements.txt ./DEPENDENCIES/
-
+COPY ./BACKEND/DEPENDENCIES/pip-requirements.txt ./DEPENDENCIES/
 RUN pip3 install -r ./DEPENDENCIES/pip-requirements.txt
 
 # Copy CA certificate to system-wide location
-COPY ca.crt /usr/local/share/ca-certificates/ca.crt
-
+COPY ./BACKEND/ca.crt /usr/local/share/ca-certificates/ca.crt
 
 # Update the CA certificates (for Debian-based systems)
 RUN update-ca-certificates

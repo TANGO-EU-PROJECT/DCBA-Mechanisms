@@ -58,7 +58,7 @@ pipeline {
                 echo 'Building Backend Docker Image'
                 script {
                     /* Build Backend image */
-                    def dockerImage = docker.build(ARTIFACTORY_DOCKER_REGISTRY + DOCKER_IMAGE_TAG, './BACKEND') 
+                    def dockerImage = docker.build(ARTIFACTORY_DOCKER_REGISTRY + DOCKER_IMAGE_TAG,'-f BACKEND/Dockerfile .')
                 }
             }
         }
