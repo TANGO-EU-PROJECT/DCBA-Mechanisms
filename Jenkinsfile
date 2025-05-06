@@ -10,6 +10,8 @@ pipeline {
 
     /* Set up environment variables for the pipeline */
     environment {
+        BUILD_TAG = "stable-${env.BUILD_ID}"
+
         // Backend
         APP_NAME = "dcba-backend"                                           /* Application Name */
         ARTIFACTORY_SERVER = "harbor.tango.rid-intrasoft.eu"                /* Docker registry server URL */
