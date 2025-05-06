@@ -5,7 +5,7 @@ FROM nikolaik/python-nodejs:python3.11-nodejs18
 WORKDIR /production
 
 # Copy package.json and package-lock.json to install Node.js DEPENDENCIES
-COPY ./package*.json ./
+COPY ../package*.json ./
 RUN npm install
 
 # Install nodemon globally to run the server script
