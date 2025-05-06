@@ -33,19 +33,29 @@ pipeline {
 
 
         /* Stage 2: Build the Docker image for the application */
-        stage('Build image') {
+        stage('Build Backend Image') {
             steps {
-                echo 'Starting to build docker image'
+                echo 'Building Backend Docker image'
                 script {
-                    /* Build the Docker image and tag it with the repository path and the dynamically generated image tag */
-                    def dockerImage = docker.build(ARTIFACTORY_DOCKER_REGISTRY + DOCKER_IMAGE_TAG) 
-                    
+                    /* Build the Backend Docker image using the Dockerfile located in BACKEND */
+                    def dockerImage = docker.build(ARTIFACTORY_DOCKER_REGISTRY + DOCKER_IMAGE_TAG, './BACKEND') 
                 }
             }
         }
 
-        /* Stage 3: Push the Docker image to the Docker registry */
-        stage("Push_Image") {
+        /* Stage 3: Start Services with Docker Compose */
+        stage('Start Services with Docker Compose') {
+            steps {
+                echo 'Starting Services with Docker Compose'
+                script {
+                    /* Use docker-compose to start MongoDB, InfluxDB, and Backend services */
+                    sh 'docker-compose -f docker-compose.yml up -d dcba_mongo_db dcba_influx_db dcba_backend'
+                }
+            }
+        }
+
+        /* Stage 4: Push the Docker image to the Docker registry */
+        stage("Push Backend Image to Registry") {
             steps {
                 /* Use Jenkins credentials to log in to the Docker registry */
                 withCredentials([[$class: 'UsernamePasswordMultiBinding', credentialsId: 'harbor-jenkins-creds', usernameVariable: 'USERNAME', passwordVariable: 'PASSWORD']]) {
@@ -59,7 +69,7 @@ pipeline {
             }
         }
 
-        /* Stage 4: Remove Docker images locally to free up space */
+        /* Stage 5: Remove Docker images locally to free up space */
         stage('Docker Remove Image locally') {
             steps {
                 sh 'docker rmi "$ARTIFACTORY_DOCKER_REGISTRY$DOCKER_IMAGE_TAG"'    /* Remove the specific image by tag */
@@ -67,7 +77,7 @@ pipeline {
             }
         }
 
-        /* Stage 5: Deploy the application to Kubernetes */
+        /* Stage 6: Deploy the application to Kubernetes */
         stage("Deployment") {
             steps {
                 /* Use the kubeconfig file to interact with the Kubernetes cluster */
