@@ -32,13 +32,13 @@ pipeline {
         }
 
 
-        /* Stage 2: Build the Docker image for the application */
-        stage('Build Backend Image') {
+        /* Stage 2: Build the Docker images for all services */
+        stage('Build DCBA Images (dcba-backend, dcba-mongo-db, dcba-influx-db)') {
             steps {
-                echo 'Building Backend Docker image'
+                echo 'Building all Docker images with Docker Compose'
                 script {
-                    /* Build the Backend Docker image using the Dockerfile located in BACKEND */
-                    def dockerImage = docker.build(ARTIFACTORY_DOCKER_REGISTRY + DOCKER_IMAGE_TAG, './BACKEND') 
+                    /* Use docker-compose to build all services */
+                    sh 'docker-compose -f docker-compose.yml build'
                 }
             }
         }
@@ -48,11 +48,12 @@ pipeline {
             steps {
                 echo 'Starting Services with Docker Compose'
                 script {
-                    /* Use docker-compose to start MongoDB, InfluxDB, and Backend services */
-                    sh 'docker-compose -f docker-compose.yml up -d dcba_mongo_db dcba_influx_db dcba_backend'
+                    /* Use docker-compose to start all services (MongoDB, InfluxDB, Backend) */
+                    sh 'docker-compose -f docker-compose.yml up -d'
                 }
             }
         }
+
 
         /* Stage 4: Push the Docker image to the Docker registry */
         stage("Push Backend Image to Registry") {
