@@ -1,3 +1,35 @@
+/*
+ * Jenkins Pipeline for DCBA Backend, MongoDB, and InfluxDB Docker Images
+ *
+ * This pipeline automates the process of:
+ * 1. Checking out the source code from a specified Git branch.
+ * 2. Building the DCBA-Backend Docker image.
+ * 3. Pulling and running MongoDB and InfluxDB containers.
+ * 4. Pushing the built Docker images (Backend, MongoDB, InfluxDB) to the Docker registry.
+ * 5. Removing Docker images locally to free up space after pushing.
+ * 6. Deploying the DCBA backend application to a Kubernetes cluster.
+ *
+ * Key Environment Variables:
+ * - ARTIFACTORY_SERVER: Docker registry server URL
+ * - ARTIFACTORY_DOCKER_REGISTRY: Docker image registry path
+ * - APP_NAME: Application name for Docker image tagging
+ * - BRANCH_NAME: Git branch to checkout for the pipeline
+ * - DOCKER_IMAGE_TAG: Tag for the Docker image using the Jenkins build ID
+ * 
+ * Stages Overview:
+ * 1. Checkout: Checks out the source code from Git repository.
+ * 2. Build DCBA-Backend Image: Builds the Backend Docker image.
+ * 3. Build DCBA-MongoDB Image: Builds the MongoDB Docker image.
+ * 4. Build DCBA-InfluxDB Image: Builds the InfluxDB Docker image.
+ * 5. Push Images to Registry: Tags and pushes the images to the Docker registry.
+ * 6. Docker Remove Images Locally: Removes locally stored Docker images to free up space.
+ * 7. Deployment: Deploys the application to Kubernetes using kubectl.
+ *
+ * Post-Build Actions:
+ * - Sends success or failure notifications to Slack.
+ */
+
+
 pipeline {
     /* Define the agent (node) where the pipeline should run */
     agent {
@@ -88,7 +120,6 @@ pipeline {
             }
         }
 
-
         /* Stage 4: Build the DCBA-InfluxDB Image */
         stage('Build DCBA-InfluxDB Image') {
             steps {
@@ -112,8 +143,6 @@ pipeline {
                 }
             }
         }
-
-
 
         /* Stage 5: Push Images to Docker Registry */
         stage("Push Images to Registry") {
@@ -152,17 +181,24 @@ pipeline {
             steps {
                 script {
                     echo "***** Removing Backend Images *****"
-                    sh 'docker rmi "$ARTIFACTORY_DOCKER_REGISTRY$DOCKER_IMAGE_TAG" || true'
-                    sh 'docker rmi "$ARTIFACTORY_DOCKER_REGISTRY$APP_NAME:latest_dev" || true'
+                    sh """
+                    docker rmi ${ARTIFACTORY_DOCKER_REGISTRY}${DOCKER_IMAGE_TAG} || true
+                    docker rmi ${ARTIFACTORY_DOCKER_REGISTRY}${APP_NAME}:latest_dev || true
+                    """
 
                     echo "***** Removing MongoDB Image *****"
-                    sh 'docker rmi "$ARTIFACTORY_DOCKER_REGISTRY$MONGO_CONTAINER:$BUILD_TAG" || true'
+                    sh """
+                    docker rmi ${ARTIFACTORY_DOCKER_REGISTRY}${MONGO_CONTAINER}:${BUILD_TAG} || true
+                    """
 
                     echo "***** Removing InfluxDB Image *****"
-                    sh 'docker rmi "$ARTIFACTORY_DOCKER_REGISTRY$INFLUX_CONTAINER:$BUILD_TAG" || true'
+                    sh """
+                    docker rmi ${ARTIFACTORY_DOCKER_REGISTRY}${INFLUX_CONTAINER}:${BUILD_TAG} || true
+                    """
                 }
             }
         }
+
 
 
         /* Stage 7: Deploy the application to Kubernetes */
