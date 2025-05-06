@@ -12,11 +12,13 @@ RUN npm install
 RUN npm install -g nodemon
 
 # Copy the Python requirements and install them
-COPY ./BACKEND/DEPENDENCIES/pip-requirements.txt ./DEPENDENCIES/
+COPY DEPENDENCIES/pip-requirements.txt ./DEPENDENCIES/
+
 RUN pip3 install -r ./DEPENDENCIES/pip-requirements.txt
 
 # Copy CA certificate to system-wide location
-COPY ./BACKEND/ca.crt /usr/local/share/ca-certificates/ca.crt
+COPY ca.crt /usr/local/share/ca-certificates/ca.crt
+
 
 # Update the CA certificates (for Debian-based systems)
 RUN update-ca-certificates
