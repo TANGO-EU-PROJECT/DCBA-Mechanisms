@@ -111,28 +111,55 @@ pipeline {
 
 
 
-        /* Stage 5: Push the DCBA-Backend image to the Docker registry */
-        stage("Push Backend Image to Registry") {
+        /* Stage 5: Push Images to Docker Registry */
+        stage("Push Images to Registry") {
             steps {
-                /* Use Jenkins credentials to log in to the Docker registry */
                 withCredentials([[$class: 'UsernamePasswordMultiBinding', credentialsId: 'harbor-jenkins-creds', usernameVariable: 'USERNAME', passwordVariable: 'PASSWORD']]) {
-                    echo "***** Push Docker Image *****" 
-                    sh 'docker login ${ARTIFACTORY_SERVER} -u ${USERNAME} -p ${PASSWORD}'                                                   /* Log in to the Docker registry */
-                    sh 'docker image push ${ARTIFACTORY_DOCKER_REGISTRY}${DOCKER_IMAGE_TAG}'                                                /* Push the Docker image with the current tag */
-                    sh 'docker tag ${ARTIFACTORY_DOCKER_REGISTRY}${DOCKER_IMAGE_TAG} ${ARTIFACTORY_DOCKER_REGISTRY}${APP_NAME}:latest_dev'  /* Tag the pushed image as the latest development version */
-                    sh 'docker image push ${ARTIFACTORY_DOCKER_REGISTRY}${APP_NAME}:latest_dev'                                             /* Push the latest development version tag to the registry */
-                    
+                    script {
+                        echo "***** Docker Registry Login *****"
+                        sh 'docker login ${ARTIFACTORY_SERVER} -u ${USERNAME} -p ${PASSWORD}'
+
+                        echo "***** Tag abd Push Backend Image *****"
+                        sh """
+                        docker push ${ARTIFACTORY_DOCKER_REGISTRY}${DOCKER_IMAGE_TAG}
+                        docker tag ${ARTIFACTORY_DOCKER_REGISTRY}${DOCKER_IMAGE_TAG} ${ARTIFACTORY_DOCKER_REGISTRY}${APP_NAME}:latest_dev
+                        docker push ${ARTIFACTORY_DOCKER_REGISTRY}${APP_NAME}:latest_dev
+                        """
+
+                        echo "***** Tag and Push MongoDB Image *****"
+                        sh """
+                        docker tag ${MONGO_IMAGE} ${ARTIFACTORY_DOCKER_REGISTRY}${MONGO_CONTAINER}:${BUILD_TAG}
+                        docker push ${ARTIFACTORY_DOCKER_REGISTRY}${MONGO_CONTAINER}:${BUILD_TAG}
+                        """
+
+                        echo "***** Tag and Push InfluxDB Image *****"
+                        sh """
+                        docker tag ${INFLUX_IMAGE} ${ARTIFACTORY_DOCKER_REGISTRY}${INFLUX_CONTAINER}:${BUILD_TAG}
+                        docker push ${ARTIFACTORY_DOCKER_REGISTRY}${INFLUX_CONTAINER}:${BUILD_TAG}
+                        """
+                    }
                 }
             }
         }
 
+
         /* Stage 6: Remove Docker images locally to free up space */
-        stage('Docker Remove Image locally') {
+        stage('Docker Remove Images Locally') {
             steps {
-                sh 'docker rmi "$ARTIFACTORY_DOCKER_REGISTRY$DOCKER_IMAGE_TAG"'    /* Remove the specific image by tag */
-                sh 'docker rmi "$ARTIFACTORY_DOCKER_REGISTRY$APP_NAME:latest_dev"' /* Remove the latest development tag locally */
+                script {
+                    echo "***** Removing Backend Images *****"
+                    sh 'docker rmi "$ARTIFACTORY_DOCKER_REGISTRY$DOCKER_IMAGE_TAG" || true'
+                    sh 'docker rmi "$ARTIFACTORY_DOCKER_REGISTRY$APP_NAME:latest_dev" || true'
+
+                    echo "***** Removing MongoDB Image *****"
+                    sh 'docker rmi "$ARTIFACTORY_DOCKER_REGISTRY$MONGO_CONTAINER:$BUILD_TAG" || true'
+
+                    echo "***** Removing InfluxDB Image *****"
+                    sh 'docker rmi "$ARTIFACTORY_DOCKER_REGISTRY$INFLUX_CONTAINER:$BUILD_TAG" || true'
+                }
             }
         }
+
 
         /* Stage 7: Deploy the application to Kubernetes */
         stage("Deployment") {
