@@ -116,7 +116,7 @@ pipeline {
                 }
             }
         }
-        
+
 
 
         /* Stage 4: Build the DCBA-InfluxDB Image */
@@ -140,6 +140,10 @@ pipeline {
             steps {
                 withCredentials([[$class: 'UsernamePasswordMultiBinding', credentialsId: 'harbor-jenkins-creds', usernameVariable: 'USERNAME', passwordVariable: 'PASSWORD']]) {
                     script {
+                        echo "ARTIFACTORY_DOCKER_REGISTRY: ${ARTIFACTORY_DOCKER_REGISTRY}"
+                        echo "MONGO_DOCKER_IMAGE_TAG: ${MONGO_DOCKER_IMAGE_TAG}"
+                        echo "INFLUX_DOCKER_IMAGE_TAG: ${INFLUX_DOCKER_IMAGE_TAG}"
+
                         echo "***** Docker Registry Login *****"
                         sh 'docker login ${ARTIFACTORY_SERVER} -u ${USERNAME} -p ${PASSWORD}'
 
@@ -154,8 +158,6 @@ pipeline {
                         sh """
                         # Push the MongoDB image built in Stage 3
                         docker image push ${ARTIFACTORY_DOCKER_REGISTRY}${MONGO_DOCKER_IMAGE_TAG}
-
-                        # Tag as latest-dev and push
                         docker tag ${ARTIFACTORY_DOCKER_REGISTRY}${MONGO_DOCKER_IMAGE_TAG} ${ARTIFACTORY_DOCKER_REGISTRY}${MONGO_CONTAINER_NAME}:latest-dev
                         docker image push ${ARTIFACTORY_DOCKER_REGISTRY}${MONGO_CONTAINER_NAME}:latest-dev
                         """
@@ -164,8 +166,6 @@ pipeline {
                         sh """
                         # Push the InfluxDB image built in Stage 4
                         docker image push ${ARTIFACTORY_DOCKER_REGISTRY}${INFLUX_DOCKER_IMAGE_TAG}
-
-                        # Tag as latest-dev and push
                         docker tag ${ARTIFACTORY_DOCKER_REGISTRY}${INFLUX_DOCKER_IMAGE_TAG} ${ARTIFACTORY_DOCKER_REGISTRY}${INFLUX_CONTAINER_NAME}:latest-dev
                         docker image push ${ARTIFACTORY_DOCKER_REGISTRY}${INFLUX_CONTAINER_NAME}:latest-dev
                         """
