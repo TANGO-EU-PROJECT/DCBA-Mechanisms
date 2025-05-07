@@ -181,7 +181,6 @@ pipeline {
                     echo "***** Removing Backend Images *****"
                     sh """
                     docker rmi ${ARTIFACTORY_DOCKER_REGISTRY}${BACKEND_DOCKER_IMAGE_TAG} || true
-                    docker rmi ${ARTIFACTORY_DOCKER_REGISTRY}${APP_NAME}:latest_dev || true
                     """
 
                     echo "***** Removing MongoDB Image *****"
