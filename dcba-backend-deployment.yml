@@ -65,6 +65,7 @@ spec:
       containers:
         - name: dcba-mongo-db
           image: harbor.tango.rid-intrasoft.eu/dcba/dcba-mongo-db:latest-dev
+          imagePullPolicy: Always
           ports:
             - containerPort: 27017
           volumeMounts:
@@ -110,6 +111,7 @@ spec:
       containers:
         - name: dcba-influx-db
           image: harbor.tango.rid-intrasoft.eu/dcba/dcba-influx-db:latest-dev
+          imagePullPolicy: Always
           ports:
             - containerPort: 8086
 ---
