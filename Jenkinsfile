@@ -105,25 +105,37 @@ pipeline {
         stage('Build DCBA-MongoDB Image') {
             steps {
                 script {
-                    echo 'Pulling and Running MongoDB Container'
+                    echo 'Building MongoDB Image'
+
+                    // Build the MongoDB image
                     sh """
-                    docker rm -f ${INFLUX_CONTAINER_NAME} || true
+                    docker pull ${MONGO_IMAGE}  # Pull the base image
+
+                    # Build the custom MongoDB image with the necessary configurations
+                    docker build -t ${ARTIFACTORY_DOCKER_REGISTRY}${MONGO_CONTAINER_NAME}:${MONGO_DOCKER_IMAGE_TAG} .
                     """
                 }
             }
         }
 
+
         /* Stage 4: Build the DCBA-InfluxDB Image */
         stage('Build DCBA-InfluxDB Image') {
             steps {
                 script {
-                    echo 'Pulling and Running InfluxDB Container'
+                    echo 'Building InfluxDB Image'
+
+                    // Build the InfluxDB image
                     sh """
-                    docker rm -f ${INFLUX_CONTAINER_NAME} || true
+                    docker pull ${INFLUX_IMAGE}  # Pull the base image
+
+                    # Build the custom InfluxDB image with necessary configurations
+                    docker build -t ${ARTIFACTORY_DOCKER_REGISTRY}${INFLUX_CONTAINER_NAME}:${INFLUX_DOCKER_IMAGE_TAG} .
                     """
                 }
             }
         }
+
 
         /* Stage 5: Push Images to Docker Registry */
         stage("Push Images to Registry") {
@@ -142,29 +154,28 @@ pipeline {
 
                         echo "***** Tag and Push MongoDB Image *****"
                         sh """
-                        docker tag ${MONGO_IMAGE} ${ARTIFACTORY_DOCKER_REGISTRY}${MONGO_DOCKER_IMAGE_TAG}
-                        docker image push ${ARTIFACTORY_DOCKER_REGISTRY}${MONGO_DOCKER_IMAGE_TAG}
+                        # Push the MongoDB image built in Stage 3
+                        docker image push ${ARTIFACTORY_DOCKER_REGISTRY}${MONGO_CONTAINER_NAME}:${MONGO_DOCKER_IMAGE_TAG}
 
-                        # Tag latest-dev from the versioned tag (which is already local)
-                        docker tag ${ARTIFACTORY_DOCKER_REGISTRY}${MONGO_DOCKER_IMAGE_TAG} ${ARTIFACTORY_DOCKER_REGISTRY}${MONGO_CONTAINER_NAME}:latest-dev
+                        # Tag as latest-dev and push
+                        docker tag ${ARTIFACTORY_DOCKER_REGISTRY}${MONGO_CONTAINER_NAME}:${MONGO_DOCKER_IMAGE_TAG} ${ARTIFACTORY_DOCKER_REGISTRY}${MONGO_CONTAINER_NAME}:latest-dev
                         docker image push ${ARTIFACTORY_DOCKER_REGISTRY}${MONGO_CONTAINER_NAME}:latest-dev
                         """
 
-
                         echo "***** Tag and Push InfluxDB Image *****"
                         sh """
-                        docker tag ${INFLUX_IMAGE} ${ARTIFACTORY_DOCKER_REGISTRY}${INFLUX_DOCKER_IMAGE_TAG}
-                        docker image push ${ARTIFACTORY_DOCKER_REGISTRY}${INFLUX_DOCKER_IMAGE_TAG}
+                        # Push the InfluxDB image built in Stage 4
+                        docker image push ${ARTIFACTORY_DOCKER_REGISTRY}${INFLUX_CONTAINER_NAME}:${INFLUX_DOCKER_IMAGE_TAG}
 
-                        # Tag latest-dev from the versioned tag (which is already local)
-                        docker tag ${ARTIFACTORY_DOCKER_REGISTRY}${INFLUX_DOCKER_IMAGE_TAG} ${ARTIFACTORY_DOCKER_REGISTRY}${INFLUX_CONTAINER_NAME}:latest-dev
+                        # Tag as latest-dev and push
+                        docker tag ${ARTIFACTORY_DOCKER_REGISTRY}${INFLUX_CONTAINER_NAME}:${INFLUX_DOCKER_IMAGE_TAG} ${ARTIFACTORY_DOCKER_REGISTRY}${INFLUX_CONTAINER_NAME}:latest-dev
                         docker image push ${ARTIFACTORY_DOCKER_REGISTRY}${INFLUX_CONTAINER_NAME}:latest-dev
                         """
                     }
-
                 }
             }
         }
+
 
 
 
