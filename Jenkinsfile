@@ -92,10 +92,11 @@ pipeline {
                 echo 'Building Backend Docker Image'
                 script {
                     /* Build Backend image */
-                    def dockerImage = docker.build(ARTIFACTORY_DOCKER_REGISTRY + BACKEND_DOCKER_IMAGE_TAG,'-f BACKEND/Dockerfile .')
+                    def dockerImage = docker.build("${ARTIFACTORY_DOCKER_REGISTRY}${BACKEND_CONTAINER}:latest-dev", '-f BACKEND/Dockerfile .')
                 }
             }
         }
+
 
 
         /* Stage 3: Build the DCBA-MongoDB Image */
@@ -152,26 +153,30 @@ pipeline {
                         echo "***** Docker Registry Login *****"
                         sh 'docker login ${ARTIFACTORY_SERVER} -u ${USERNAME} -p ${PASSWORD}'
 
-                        echo "***** Tag abd Push Backend Image *****"
+                        echo "***** Tag and Push Backend Image *****"
+                        // Tag the image with 'latest-dev' and push it
                         sh """
-                        docker push ${ARTIFACTORY_DOCKER_REGISTRY}${BACKEND_DOCKER_IMAGE_TAG}
+                        docker push ${ARTIFACTORY_DOCKER_REGISTRY}${BACKEND_CONTAINER}:latest-dev
                         """
 
                         echo "***** Tag and Push MongoDB Image *****"
+                        // Tag the MongoDB image with 'latest-dev' and push it
                         sh """
-                        docker tag ${MONGO_IMAGE} ${ARTIFACTORY_DOCKER_REGISTRY}${MONGO_CONTAINER}:${BUILD_TAG}
-                        docker push ${ARTIFACTORY_DOCKER_REGISTRY}${MONGO_CONTAINER}:${BUILD_TAG}
+                        docker tag ${MONGO_IMAGE} ${ARTIFACTORY_DOCKER_REGISTRY}${MONGO_CONTAINER}:latest-dev
+                        docker push ${ARTIFACTORY_DOCKER_REGISTRY}${MONGO_CONTAINER}:latest-dev
                         """
 
                         echo "***** Tag and Push InfluxDB Image *****"
+                        // Tag the InfluxDB image with 'latest-dev' and push it
                         sh """
-                        docker tag ${INFLUX_IMAGE} ${ARTIFACTORY_DOCKER_REGISTRY}${INFLUX_CONTAINER}:${BUILD_TAG}
-                        docker push ${ARTIFACTORY_DOCKER_REGISTRY}${INFLUX_CONTAINER}:${BUILD_TAG}
+                        docker tag ${INFLUX_IMAGE} ${ARTIFACTORY_DOCKER_REGISTRY}${INFLUX_CONTAINER}:latest-dev
+                        docker push ${ARTIFACTORY_DOCKER_REGISTRY}${INFLUX_CONTAINER}:latest-dev
                         """
                     }
                 }
             }
         }
+
 
 
         /* Stage 6: Remove Docker images locally to free up space */
@@ -180,17 +185,17 @@ pipeline {
                 script {
                     echo "***** Removing Backend Images *****"
                     sh """
-                    docker rmi ${ARTIFACTORY_DOCKER_REGISTRY}${BACKEND_DOCKER_IMAGE_TAG} || true
+                    docker rmi ${ARTIFACTORY_DOCKER_REGISTRY}${BACKEND_CONTAINER}:latest-dev || true
                     """
 
                     echo "***** Removing MongoDB Image *****"
                     sh """
-                    docker rmi ${ARTIFACTORY_DOCKER_REGISTRY}${MONGO_CONTAINER}:${BUILD_TAG} || true
+                    docker rmi ${ARTIFACTORY_DOCKER_REGISTRY}${MONGO_CONTAINER}:latest-dev || true
                     """
 
                     echo "***** Removing InfluxDB Image *****"
                     sh """
-                    docker rmi ${ARTIFACTORY_DOCKER_REGISTRY}${INFLUX_CONTAINER}:${BUILD_TAG} || true
+                    docker rmi ${ARTIFACTORY_DOCKER_REGISTRY}${INFLUX_CONTAINER}:latest-dev || true
                     """
                 }
             }
