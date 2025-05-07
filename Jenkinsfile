@@ -203,6 +203,7 @@ pipeline {
 
 
 
+
         /* Stage 7: Deploy the application to Kubernetes */
         stage("Deployment") {
             steps {
