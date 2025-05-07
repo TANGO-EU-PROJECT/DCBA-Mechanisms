@@ -104,7 +104,6 @@ pipeline {
                 script {
                     echo 'Pulling and Running MongoDB Container'
                     sh """
-                    docker rm -f ${MONGO_CONTAINER} || true
                     docker pull ${MONGO_IMAGE}
                     docker run -d \\
                     --name ${MONGO_CONTAINER} \\
@@ -126,7 +125,6 @@ pipeline {
                 script {
                     echo 'Pulling and Running InfluxDB Container'
                     sh """
-                    docker rm -f ${INFLUX_CONTAINER} || true
                     docker pull ${INFLUX_IMAGE}
                     docker run -d \\
                     --name ${INFLUX_CONTAINER} \\
