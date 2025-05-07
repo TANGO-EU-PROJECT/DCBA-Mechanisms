@@ -45,11 +45,11 @@ pipeline {
         BUILD_TAG = "stable-${env.BUILD_ID}"
 
         // Backend
-        APP_NAME = "dcba-backend"                                           /* Application Name */
+        BACKEND_CONTAINER = "dcba-backend"                                  /* Application Name */
         ARTIFACTORY_SERVER = "harbor.tango.rid-intrasoft.eu"                /* Docker registry server URL */
         ARTIFACTORY_DOCKER_REGISTRY = "harbor.tango.rid-intrasoft.eu/dcba/" /* Docker image registry path */
         BRANCH_NAME = "stable"                                              /* Git branch to checkout */
-        DOCKER_IMAGE_TAG = "$APP_NAME:R${env.BUILD_ID}"                     /* Docker image tag using the application name and Jenkins build ID */
+        BACKEND_DOCKER_IMAGE_TAG = "${BACKEND_CONTAINER}:${env.BUILD_ID}"   /* Docker image tag using the application name and Jenkins build ID */
 
         // MongoDB
         MONGO_IMAGE = "mongo:latest"
@@ -92,7 +92,7 @@ pipeline {
                 echo 'Building Backend Docker Image'
                 script {
                     /* Build Backend image */
-                    def dockerImage = docker.build(ARTIFACTORY_DOCKER_REGISTRY + DOCKER_IMAGE_TAG,'-f BACKEND/Dockerfile .')
+                    def dockerImage = docker.build(ARTIFACTORY_DOCKER_REGISTRY + BACKEND_DOCKER_IMAGE_TAG,'-f BACKEND/Dockerfile .')
                 }
             }
         }
@@ -154,9 +154,7 @@ pipeline {
 
                         echo "***** Tag abd Push Backend Image *****"
                         sh """
-                        docker push ${ARTIFACTORY_DOCKER_REGISTRY}${DOCKER_IMAGE_TAG}
-                        docker tag ${ARTIFACTORY_DOCKER_REGISTRY}${DOCKER_IMAGE_TAG} ${ARTIFACTORY_DOCKER_REGISTRY}${APP_NAME}:latest_dev
-                        docker push ${ARTIFACTORY_DOCKER_REGISTRY}${APP_NAME}:latest_dev
+                        docker push ${ARTIFACTORY_DOCKER_REGISTRY}${BACKEND_DOCKER_IMAGE_TAG}
                         """
 
                         echo "***** Tag and Push MongoDB Image *****"
@@ -182,7 +180,7 @@ pipeline {
                 script {
                     echo "***** Removing Backend Images *****"
                     sh """
-                    docker rmi ${ARTIFACTORY_DOCKER_REGISTRY}${DOCKER_IMAGE_TAG} || true
+                    docker rmi ${ARTIFACTORY_DOCKER_REGISTRY}${BACKEND_DOCKER_IMAGE_TAG} || true
                     docker rmi ${ARTIFACTORY_DOCKER_REGISTRY}${APP_NAME}:latest_dev || true
                     """
 
