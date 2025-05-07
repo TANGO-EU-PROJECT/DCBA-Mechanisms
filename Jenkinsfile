@@ -183,6 +183,7 @@ pipeline {
                         docker image push ${ARTIFACTORY_DOCKER_REGISTRY}${INFLUX_CONTAINER_NAME}:latest-dev
                         """
                     }
+                    
                 }
             }
         }
