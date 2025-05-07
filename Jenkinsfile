@@ -49,7 +49,7 @@ pipeline {
         ARTIFACTORY_SERVER = "harbor.tango.rid-intrasoft.eu"                /* Docker registry server URL */
         ARTIFACTORY_DOCKER_REGISTRY = "harbor.tango.rid-intrasoft.eu/dcba/" /* Docker image registry path */
         BRANCH_NAME = "stable"                                              /* Git branch to checkout */
-        BACKEND_DOCKER_IMAGE_TAG = "R${env.BUILD_ID}"  // ✅ FIXED
+        BACKEND_DOCKER_IMAGE_TAG = "${BACKEND_CONTAINER_NAME}:R${env.BUILD_ID}" /* Docker image tag using the application name and Jenkins build ID */
 
         // MongoDB
         MONGO_IMAGE = "mongo:latest"
@@ -59,7 +59,7 @@ pipeline {
         MONGO_INITDB_ADMIN_USERNAME = "admin-username"
         MONGO_INITDB_ADMIN_PASSWORD = "admin-password"
         MONGO_INITDB_DATABASE = "dcba-mongo-db-v1"
-        MONGO_DOCKER_IMAGE_TAG = "R${env.BUILD_ID}"  // ✅ FIXED
+        MONGO_DOCKER_IMAGE_TAG = "${MONGO_CONTAINER_NAME}:R${env.BUILD_ID}"
         // InfluxDB
         INFLUX_IMAGE = "influxdb:latest"
         INFLUX_CONTAINER_NAME = "dcba-influx-db"
@@ -70,7 +70,7 @@ pipeline {
         INFLUX_INITDB_ORG = "DCBA"
         INFLUX_INITDB_BUCKET = "DCBA"
         INFLUX_INITDB_AUTH_TOKEN = "QzaDsrfh8LkP0dnTmxj4fB4KAtQVZb-68BHqTTqWv2jie5daMLpEqeugbn1hIfbTcduNEuR8HAoUtVFjC2M3bw=="
-        INFLUX_DOCKER_IMAGE_TAG = "R${env.BUILD_ID}"  // ✅ FIXED
+        INFLUX_DOCKER_IMAGE_TAG = "${INFLUX_CONTAINER_NAME}:R${env.BUILD_ID}"
     }
 
     stages {
@@ -112,8 +112,9 @@ pipeline {
                     docker pull ${MONGO_IMAGE}  # Pull the base image
 
                     # Build the custom MongoDB image with the necessary configurations
-                    docker build -t ${ARTIFACTORY_DOCKER_REGISTRY}${MONGO_CONTAINER_NAME}:${MONGO_DOCKER_IMAGE_TAG} .
+                    docker build -t ${ARTIFACTORY_DOCKER_REGISTRY}${MONGO_DOCKER_IMAGE_TAG} .
                     """
+                    
                 }
             }
         }
@@ -130,7 +131,7 @@ pipeline {
                     docker pull ${INFLUX_IMAGE}  # Pull the base image
 
                     # Build the custom InfluxDB image with necessary configurations
-                    docker build -t ${ARTIFACTORY_DOCKER_REGISTRY}${INFLUX_CONTAINER_NAME}:${INFLUX_DOCKER_IMAGE_TAG} .
+                    docker build -t ${ARTIFACTORY_DOCKER_REGISTRY}${INFLUX_DOCKER_IMAGE_TAG} .
                     """
                 }
             }
@@ -155,20 +156,20 @@ pipeline {
                         echo "***** Tag and Push MongoDB Image *****"
                         sh """
                         # Push the MongoDB image built in Stage 3
-                        docker image push ${ARTIFACTORY_DOCKER_REGISTRY}${MONGO_CONTAINER_NAME}:${MONGO_DOCKER_IMAGE_TAG}
+                        docker image push ${ARTIFACTORY_DOCKER_REGISTRY}${MONGO_DOCKER_IMAGE_TAG}
 
                         # Tag as latest-dev and push
-                        docker tag ${ARTIFACTORY_DOCKER_REGISTRY}${MONGO_CONTAINER_NAME}:${MONGO_DOCKER_IMAGE_TAG} ${ARTIFACTORY_DOCKER_REGISTRY}${MONGO_CONTAINER_NAME}:latest-dev
+                        docker tag ${ARTIFACTORY_DOCKER_REGISTRY}${MONGO_DOCKER_IMAGE_TAG} ${ARTIFACTORY_DOCKER_REGISTRY}${MONGO_CONTAINER_NAME}:latest-dev
                         docker image push ${ARTIFACTORY_DOCKER_REGISTRY}${MONGO_CONTAINER_NAME}:latest-dev
                         """
 
                         echo "***** Tag and Push InfluxDB Image *****"
                         sh """
                         # Push the InfluxDB image built in Stage 4
-                        docker image push ${ARTIFACTORY_DOCKER_REGISTRY}${INFLUX_CONTAINER_NAME}:${INFLUX_DOCKER_IMAGE_TAG}
+                        docker image push ${ARTIFACTORY_DOCKER_REGISTRY}${INFLUX_DOCKER_IMAGE_TAG}
 
                         # Tag as latest-dev and push
-                        docker tag ${ARTIFACTORY_DOCKER_REGISTRY}${INFLUX_CONTAINER_NAME}:${INFLUX_DOCKER_IMAGE_TAG} ${ARTIFACTORY_DOCKER_REGISTRY}${INFLUX_CONTAINER_NAME}:latest-dev
+                        docker tag ${ARTIFACTORY_DOCKER_REGISTRY}${INFLUX_DOCKER_IMAGE_TAG} ${ARTIFACTORY_DOCKER_REGISTRY}${INFLUX_CONTAINER_NAME}:latest-dev
                         docker image push ${ARTIFACTORY_DOCKER_REGISTRY}${INFLUX_CONTAINER_NAME}:latest-dev
                         """
                     }
