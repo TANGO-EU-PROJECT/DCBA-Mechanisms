@@ -49,7 +49,7 @@ pipeline {
         ARTIFACTORY_SERVER = "harbor.tango.rid-intrasoft.eu"                /* Docker registry server URL */
         ARTIFACTORY_DOCKER_REGISTRY = "harbor.tango.rid-intrasoft.eu/dcba/" /* Docker image registry path */
         BRANCH_NAME = "stable"                                              /* Git branch to checkout */
-        BACKEND_DOCKER_IMAGE_TAG = "${BACKEND_CONTAINER_NAME}:${env.BUILD_ID}" /* Docker image tag using the application name and Jenkins build ID */
+        BACKEND_DOCKER_IMAGE_TAG = "${BACKEND_CONTAINER_NAME}:R${env.BUILD_ID}" /* Docker image tag using the application name and Jenkins build ID */
 
         // MongoDB
         MONGO_IMAGE = "mongo:latest"
@@ -59,7 +59,7 @@ pipeline {
         MONGO_INITDB_ADMIN_USERNAME = "admin-username"
         MONGO_INITDB_ADMIN_PASSWORD = "admin-password"
         MONGO_INITDB_DATABASE = "dcba-mongo-db-v1"
-        MONGO_DOCKER_IMAGE_TAG = "${MONGO_CONTAINER_NAME}:${env.BUILD_ID}"
+        MONGO_DOCKER_IMAGE_TAG = "${MONGO_CONTAINER_NAME}:R${env.BUILD_ID}"
         // InfluxDB
         INFLUX_IMAGE = "influxdb:latest"
         INFLUX_CONTAINER_NAME = "dcba-influx-db"
@@ -70,7 +70,7 @@ pipeline {
         INFLUX_INITDB_ORG = "DCBA"
         INFLUX_INITDB_BUCKET = "DCBA"
         INFLUX_INITDB_AUTH_TOKEN = "QzaDsrfh8LkP0dnTmxj4fB4KAtQVZb-68BHqTTqWv2jie5daMLpEqeugbn1hIfbTcduNEuR8HAoUtVFjC2M3bw=="
-        INFLUX_DOCKER_IMAGE_TAG = "${INFLUX_CONTAINER_NAME}:${env.BUILD_ID}"
+        INFLUX_DOCKER_IMAGE_TAG = "${INFLUX_CONTAINER_NAME}:R${env.BUILD_ID}"
     }
 
     stages {
