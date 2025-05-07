@@ -206,17 +206,10 @@ pipeline {
         /* Stage 7: Deploy the application to Kubernetes */
         stage("Deployment") {
             steps {
-                script {
-                    // Write BUILD_ID to environment for substitution
-                    sh """
-                        export BUILD_ID=${env.BUILD_ID}
-                        envsubst < dcba-backend-deployment.yml > dcba-backend-deployment.processed.yml
-                    """
-                }
-
+                /* Use the kubeconfig file to interact with the Kubernetes cluster */
                 withKubeConfig([credentialsId: 'K8s-config-file', serverUrl: 'https://167.235.66.115:6443', namespace: 'tango-development']) {
-                    sh 'kubectl apply -f dcba-backend-deployment.processed.yml'
-                    sh 'kubectl get pods'
+                    sh 'kubectl apply -f dcba-backend-deployment.yml' /* Apply the Kubernetes deployment manifest to update or deploy the application */
+                    sh 'kubectl get pods'                            /* Verify that the deployment is running by listing the pods in the namespace  */
                 }
             }
         }
