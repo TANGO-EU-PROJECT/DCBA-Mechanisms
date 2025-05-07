@@ -59,6 +59,8 @@ spec:
       labels:
         app: dcba-mongo-db
     spec:
+      imagePullSecrets:
+        - name: regcred
       containers:
         - name: dcba-mongo-db
           image: harbor.tango.rid-intrasoft.eu/dcba/dcba-mongo-db:latest-dev
@@ -102,6 +104,8 @@ spec:
       labels:
         app: dcba-influx-db
     spec:
+      imagePullSecrets:
+        - name: regcred
       containers:
         - name: dcba-influx-db
           image: harbor.tango.rid-intrasoft.eu/dcba/dcba-influx-db:latest-dev
