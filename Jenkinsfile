@@ -45,23 +45,24 @@ pipeline {
         BUILD_TAG = "stable-${env.BUILD_ID}"
 
         // Backend
-        BACKEND_CONTAINER = "dcba-backend"                                  /* Application Name */
+        BACKEND_CONTAINER_NAME = "dcba-backend"                             /* Application Name */
         ARTIFACTORY_SERVER = "harbor.tango.rid-intrasoft.eu"                /* Docker registry server URL */
         ARTIFACTORY_DOCKER_REGISTRY = "harbor.tango.rid-intrasoft.eu/dcba/" /* Docker image registry path */
         BRANCH_NAME = "stable"                                              /* Git branch to checkout */
-        BACKEND_DOCKER_IMAGE_TAG = "${BACKEND_CONTAINER}:${env.BUILD_ID}"   /* Docker image tag using the application name and Jenkins build ID */
+        BACKEND_DOCKER_IMAGE_TAG = "${BACKEND_CONTAINER_NAME}:${env.BUILD_ID}" /* Docker image tag using the application name and Jenkins build ID */
 
         // MongoDB
         MONGO_IMAGE = "mongo:latest"
-        MONGO_CONTAINER = "dcba-mongo-db"
+        MONGO_CONTAINER_NAME = "dcba-mongo-db"
         MONGO_INITDB_EXTERNAL_PORT = "27018"
         MONGO_INITDB_INTERNAL_PORT = "27017"
         MONGO_INITDB_ADMIN_USERNAME = "admin-username"
         MONGO_INITDB_ADMIN_PASSWORD = "admin-password"
         MONGO_INITDB_DATABASE = "dcba-mongo-db-v1"
+        MONGO_DOCKER_IMAGE_TAG = "${MONGO_CONTAINER_NAME}:${env.BUILD_ID}"
         // InfluxDB
         INFLUX_IMAGE = "influxdb:latest"
-        INFLUX_CONTAINER = "dcba-influx-db"
+        INFLUX_CONTAINER_NAME = "dcba-influx-db"
         INFLUXDB_EXTERNAL_PORT = "8087"
         INFLUXDB_INTERNAL_PORT = "8086"
         INFLUX_INITDB_ADMIN_USERNAME = "admin-username"
@@ -69,6 +70,7 @@ pipeline {
         INFLUX_INITDB_ORG = "DCBA"
         INFLUX_INITDB_BUCKET = "DCBA"
         INFLUX_INITDB_AUTH_TOKEN = "QzaDsrfh8LkP0dnTmxj4fB4KAtQVZb-68BHqTTqWv2jie5daMLpEqeugbn1hIfbTcduNEuR8HAoUtVFjC2M3bw=="
+        INFLUX_DOCKER_IMAGE_TAG = "${INFLUX_CONTAINER_NAME}:${env.BUILD_ID}"
     }
 
     stages {
@@ -92,7 +94,7 @@ pipeline {
                 echo 'Building Backend Docker Image'
                 script {
                     /* Build Backend image */
-                    def dockerImage = docker.build("${ARTIFACTORY_DOCKER_REGISTRY}${BACKEND_CONTAINER}:latest-dev", '-f BACKEND/Dockerfile .')
+                    def dockerImage = docker.build(ARTIFACTORY_DOCKER_REGISTRY + BACKEND_DOCKER_IMAGE_TAG, '-f BACKEND/Dockerfile .')
                 }
             }
         }
@@ -105,10 +107,10 @@ pipeline {
                 script {
                     echo 'Pulling and Running MongoDB Container'
                     sh """
-                    docker rm -f ${MONGO_CONTAINER} || true
+                    docker rm -f ${MONGO_CONTAINER_NAME} || true
                     docker pull ${MONGO_IMAGE}
                     docker run -d \\
-                    --name ${MONGO_CONTAINER} \\
+                    --name ${MONGO_CONTAINER_NAME} \\
                     -p ${MONGO_INITDB_EXTERNAL_PORT}:${MONGO_INITDB_INTERNAL_PORT} \\
                     -v mongo_data:/data/db/devices \\
                     -e MONGO_INITDB_ROOT_USERNAME=${MONGO_INITDB_ADMIN_USERNAME} \\
@@ -127,10 +129,10 @@ pipeline {
                 script {
                     echo 'Pulling and Running InfluxDB Container'
                     sh """
-                    docker rm -f ${INFLUX_CONTAINER} || true
+                    docker rm -f ${INFLUX_CONTAINER_NAME} || true
                     docker pull ${INFLUX_IMAGE}
                     docker run -d \\
-                    --name ${INFLUX_CONTAINER} \\
+                    --name ${INFLUX_CONTAINER_NAME} \\
                     -p ${INFLUXDB_EXTERNAL_PORT}:${INFLUXDB_INTERNAL_PORT} \\
                     -v influx_data:/var/lib/influxdb \\
                     -e DOCKER_INFLUXDB_INIT_MODE=setup \\
@@ -155,25 +157,25 @@ pipeline {
 
                         echo "***** Tag and Push Backend Image *****"
                         sh """
-                        docker push ${ARTIFACTORY_DOCKER_REGISTRY}${BACKEND_CONTAINER}:latest-dev
-                        docker tag ${ARTIFACTORY_DOCKER_REGISTRY}${BACKEND_CONTAINER}:latest-dev ${ARTIFACTORY_DOCKER_REGISTRY}${BACKEND_CONTAINER}:${BUILD_TAG}
-                        docker push ${ARTIFACTORY_DOCKER_REGISTRY}${BACKEND_CONTAINER}:${BUILD_TAG}
+                        docker image push ${ARTIFACTORY_DOCKER_REGISTRY}${BACKEND_DOCKER_IMAGE_TAG}
+                        docker tag ${ARTIFACTORY_DOCKER_REGISTRY}${BACKEND_DOCKER_IMAGE_TAG} ${ARTIFACTORY_DOCKER_REGISTRY}${BACKEND_CONTAINER_NAME}:latest-dev
+                        docker image push ${ARTIFACTORY_DOCKER_REGISTRY}${BACKEND_CONTAINER_NAME}:latest-dev
                         """
 
                         echo "***** Tag and Push MongoDB Image *****"
                         sh """
-                        docker tag ${MONGO_IMAGE} ${ARTIFACTORY_DOCKER_REGISTRY}${MONGO_CONTAINER}:latest-dev
-                        docker tag ${MONGO_IMAGE} ${ARTIFACTORY_DOCKER_REGISTRY}${MONGO_CONTAINER}:${BUILD_TAG}
-                        docker push ${ARTIFACTORY_DOCKER_REGISTRY}${MONGO_CONTAINER}:latest-dev
-                        docker push ${ARTIFACTORY_DOCKER_REGISTRY}${MONGO_CONTAINER}:${BUILD_TAG}
+                        docker tag ${MONGO_IMAGE} ${ARTIFACTORY_DOCKER_REGISTRY}${MONGO_DOCKER_IMAGE_TAG}
+                        docker tag ${ARTIFACTORY_DOCKER_REGISTRY}${MONGO_DOCKER_IMAGE_TAG} ${ARTIFACTORY_DOCKER_REGISTRY}${MONGO_CONTAINER_NAME}:latest-dev
+                        docker image push ${ARTIFACTORY_DOCKER_REGISTRY}${MONGO_DOCKER_IMAGE_TAG}
+                        docker image push ${ARTIFACTORY_DOCKER_REGISTRY}${MONGO_CONTAINER_NAME}:latest-dev
                         """
 
                         echo "***** Tag and Push InfluxDB Image *****"
                         sh """
-                        docker tag ${INFLUX_IMAGE} ${ARTIFACTORY_DOCKER_REGISTRY}${INFLUX_CONTAINER}:latest-dev
-                        docker tag ${INFLUX_IMAGE} ${ARTIFACTORY_DOCKER_REGISTRY}${INFLUX_CONTAINER}:${BUILD_TAG}
-                        docker push ${ARTIFACTORY_DOCKER_REGISTRY}${INFLUX_CONTAINER}:latest-dev
-                        docker push ${ARTIFACTORY_DOCKER_REGISTRY}${INFLUX_CONTAINER}:${BUILD_TAG}
+                        docker tag ${INFLUX_IMAGE} ${ARTIFACTORY_DOCKER_REGISTRY}${INFLUX_DOCKER_IMAGE_TAG}
+                        docker tag ${ARTIFACTORY_DOCKER_REGISTRY}${INFLUX_DOCKER_IMAGE_TAG} ${ARTIFACTORY_DOCKER_REGISTRY}${INFLUX_CONTAINER_NAME}:latest-dev
+                        docker image push ${ARTIFACTORY_DOCKER_REGISTRY}${INFLUX_DOCKER_IMAGE_TAG}
+                        docker image push ${ARTIFACTORY_DOCKER_REGISTRY}${INFLUX_CONTAINER_NAME}:latest-dev
                         """
                     }
                 }
@@ -188,20 +190,20 @@ pipeline {
                 script {
                     echo "***** Removing Backend Images *****"
                     sh """
-                    docker rmi ${ARTIFACTORY_DOCKER_REGISTRY}${BACKEND_CONTAINER}:latest-dev || true
-                    docker rmi ${ARTIFACTORY_DOCKER_REGISTRY}${BACKEND_CONTAINER}:${BUILD_TAG} || true
+                    docker rmi ${ARTIFACTORY_DOCKER_REGISTRY}${BACKEND_DOCKER_IMAGE_TAG}
+                    docker rmi ${ARTIFACTORY_DOCKER_REGISTRY}${BACKEND_CONTAINER_NAME}:latest-dev
                     """
 
                     echo "***** Removing MongoDB Image *****"
                     sh """
-                    docker rmi ${ARTIFACTORY_DOCKER_REGISTRY}${MONGO_CONTAINER}:latest-dev || true
-                    docker rmi ${ARTIFACTORY_DOCKER_REGISTRY}${MONGO_CONTAINER}:${BUILD_TAG} || true
+                    docker rmi ${ARTIFACTORY_DOCKER_REGISTRY}${MONGO_DOCKER_IMAGE_TAG}
+                    docker rmi ${ARTIFACTORY_DOCKER_REGISTRY}${MONGO_CONTAINER_NAME}:latest-dev
                     """
 
                     echo "***** Removing InfluxDB Image *****"
                     sh """
-                    docker rmi ${ARTIFACTORY_DOCKER_REGISTRY}${INFLUX_CONTAINER}:latest-dev || true
-                    docker rmi ${ARTIFACTORY_DOCKER_REGISTRY}${INFLUX_CONTAINER}:${BUILD_TAG} || true
+                    docker rmi ${ARTIFACTORY_DOCKER_REGISTRY}${INFLUX_DOCKER_IMAGE_TAG}
+                    docker rmi ${ARTIFACTORY_DOCKER_REGISTRY}${INFLUX_CONTAINER_NAME}:latest-dev
                     """
                 }
             }
