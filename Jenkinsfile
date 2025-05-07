@@ -179,6 +179,7 @@ pipeline {
 
 
 
+
         /* Stage 6: Remove Docker images locally to free up space */
         stage('Docker Remove Images Locally') {
             steps {
