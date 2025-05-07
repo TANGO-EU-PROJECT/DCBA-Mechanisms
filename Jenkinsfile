@@ -107,18 +107,8 @@ pipeline {
                 script {
                     echo 'Pulling and Running MongoDB Container'
                     sh """
-                    docker rm -f ${MONGO_CONTAINER_NAME} || true
-                    docker pull ${MONGO_IMAGE}
-                    docker run -d \\
-                    --name ${MONGO_CONTAINER_NAME} \\
-                    -p ${MONGO_INITDB_EXTERNAL_PORT}:${MONGO_INITDB_INTERNAL_PORT} \\
-                    -v mongo_data:/data/db/devices \\
-                    -e MONGO_INITDB_ROOT_USERNAME=${MONGO_INITDB_ADMIN_USERNAME} \\
-                    -e MONGO_INITDB_ROOT_PASSWORD=${MONGO_INITDB_ADMIN_PASSWORD} \\
-                    -e MONGO_INITDB_DATABASE=${MONGO_INITDB_DATABASE} \\
-                    ${MONGO_IMAGE}
+                    docker rm -f ${INFLUX_CONTAINER_NAME} || true
                     """
-
                 }
             }
         }
@@ -130,18 +120,6 @@ pipeline {
                     echo 'Pulling and Running InfluxDB Container'
                     sh """
                     docker rm -f ${INFLUX_CONTAINER_NAME} || true
-                    docker pull ${INFLUX_IMAGE}
-                    docker run -d \\
-                    --name ${INFLUX_CONTAINER_NAME} \\
-                    -p ${INFLUXDB_EXTERNAL_PORT}:${INFLUXDB_INTERNAL_PORT} \\
-                    -v influx_data:/var/lib/influxdb \\
-                    -e DOCKER_INFLUXDB_INIT_MODE=setup \\
-                    -e DOCKER_INFLUXDB_INIT_USERNAME=${INFLUX_INITDB_ADMIN_USERNAME} \\
-                    -e DOCKER_INFLUXDB_INIT_PASSWORD=${INFLUX_INITDB_ADMIN_PASSWORD} \\
-                    -e DOCKER_INFLUXDB_INIT_ORG=${INFLUX_INITDB_ORG} \\
-                    -e DOCKER_INFLUXDB_INIT_BUCKET=${INFLUX_INITDB_BUCKET} \\
-                    -e DOCKER_INFLUXDB_INIT_ADMIN_TOKEN="${INFLUX_INITDB_AUTH_TOKEN}" \\
-                    ${INFLUX_IMAGE}
                     """
                 }
             }
@@ -183,7 +161,7 @@ pipeline {
                         docker image push ${ARTIFACTORY_DOCKER_REGISTRY}${INFLUX_CONTAINER_NAME}:latest-dev
                         """
                     }
-                    
+
                 }
             }
         }
