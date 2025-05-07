@@ -110,9 +110,7 @@ pipeline {
                     // Build the MongoDB image
                     sh """
                     docker pull ${MONGO_IMAGE}  # Pull the base image
-
-                    # Build the custom MongoDB image with the necessary configurations
-                    docker build -t ${ARTIFACTORY_DOCKER_REGISTRY}${MONGO_DOCKER_IMAGE_TAG} .
+                    docker tag ${MONGO_IMAGE} ${ARTIFACTORY_DOCKER_REGISTRY}${MONGO_DOCKER_IMAGE_TAG}
                     """
                     
                 }
@@ -129,9 +127,7 @@ pipeline {
                     // Build the InfluxDB image
                     sh """
                     docker pull ${INFLUX_IMAGE}  # Pull the base image
-
-                    # Build the custom InfluxDB image with necessary configurations
-                    docker build -t ${ARTIFACTORY_DOCKER_REGISTRY}${INFLUX_DOCKER_IMAGE_TAG} .
+                    docker tag ${INFLUX_IMAGE} ${ARTIFACTORY_DOCKER_REGISTRY}${INFLUX_DOCKER_IMAGE_TAG}
                     """
                 }
             }
