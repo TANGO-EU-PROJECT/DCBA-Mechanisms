@@ -156,6 +156,7 @@ pipeline {
                         echo "***** Tag and Push Backend Image *****"
                         sh """
                         docker push ${ARTIFACTORY_DOCKER_REGISTRY}${BACKEND_CONTAINER}:latest-dev
+                        docker tag ${ARTIFACTORY_DOCKER_REGISTRY}${BACKEND_CONTAINER}:latest-dev ${ARTIFACTORY_DOCKER_REGISTRY}${BACKEND_CONTAINER}:${BUILD_TAG}
                         docker push ${ARTIFACTORY_DOCKER_REGISTRY}${BACKEND_CONTAINER}:${BUILD_TAG}
                         """
 
