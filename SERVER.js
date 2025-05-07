@@ -42,6 +42,8 @@ DCBA_SERVER.use(cookieParser());
 /* Middleware for logging HTTP requests using Morgan (set to 'tiny' log format) */
 DCBA_SERVER.use(morgan('tiny'));
 
+console.log(process.env.INFLUX_DB_URI); // Should not be undefined
+console.log(process.env.MONGO_DB_URI); // Should not be undefined
 
 /************************************************************************************************************************************************************************************************/
 
