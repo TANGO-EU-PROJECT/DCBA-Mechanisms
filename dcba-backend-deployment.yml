@@ -1,4 +1,4 @@
----
+# DCBA Backend Deployment
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -11,6 +11,7 @@ spec:
   replicas: 2
   selector:
     matchLabels:
+      app: dcba-backend
       type: back-end
   template:
     metadata:
@@ -22,12 +23,12 @@ spec:
         - name: regcred
       containers:
         - name: dcba-backend
-          image: dcba-backend:latest  # Use the latest image built via docker-compose or an image registry
+          image: harbor.tango.rid-intrasoft.eu/dcba/dcba-backend:stable-${BUILD_ID}
           imagePullPolicy: Always
           ports:
             - containerPort: 3000
-
 ---
+# DCBA Backend Service
 apiVersion: v1
 kind: Service
 metadata:
@@ -40,10 +41,38 @@ spec:
     app: dcba-backend
   type: NodePort
   ports:
-    - port: 3001        # Backend External port 
-      targetPort: 3000  # Backend Internal port 
-
+    - port: 3001
+      targetPort: 3000
 ---
+# MongoDB Deployment
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: dcba-mongo-db
+  namespace: tango-development
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: dcba-mongo-db
+  template:
+    metadata:
+      labels:
+        app: dcba-mongo-db
+    spec:
+      containers:
+        - name: dcba-mongo-db
+          image: harbor.tango.rid-intrasoft.eu/dcba/dcba-mongo-db:stable-${BUILD_ID}
+          ports:
+            - containerPort: 27017
+          volumeMounts:
+            - name: mongo-storage
+              mountPath: /data/db
+      volumes:
+        - name: mongo-storage
+          emptyDir: {}
+---
+# MongoDB Service
 apiVersion: v1
 kind: Service
 metadata:
@@ -55,10 +84,32 @@ spec:
   selector:
     app: dcba-mongo-db
   ports:
-    - port: 27018        # Mongo DB External port
-      targetPort: 27017  # Mongo DB Internal port
-
+    - port: 27018
+      targetPort: 27017
 ---
+# InfluxDB Deployment
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: dcba-influx-db
+  namespace: tango-development
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: dcba-influx-db
+  template:
+    metadata:
+      labels:
+        app: dcba-influx-db
+    spec:
+      containers:
+        - name: dcba-influx-db
+          image: harbor.tango.rid-intrasoft.eu/dcba/dcba-influx-db:stable-${BUILD_ID}
+          ports:
+            - containerPort: 8086
+---
+# InfluxDB Service
 apiVersion: v1
 kind: Service
 metadata:
@@ -70,5 +121,5 @@ spec:
   selector:
     app: dcba-influx-db
   ports:
-    - port: 8087        # Influx DB External port
-      targetPort: 8086  # Influx DB External port
+    - port: 8087
+      targetPort: 8086
