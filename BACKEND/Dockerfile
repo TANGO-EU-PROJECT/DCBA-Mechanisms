@@ -1,6 +1,10 @@
 # Use the official Node.js image as the base image
 FROM nikolaik/python-nodejs:python3.11-nodejs18	
 
+# Declare the build-time argument (only just to create a new artifact in Harbor each time the mongo is re-built)
+ARG BUILD_TIME
+LABEL build_time="$BUILD_TIME"
+
 # Set the working directory inside the container
 WORKDIR /production
 

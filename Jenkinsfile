@@ -94,7 +94,8 @@ pipeline {
                 echo 'Building Backend Docker Image'
                 script {
                     /* Build Backend image */
-                    def backendDockerImage = docker.build(ARTIFACTORY_DOCKER_REGISTRY + BACKEND_DOCKER_IMAGE_TAG, '-f BACKEND/Dockerfile .')
+                    def backendBuildTimestamp = new Date().format("yyyyMMddHHmmss")
+                    def backendDockerImage = docker.build(ARTIFACTORY_DOCKER_REGISTRY + BACKEND_DOCKER_IMAGE_TAG, "--build-arg BUILD_TIME=${backendBuildTimestamp} -f BACKEND/Dockerfile .")
                 }
             }
         }
@@ -107,7 +108,8 @@ pipeline {
             steps {
                 echo 'Building MongoDB Image'
                 script {
-                    def mongoDockerImage = docker.build(ARTIFACTORY_DOCKER_REGISTRY + MONGO_DOCKER_IMAGE_TAG, '-f MONGO_DB/Dockerfile .')
+                    def mongoBuildTimestamp = new Date().format("yyyyMMddHHmmss")
+                    def mongoDockerImage = docker.build(ARTIFACTORY_DOCKER_REGISTRY + MONGO_DOCKER_IMAGE_TAG, "--build-arg BUILD_TIME=${mongoBuildTimestamp} -f MONGO_DB/Dockerfile .")
                 }
             }
         }
@@ -118,7 +120,8 @@ pipeline {
             steps {
                 echo 'Building InfluxDB Image'
                 script {
-                    def influxDockerImage = docker.build(ARTIFACTORY_DOCKER_REGISTRY + INFLUX_DOCKER_IMAGE_TAG, '-f INFLUX_DB/Dockerfile .')
+                    def influxBuildTimestamp = new Date().format("yyyyMMddHHmmss")
+                    def influxDockerImage = docker.build(ARTIFACTORY_DOCKER_REGISTRY + INFLUX_DOCKER_IMAGE_TAG, "--build-arg BUILD_TIME=${influxBuildTimestamp} -f INFLUX_DB/Dockerfile .")
                 }
             }
         }
