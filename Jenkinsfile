@@ -94,7 +94,7 @@ pipeline {
                 echo 'Building Backend Docker Image'
                 script {
                     /* Build Backend image */
-                    def dockerImage = docker.build(ARTIFACTORY_DOCKER_REGISTRY + BACKEND_DOCKER_IMAGE_TAG, '-f BACKEND/Dockerfile .')
+                    def backendDockerImage = docker.build(ARTIFACTORY_DOCKER_REGISTRY + BACKEND_DOCKER_IMAGE_TAG, '-f BACKEND/Dockerfile .')
                 }
             }
         }
@@ -104,32 +104,22 @@ pipeline {
         /* Stage 3: Build the DCBA-MongoDB Image */
         stage('Build DCBA-MongoDB Image') {
             steps {
+                echo 'Building MongoDB Image'
                 script {
-                    echo 'Building MongoDB Image'
-
-                    // Build the MongoDB image
-                    sh """
-                    docker pull ${MONGO_IMAGE}  # Pull the base image
-                    docker tag ${MONGO_IMAGE} ${ARTIFACTORY_DOCKER_REGISTRY}${MONGO_DOCKER_IMAGE_TAG}
-                    """
-                    
+                    def mongoDockerImage = docker.build(ARTIFACTORY_DOCKER_REGISTRY + MONGO_DOCKER_IMAGE_TAG, '-f MONGO_DB/Dockerfile .')
                 }
             }
         }
 
 
 
+
         /* Stage 4: Build the DCBA-InfluxDB Image */
         stage('Build DCBA-InfluxDB Image') {
             steps {
+                echo 'Building InfluxDB Image'
                 script {
-                    echo 'Building InfluxDB Image'
-
-                    // Build the InfluxDB image
-                    sh """
-                    docker pull ${INFLUX_IMAGE}  # Pull the base image
-                    docker tag ${INFLUX_IMAGE} ${ARTIFACTORY_DOCKER_REGISTRY}${INFLUX_DOCKER_IMAGE_TAG}
-                    """
+                    def influxDockerImage = docker.build(ARTIFACTORY_DOCKER_REGISTRY + INFLUX_DOCKER_IMAGE_TAG, '-f INFLUX_DB/Dockerfile .')
                 }
             }
         }
@@ -140,9 +130,6 @@ pipeline {
             steps {
                 withCredentials([[$class: 'UsernamePasswordMultiBinding', credentialsId: 'harbor-jenkins-creds', usernameVariable: 'USERNAME', passwordVariable: 'PASSWORD']]) {
                     script {
-                        echo "ARTIFACTORY_DOCKER_REGISTRY: ${ARTIFACTORY_DOCKER_REGISTRY}"
-                        echo "MONGO_DOCKER_IMAGE_TAG: ${MONGO_DOCKER_IMAGE_TAG}"
-                        echo "INFLUX_DOCKER_IMAGE_TAG: ${INFLUX_DOCKER_IMAGE_TAG}"
 
                         echo "***** Docker Registry Login *****"
                         sh 'docker login ${ARTIFACTORY_SERVER} -u ${USERNAME} -p ${PASSWORD}'
