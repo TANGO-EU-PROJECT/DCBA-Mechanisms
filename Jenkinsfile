@@ -42,7 +42,7 @@ pipeline {
 
     /* Set up environment variables for the pipeline */
     environment {
-        BUILD_TAG = "stable-${env.BUILD_ID}"
+        //BUILD_TAG = "stable-${env.BUILD_ID}"
 
         // Backend
         BACKEND_CONTAINER_NAME = "dcba-backend"                             /* Application Name */
@@ -106,7 +106,7 @@ pipeline {
             steps {
                 echo 'Building MongoDB Image'
                 script {
-                    def mongoDockerImage = docker.build(ARTIFACTORY_DOCKER_REGISTRY + MONGO_DOCKER_IMAGE_TAG, '-f MONGO_DB/Dockerfile .')
+                    def mongoDockerImage = docker.build(ARTIFACTORY_DOCKER_REGISTRY + MONGO_DOCKER_IMAGE_TAG, '-f BACKEND/Dockerfile .')
                 }
             }
         }
