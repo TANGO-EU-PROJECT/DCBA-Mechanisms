@@ -53,7 +53,7 @@ pipeline {
 
         // MongoDB
         MONGO_IMAGE = "mongo:latest"
-        MONGO_CONTAINER_NAME = "dcba-mongo-db"
+        MONGO_CONTAINER_NAME = "dcba-mongo"
         MONGO_INITDB_EXTERNAL_PORT = "27018"
         MONGO_INITDB_INTERNAL_PORT = "27017"
         MONGO_INITDB_ADMIN_USERNAME = "admin-username"
@@ -62,7 +62,7 @@ pipeline {
         MONGO_DOCKER_IMAGE_TAG = "${MONGO_CONTAINER_NAME}:R${env.BUILD_ID}"
         // InfluxDB
         INFLUX_IMAGE = "influxdb:latest"
-        INFLUX_CONTAINER_NAME = "dcba-influx-db"
+        INFLUX_CONTAINER_NAME = "dcba-influx"
         INFLUXDB_EXTERNAL_PORT = "8087"
         INFLUXDB_INTERNAL_PORT = "8086"
         INFLUX_INITDB_ADMIN_USERNAME = "admin-username"
@@ -106,7 +106,7 @@ pipeline {
             steps {
                 echo 'Building MongoDB Image'
                 script {
-                    def mongoDockerImage = docker.build(ARTIFACTORY_DOCKER_REGISTRY + MONGO_DOCKER_IMAGE_TAG, '--no-cache -f MONGO_DB/Dockerfile .')
+                    def mongoDockerImage = docker.build(ARTIFACTORY_DOCKER_REGISTRY + MONGO_DOCKER_IMAGE_TAG, '-f MONGO_DB/Dockerfile .')
                 }
             }
         }
@@ -117,7 +117,7 @@ pipeline {
             steps {
                 echo 'Building InfluxDB Image'
                 script {
-                    def influxDockerImage = docker.build(ARTIFACTORY_DOCKER_REGISTRY + INFLUX_DOCKER_IMAGE_TAG, '--no-cache -f INFLUX_DB/Dockerfile .')
+                    def influxDockerImage = docker.build(ARTIFACTORY_DOCKER_REGISTRY + INFLUX_DOCKER_IMAGE_TAG, '-f INFLUX_DB/Dockerfile .')
                 }
             }
         }
