@@ -112,8 +112,6 @@ pipeline {
         }
 
 
-
-
         /* Stage 4: Build the DCBA-InfluxDB Image */
         stage('Build DCBA-InfluxDB Image') {
             steps {
