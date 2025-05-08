@@ -125,6 +125,7 @@ pipeline {
         }
 
 
+
         /* Stage 5: Push Images to Docker Registry */
         stage("Push Images to Registry") {
             steps {
