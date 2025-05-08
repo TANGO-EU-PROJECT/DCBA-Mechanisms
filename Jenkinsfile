@@ -101,8 +101,6 @@ pipeline {
         }
 
 
-
-
         /* Stage 3: Build the DCBA-MongoDB Image */
         stage('Build DCBA-MongoDB Image') {
             steps {
@@ -125,7 +123,6 @@ pipeline {
                 }
             }
         }
-
 
 
         /* Stage 5: Push Images to Docker Registry */
@@ -163,8 +160,6 @@ pipeline {
         }
 
 
-
-
         /* Stage 6: Remove Docker images locally to free up space */
         stage('Docker Remove Images Locally') {
             steps {
@@ -189,9 +184,6 @@ pipeline {
                 }
             }
         }
-
-
-
 
 
         /* Stage 7: Deploy the application to Kubernetes */
