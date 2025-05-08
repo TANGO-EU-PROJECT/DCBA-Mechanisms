@@ -144,7 +144,6 @@ pipeline {
 
                         echo "***** Tag and Push MongoDB Image *****"
                         sh """
-                        # Push the MongoDB image built in Stage 3
                         docker image push ${ARTIFACTORY_DOCKER_REGISTRY}${MONGO_DOCKER_IMAGE_TAG}
                         docker tag ${ARTIFACTORY_DOCKER_REGISTRY}${MONGO_DOCKER_IMAGE_TAG} ${ARTIFACTORY_DOCKER_REGISTRY}${MONGO_CONTAINER_NAME}:latest-dev
                         docker image push ${ARTIFACTORY_DOCKER_REGISTRY}${MONGO_CONTAINER_NAME}:latest-dev
@@ -152,7 +151,6 @@ pipeline {
 
                         echo "***** Tag and Push InfluxDB Image *****"
                         sh """
-                        # Push the InfluxDB image built in Stage 4
                         docker image push ${ARTIFACTORY_DOCKER_REGISTRY}${INFLUX_DOCKER_IMAGE_TAG}
                         docker tag ${ARTIFACTORY_DOCKER_REGISTRY}${INFLUX_DOCKER_IMAGE_TAG} ${ARTIFACTORY_DOCKER_REGISTRY}${INFLUX_CONTAINER_NAME}:latest-dev
                         docker image push ${ARTIFACTORY_DOCKER_REGISTRY}${INFLUX_CONTAINER_NAME}:latest-dev
