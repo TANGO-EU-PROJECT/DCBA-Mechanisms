@@ -53,17 +53,16 @@ pipeline {
 
         // MongoDB
         MONGO_IMAGE = "mongo:latest"
-        MONGO_CONTAINER_NAME = "dcba-mongo"
+        MONGO_CONTAINER_NAME = "dcba-mongo-db"
         MONGO_INITDB_EXTERNAL_PORT = "27018"
         MONGO_INITDB_INTERNAL_PORT = "27017"
         MONGO_INITDB_ADMIN_USERNAME = "admin-username"
         MONGO_INITDB_ADMIN_PASSWORD = "admin-password"
         MONGO_INITDB_DATABASE = "dcba-mongo-db-v1"
         MONGO_DOCKER_IMAGE_TAG = "${MONGO_CONTAINER_NAME}:R${env.BUILD_ID}"
-        
         // InfluxDB
         INFLUX_IMAGE = "influxdb:latest"
-        INFLUX_CONTAINER_NAME = "dcba-influx"
+        INFLUX_CONTAINER_NAME = "dcba-influx-db"
         INFLUXDB_EXTERNAL_PORT = "8087"
         INFLUXDB_INTERNAL_PORT = "8086"
         INFLUX_INITDB_ADMIN_USERNAME = "admin-username"
