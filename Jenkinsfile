@@ -106,11 +106,10 @@ pipeline {
             steps {
                 echo 'Building MongoDB Image'
                 script {
-                    def mongoDockerImage = docker.build(ARTIFACTORY_DOCKER_REGISTRY + MONGO_DOCKER_IMAGE_TAG, '-f BACKEND/Dockerfile .')
+                    def mongoDockerImage = docker.build(ARTIFACTORY_DOCKER_REGISTRY + MONGO_DOCKER_IMAGE_TAG, '-f MONGO_DB/Dockerfile .')
                 }
             }
         }
-
 
 
 

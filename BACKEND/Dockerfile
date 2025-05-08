@@ -24,9 +24,6 @@ RUN update-ca-certificates
 # Copy the rest of the application code to the working directory
 COPY . .
 
-# Expose the port that your Node.js app will run on
-EXPOSE ${SERVER_INTERNAL_BIND_PORT}
-
 # Command to run the server with nodemon, ignoring the specified files and directories
 WORKDIR /production
 
