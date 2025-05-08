@@ -60,6 +60,7 @@ pipeline {
         MONGO_INITDB_ADMIN_PASSWORD = "admin-password"
         MONGO_INITDB_DATABASE = "dcba-mongo-db-v1"
         MONGO_DOCKER_IMAGE_TAG = "${MONGO_CONTAINER_NAME}:R${env.BUILD_ID}"
+        
         // InfluxDB
         INFLUX_IMAGE = "influxdb:latest"
         INFLUX_CONTAINER_NAME = "dcba-influx"
