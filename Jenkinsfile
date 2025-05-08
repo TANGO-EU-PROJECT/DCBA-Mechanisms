@@ -106,7 +106,7 @@ pipeline {
             steps {
                 echo 'Building MongoDB Image'
                 script {
-                    def mongoDockerImage = docker.build(ARTIFACTORY_DOCKER_REGISTRY + MONGO_DOCKER_IMAGE_TAG, '-f MONGO_DB/Dockerfile .')
+                    def mongoDockerImage = docker.build(ARTIFACTORY_DOCKER_REGISTRY + MONGO_DOCKER_IMAGE_TAG, '--no-cache -f MONGO_DB/Dockerfile .')
                 }
             }
         }
@@ -117,7 +117,7 @@ pipeline {
             steps {
                 echo 'Building InfluxDB Image'
                 script {
-                    def influxDockerImage = docker.build(ARTIFACTORY_DOCKER_REGISTRY + INFLUX_DOCKER_IMAGE_TAG, '-f INFLUX_DB/Dockerfile .')
+                    def influxDockerImage = docker.build(ARTIFACTORY_DOCKER_REGISTRY + INFLUX_DOCKER_IMAGE_TAG, '--no-cache -f INFLUX_DB/Dockerfile .')
                 }
             }
         }
