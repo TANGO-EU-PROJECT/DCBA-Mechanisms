@@ -2,9 +2,7 @@
 const express = require('express');                                              /* Import Express framework                            */
 const morgan = require('morgan');                                                /* Import Morgan for HTTP request logging              */
 const config = require('./BACKEND/CONFIG/config');                               /* Import server configuration settings                */
-const routes = require('./BACKEND/API/routes/routes');                           /* Import API routes                                   */
 const controller = require('./BACKEND/API/controllers/controller');              /* Import controller for route handlers                */
-const dotenv = require('dotenv');                                                /* Import dotenv for environment variable management   */
 const mongoose = require('mongoose');                                            /* Import Mongoose for MongoDB object modeling         */
 const { InfluxDBClient } = require('@influxdata/influxdb3-client');
 const http = require('http');                                                    /* Import http for creating a HTTP server              */
@@ -12,7 +10,6 @@ const WebSocket = require('ws');                                                
 const { initializeWebSocketServer } = require('./BACKEND/UTILITIES/functions');  /* Import WebSocket functions from utilities           */
 const moment = require('moment');
 const cors = require('cors');
-const path = require('path');
 const frontendRoutes = require('./BACKEND/API/routes/frontendRoutes');                 /* Import FRONTEND API routes */
 const authenticatorRoutes = require('./BACKEND/API/routes/authenticatorRoutes');       /* Import AUTHENTICATOR routes */
 const externalServicesRoutes = require('./BACKEND/API/routes/externalServicesRoutes'); /* Import EXTERNAL SERVICES routes */
@@ -85,7 +82,7 @@ checkInfluxWithQuery();
 
 /* ------------------------- ROUTE CONFIGURATION ------------------------- */
 
-// Import routes for handling interaction with employee devices via the Authenticator app
+// Import routes for handling interaction with employee's devices via the Authenticator app
 DCBA_SERVER.use('/authenticator', authenticatorRoutes);
 
 // Import routes for handling interaction with external API services
@@ -122,10 +119,11 @@ initializeWebSocketServer(wss);
 /* ------------------------- SERVER STARTUP ------------------------- */
 
 // Get the server's port number from environment variables
-const port = process.env.SERVER_INTERNAL_BIND_PORT; 
+const internalPort = process.env.SERVER_INTERNAL_BIND_PORT; 
+const externalPort = process.env.SERVER_EXTERNAL_BIND_PORT;
 // Get the server's IP address from the configuration (bind to all interfaces in production or localhost in development)
 const ip = config.ServerIPAddr; 
 // Start the Express server and listen on the specified IP address and port
-server.listen(port, ip, () => {
-  console.log(`\n${magenta}============================= ${green}SERVER IS NOW LISTENING${reset} ${magenta}=============================\n${green}🔹 ${lightBlue}SERVER HOSTED AT:${reset} ${green}{ ${ip}:${port} } ${lightBlue}✔️ ${reset}\n${magenta}===================================================================================${reset}\n`);
+server.listen(internalPort, ip, () => {
+  console.log(`\n${magenta}============================= ${green}SERVER IS NOW LISTENING${reset} ${magenta}=============================\n${green}🔹 ${lightBlue}SERVER HOSTED AT:${reset} ${green}{ ${ip} }${reset}\n${magenta}---- Internally: ${green}${internalPort}${reset}\n${magenta}---- Externally: ${green}${externalPort}${reset}\n${magenta}===================================================================================${reset}\n`);
 });

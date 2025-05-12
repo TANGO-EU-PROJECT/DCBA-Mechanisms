@@ -51,8 +51,8 @@ const reset = '\x1b[0m';      /* Reset color to default              */
  */
 const getDeviceURI = async (did) => {
   try {
-    // Attempt to retrieve the device's details from the database using the 'findDevice' function
-    const device = await findDevice(did);
+    // Attempt to retrieve the device's details from the database using the 'findDeviceByDID' function
+    const device = await findDeviceByDID(did);
 
     // If an device record is found, return an object containing the URI. Otherwise, return null.
     return device ? { uriContent: device.URI } : null;
@@ -137,7 +137,7 @@ const createDeviceDocument = async (did, sub, device_id, log_file_uri, heatmap) 
  * @returns {Promise<Object|null>} - Returns the device document if found, otherwise returns `null`.
  * @throws {Error} - Throws an error if the database query fails.
  */
-const findDevice = async (did) => {
+const findDeviceByDID = async (did) => {
   try {
     // Query the "DEVICE" collection to find a device by the specified DID
     const device = await DEVICE.findOne({ did: did });
@@ -382,7 +382,7 @@ function readEDHeatmapCSV(filePath) {
 const getDeviceHeatmap = async (did) => {
   try {
     // Attempt to fetch the device's document from the database using the provided did
-    const device = await findDevice(did);
+    const device = await findDeviceByDID(did);
 
     // If no device is found, throw an error with a descriptive message
     if (!device) {
@@ -429,9 +429,6 @@ async function processSessionRequest(authToken, qr_scanner_state_request, did, s
       const device_id = sessionRequest.device_id;
       const log_file_uri = sessionRequest.log_file_uri;
 
-      // Notify the device through WebSocket
-      notifyDevice(authToken, qr_scanner_state_request, device_id, did, sub, log_file_uri, "session-request-valid");
-
       // Remove the processed session request from the database
       await SESSION_REQUEST.deleteOne({ _id: sessionRequest._id });
 
@@ -443,25 +440,72 @@ async function processSessionRequest(authToken, qr_scanner_state_request, did, s
         device_id: device_id,
       });
 
-      // Look for the device in the DEVICE collection using the findDevice function
-      const existingDevice = await findDevice(did);
+      // Look for the device in the DEVICE collection using the findDeviceByDeviceID function
+      const existingDevice = await findDeviceByDeviceID(device_id);
 
       if (!existingDevice) {
-        // If no existing device, create a new one
-        await createDeviceDocument(did, sub, device_id, log_file_uri, heatmap);
+        // Device not found 
+        // Search in the Mongo for a device with this did
+        const deviceWithSameDID = await findDeviceByDID(did);
+        if (!deviceWithSameDID) {
+          // If no device found associated with this DID, create it
+          await createDeviceDocument(did, sub, device_id, log_file_uri, heatmap);
+          notifyDevice(authToken, qr_scanner_state_request, device_id, did, sub, log_file_uri, "session-request-valid");
+          await updateFrontend(FRONTEND_CONNECTION, 'UPDATE_DEVICES');
+          return { status: 200, message: "Device status updated to online." };
+        } else {
+          // Someone tried to log in from his/her device, using an existing DID
+          notifyDevice(authToken, qr_scanner_state_request, device_id, did, sub, log_file_uri, "potential-credential-sharing");
+          logEvent({
+            event: 'UNAUTHORIZED ATTEMPT USING CREDENTIALS FROM ANOTHER DEVICE',
+            status: 'FAILED ❌',
+            did: did,
+            device_id: device_id,
+          });
+          return { status: 401, message: "Credentials don't match this device." };
+        }
       } else {
-        // If the device already exists, update their status to 'online'
-        existingDevice.status = 'online';
-        await existingDevice.save();  // Save the updated device document
-        logEvent({
-          event: 'DEVICE ALREADY REGISTERED IN THE DATABASE',
-          status: 'SUCCESS ✅',
-          did: did,
-          device_id: device_id,
-        });
+        // This device already exists. Need to ensure that its did matches the did request
+        if (existingDevice.did === did) {
+          // The device associated with this did already exists
+          // 1. Check if the device is already online
+          if (existingDevice.status === 'offline') {
+            existingDevice.status = 'online';
+            await existingDevice.save();  // Save the updated device document
+            logEvent({
+              event: 'DEVICE ALREADY REGISTERED IN THE DATABASE',
+              status: 'SUCCESS ✅',
+              did: did,
+              device_id: device_id,
+            });
+            notifyDevice(authToken, qr_scanner_state_request, device_id, did, sub, log_file_uri, "session-request-valid");
+            await updateFrontend(FRONTEND_CONNECTION, 'UPDATE_DEVICES');
+            return { status: 200, message: "Device status updated to online." };
+          } else {
+            // The specific device is already online
+            logEvent({
+              event: 'DEVICE ALREADY ONLINE',
+              status: 'FAILED ❌',
+              did: did,
+              device_id: device_id,
+            });
+            notifyDevice(authToken, qr_scanner_state_request, device_id, did, sub, log_file_uri, "device-already-online");
+            return { status: 409, message: "Device already online." };
+          }
+          
+        } else {
+          // Someone tried to log in to their device using another employee's credentials
+          notifyDevice(authToken, qr_scanner_state_request, device_id, did, sub, log_file_uri, "potential-credential-sharing");
+          logEvent({
+            event: 'UNAUTHORIZED ATTEMPT USING CREDENTIALS FROM ANOTHER DEVICE',
+            status: 'FAILED ❌',
+            did: did,
+            device_id: device_id,
+          });
+          return { status: 401, message: "Credentials don't match this device." };
+        }
       }
-
-      await updateFrontend(FRONTEND_CONNECTION, 'UPDATE_DEVICES');
+      //await updateFrontend(FRONTEND_CONNECTION, 'UPDATE_DEVICES');
     } else {
       // Notify the device that the session request is expired, in order to re-generate a new unique QR
       notifyDevice(authToken, qr_scanner_state_request, "unknown", did, sub, "unknown", "session-request-expired");
@@ -471,7 +515,7 @@ async function processSessionRequest(authToken, qr_scanner_state_request, did, s
         did: did,
         cause: 'THE SESSION REQUEST HAS EXPIRED'
       });
-      
+      return { status: 410, message: "Session request expired." };
     }
   } catch (error) {
     // Handle any errors that occur during the session request processing
@@ -481,6 +525,7 @@ async function processSessionRequest(authToken, qr_scanner_state_request, did, s
       did: did,
       cause: `AN ERROR OCCURRED DURING THE PROCESSING OF THE SESSION REQUEST: ${error}`
     });    
+    return { status: 500, message: "Internal server error" };
   }
 }
 
@@ -601,61 +646,109 @@ function initializeWebSocketServer(wss) {
 /** [13]
  * Notifies a specific client (device) via WebSocket when certain events occur.
  * This function checks if the WebSocket connection for the given device_id is open,
- * and if so, sends the notification with the relevant data.
+ * and if so, sends the message with the relevant data.
  * 
  * @param {string} qr_scanner_state_request - The current state of the session (e.g., 'auth_success').
  * @param {string} device_id - The device identifier.
  * @param {string} did - The Decentralized Identifier (DID) associated with the device.
  * @param {string} sub - Subscription or other relevant information.
+ * @param {string} message - Based on this message, the Authenticator app decides which alert to display.
  */
-function notifyDevice(authToken, qr_scanner_state_request, device_id, did, sub, log_file_uri, notification) {
+function notifyDevice(authToken, qr_scanner_state_request, device_id, did, sub, log_file_uri, message) {
   // Retrieve the WebSocket connection associated with the device_id
   const device = DEVICES.get(qr_scanner_state_request);
   
   // Check if the device's WebSocket connection exists and is open
   if (device && device.readyState === WebSocket.OPEN) {
     // Prepare the data to be sent to the device
-    if (notification === "session-request-expired") {
-        const data = {
-          status: "auth_failed",                                          // Status message indicating the result (e.g., 'auth_success')
-          qr_scanner_state_request: qr_scanner_state_request,             // The current state (e.g., 'authenticated', 'pending')
-          device_id: device_id,                                           // The device ID
-          did: did,                                                       // The Decentralized Identifier (DID) associated with the device
-          sub: sub,                                                       // The subscription or other relevant information
-          logFileURI: log_file_uri,
-          authToken: authToken
-        };
-    
-        // Send the data to the device as a JSON string
-        device.send(JSON.stringify(data));
-    
-        logEvent({
-          event: `NOTIFIED DEVICE WITH QR STATE "${qr_scanner_state_request}"`,
-          status: 'SUCCESS ✅',
-          cause: 'SESSION REQUEST EXPIRED',
-          device_id: device_id,
-          did: did,
-        });
-    } else {
-        const data = {
-          status: "auth_success",                                         // Status message indicating the result (e.g., 'auth_success')
-          qr_scanner_state_request: qr_scanner_state_request,             // The current state (e.g., 'authenticated', 'pending')
-          device_id: device_id,                                           // The device ID
-          did: did,                                                       // The Decentralized Identifier (DID) associated with the device
-          sub: sub,                                                       // The subscription or other relevant information
-          logFileURI: log_file_uri,
-          authToken: authToken
-        };
-    
-        // Send the data to the device as a JSON string
-        device.send(JSON.stringify(data));
-        logEvent({
-          event: `NOTIFIED DEVICE WITH QR STATE "${qr_scanner_state_request}"`,
-          status: 'SUCCESS ✅',
-          cause: 'DEVICE AUTHENTICATED',
-          device_id: device_id,
-          did: did,
-        });
+    if (message === "session-request-expired") {
+      const data = {
+        status: "auth-failed",                                          // Status message indicating the result (e.g., 'auth_success')
+        qr_scanner_state_request: qr_scanner_state_request,             // The current state (e.g., 'authenticated', 'pending')
+        device_id: device_id,                                           // The device ID
+        did: did,                                                       // The Decentralized Identifier (DID) associated with the device
+        sub: sub,                                                       // The subscription or other relevant information
+        logFileURI: log_file_uri,
+        authToken: authToken,
+        message: message                                                // message: session-request-expired
+      };
+  
+      // Send the data to the device as a JSON string
+      device.send(JSON.stringify(data));
+  
+      logEvent({
+        event: `NOTIFIED DEVICE WITH QR STATE "${qr_scanner_state_request}"`,
+        status: 'SUCCESS ✅',
+        cause: 'SESSION REQUEST EXPIRED',
+        device_id: device_id,
+        did: did,
+      });
+    } else if (message === "session-request-valid") {
+      const data = {
+        status: "auth-success",                                         // Status message indicating the result (e.g., 'auth_success')
+        qr_scanner_state_request: qr_scanner_state_request,             // The current state (e.g., 'authenticated', 'pending')
+        device_id: device_id,                                           // The device ID
+        did: did,                                                       // The Decentralized Identifier (DID) associated with the device
+        sub: sub,                                                       // The subscription or other relevant information
+        logFileURI: log_file_uri,
+        authToken: authToken,
+        message: message                                                // message: session-request-valid
+      };
+  
+      // Send the data to the device as a JSON string
+      device.send(JSON.stringify(data));
+      logEvent({
+        event: `NOTIFIED DEVICE WITH QR STATE "${qr_scanner_state_request}"`,
+        status: 'SUCCESS ✅',
+        cause: 'DEVICE AUTHENTICATED',
+        device_id: device_id,
+        did: did,
+      });
+
+
+    } else if (message === "device-already-online") {
+      const data = {
+        status: "auth-failed",                                          // Status message indicating the result (e.g., 'auth_success')
+        qr_scanner_state_request: qr_scanner_state_request,             // The current state (e.g., 'authenticated', 'pending')
+        device_id: device_id,                                           // The device ID
+        did: did,                                                       // The Decentralized Identifier (DID) associated with the device
+        sub: sub,                                                       // The subscription or other relevant information
+        logFileURI: log_file_uri,
+        authToken: authToken,
+        message: message                                                // message: device-already-online
+      };
+  
+      // Send the data to the device as a JSON string
+      device.send(JSON.stringify(data));
+      logEvent({
+        event: `NOTIFIED DEVICE WITH QR STATE "${qr_scanner_state_request}"`,
+        status: 'SUCCESS ✅',
+        cause: 'THIS DID IS ALREADY ONLINE',
+        device_id: device_id,
+        did: did,
+      });
+
+    } else if (message === "potential-credential-sharing") {
+      const data = {
+        status: "auth-failed",                                          // Status message indicating the result (e.g., 'auth_success')
+        qr_scanner_state_request: qr_scanner_state_request,             // The current state (e.g., 'authenticated', 'pending')
+        device_id: device_id,                                           // The device ID
+        did: did,                                                       // The Decentralized Identifier (DID) associated with the device
+        sub: sub,                                                       // The subscription or other relevant information
+        logFileURI: log_file_uri,
+        authToken: authToken,
+        message: message                                                // message: potential-credential-sharing
+      };
+  
+      // Send the data to the device as a JSON string
+      device.send(JSON.stringify(data));
+      logEvent({
+        event: `NOTIFIED DEVICE WITH QR STATE "${qr_scanner_state_request}"`,
+        status: 'SUCCESS ✅',
+        cause: 'THIS DID IS NOT ASSOCIATED WITH THIS DEVICE',
+        device_id: device_id,
+        did: did,
+      });
     }
     
   } else {
@@ -784,6 +877,49 @@ function getFrontendConnection() {
   return FRONTEND_CONNECTION;
 }
 
+/** [17]
+ * Finds a device in the MongoDB database by their Device ID .
+ * This function queries the "DEVICE" collection to retrieve a device document 
+ * that matches the provided device id.
+ *
+ * @param {string} device_id - The id of the device to be searched.
+ * @returns {Promise<Object|null>} - Returns the device document if found, otherwise returns `null`.
+ * @throws {Error} - Throws an error if the database query fails.
+ */
+const findDeviceByDeviceID = async (device_id) => {
+  try {
+    // Query the "DEVICE" collection to find a device by the specified DID
+    const device = await DEVICE.findOne({ device_id: device_id });
+
+    if (!device) {
+      // Log a message if the device does not exist in the database
+      logEvent({
+        event: 'DEVICE DOES NOT EXIST',
+        status: 'FAILED ❌',
+        device_id: device_id,
+        cause: 'NOT FOUND'
+      });
+      return null;
+    }
+
+    // Return the device document if found
+    return device;
+  } catch (error) {
+    // Log any errors encountered during the database query
+    logEvent({
+      event: 'DEVICE SEARCH IN DATABASE',
+      status: 'FAILED ❌',
+      did: did,
+      cause: `AN ERROR OCCURRED DURING DEVICE SEARCH IN THE DATABASE: ${error}`
+    });
+    
+
+    // Throw an error indicating the failure of the database query
+    throw new Error('Database query failed');
+  }
+};
+
+
 
 
 
@@ -837,7 +973,8 @@ const logEvent = (eventDetails) => {
 
 /* Export the utility functions for use in other files */
 module.exports = {
-  findDevice,                     // Finds device by criteria
+  findDeviceByDID,                // Finds device by DID
+  findDeviceByDeviceID,           // Finds device by Device ID
   getDeviceURI,                   // Retrieves the device URI
   createDeviceDocument,           // Creates a new device entry
   storeLogsToInfluxDB,            // Stores device logs in InfluxDB

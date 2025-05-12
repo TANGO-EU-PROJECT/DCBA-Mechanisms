@@ -20,7 +20,7 @@ pipeline {
                                 namespace: 'tango-development'            /* Specifies that commands should be executed in the tango-development namespace. */
                 ]) {
                     /* Run a shell command to delete the deployment specified in the YAML file */
-                    sh 'kubectl delete -f dcba-server-deployment.yml'
+                    sh 'kubectl delete -f dcba-backend-deployment.yml'
                     
                     /* Run a shell command to check the status of the pods after deletion */
                     sh 'kubectl get pods'

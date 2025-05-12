@@ -1,0 +1,242 @@
+# ------------------------------- DCBA Backend Deployment ------------------------------- #
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: dcba-backend
+  namespace: tango-development
+  labels:
+    app: dcba-backend
+    type: back-end
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      type: back-end
+  template:
+    metadata:
+      labels:
+        app: dcba-backend
+        type: back-end
+    spec:
+      imagePullSecrets:
+        - name: regcred
+      
+      containers:
+        - name: dcba-backend
+          image: harbor.tango.rid-intrasoft.eu/dcba/dcba-backend:latest-dev
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 3000
+          env:
+              # For K8s deployment, all the env variables should be exported there.
+            - name: NODE_ENV
+              value: "DEV"
+            - name: HOSTNAME_DEV
+              value: "127.0.0.1"
+            - name: HOSTNAME_PROD
+              value: "0.0.0.0"
+            - name: HOSTNAME_STATIC_IP_CALLBACK_TANGO_VERIFIER
+              value: "10.64.44.121"
+            - name: SERVER_INTERNAL_BIND_PORT
+              value: "3000"
+            - name: SERVER_EXTERNAL_BIND_PORT
+              value: "3001"
+            - name: FEATURE_EXTRACTOR_SCRIPT_PATH
+              value: "BACKEND/SCRIPTS/RISK_ASSESSMENT_ENGINE/DataProcessor.py"
+            - name: ED_LOCALIZATION_PATH
+              value: "BACKEND/SCRIPTS/LOCALIZATION/Localizator_Euclidean_Distance.py"
+            - name: ED_HEATMAP_PATH
+              value: "BACKEND/SCRIPTS/LOCALIZATION/WiFi_Heatmap_Euclidean_Distance.csv"
+            - name: LSO_LOCALIZATION_PATH
+              value: "BACKEND/SCRIPTS/LOCALIZATION/Localizator_Least_Squares_Optimization.py"
+            - name: LSO_HEATMAP_PATH
+              value: "BACKEND/SCRIPTS/LOCALIZATION/WiFi_Heatmap_Least_Squares_Optimization.csv"
+            - name: LOCALIZATION_ALGORITHM_APPLIED
+              value: "LSO"
+            - name: JWT_SECRET_KEY
+              value: "G&5@dWvX9#jY^!kL6f3F+v4V2r2OaKp7zQ1e8bZ*H9uN!cR"
+            - name: BACKEND_CONTAINER
+              value: "dcba-backend"
+            - name: MONGO_INITDB_ADMIN_USERNAME
+              value: "admin-username"
+            - name: MONGO_INITDB_ADMIN_PASSWORD
+              value: "admin-password"
+            - name: MONGO_INITDB_DATABASE
+              value: "dcba-mongo-db-v1"
+            - name: MONGO_CONTAINER
+              value: "dcba-mongo-db"
+            - name: MONGO_INITDB_INTERNAL_PORT
+              value: "27017"
+            - name: MONGO_INITDB_EXTERNAL_PORT
+              value: "27018"
+            - name: MONGO_REPLICA_SET_NAME
+              value: "rs0"
+            - name: MONGO_DISABLE_IPV6
+              value: "true"
+            - name: MONGO_DB_URI
+              value: "mongodb://admin-username:admin-password@dcba-mongo-db:27018/dcba-mongo-db-v1?authSource=admin"
+            - name: MONGO_DB_DEVICE_SCHEME_PATH
+              value: "MONGO_DB/MODELS/DEVICE.js"
+            - name: MONGO_DB_SESSION_REQUEST_SCHEME_PATH
+              value: "MONGO_DB/MODELS/SESSION_REQUEST.js"
+            - name: INFLUX_INITDB_ADMIN_USERNAME
+              value: "admin-username"
+            - name: INFLUX_INITDB_ADMIN_PASSWORD
+              value: "admin-password"
+            - name: INFLUX_INITDB_DATABASE
+              value: "dcba-influx-db-v1"
+            - name: INFLUX_CONTAINER
+              value: "dcba-influx-db"
+            - name: INFLUX_INITDB_AUTH_TOKEN
+              value: "QzaDsrfh8LkP0dnTmxj4fB4KAtQVZb-68BHqTTqWv2jie5daMLpEqeugbn1hIfbTcduNEuR8HAoUtVFjC2M3bw=="
+            - name: INFLUX_INITDB_ORG
+              value: "DCBA"
+            - name: INFLUX_INITDB_BUCKET
+              value: "DCBA"
+            - name: INFLUXDB_INTERNAL_PORT
+              value: "8086"
+            - name: INFLUXDB_EXTERNAL_PORT
+              value: "8087"
+            - name: INFLUX_DB_URI
+              value: "http://dcba-influx-db:8087" # use the external port of the InfluxDB, since it runs in separate pod than the dcba backend 
+            - name: LAT0
+              value: "39.365858279847544"
+            - name: LON0
+              value: "22.923886333496505"
+            - name: HOSTNAME_FRONT_DEV
+              value: "127.0.0.1"
+            - name: HOSTNAME_FRONT_PROD
+              value: "0.0.0.0"
+            - name: FRONTEND_SERVER_BIND_PORT
+              value: "8080"
+            - name: FRONTEND_LOGIN_USERNAME
+              value: "admin"
+            - name: FRONTEND_LOGIN_PASSWORD
+              value: "admin"
+
+---
+# ------------------------------- DCBA Backend Service ------------------------------- #
+apiVersion: v1
+kind: Service
+metadata:
+  name: dcba-backend
+  namespace: tango-development
+  labels:
+    app: dcba-backend
+spec:
+  selector:
+    app: dcba-backend
+  type: NodePort
+  ports:
+    - port: 3001       # Port exposed in the internal cluster (external pod port)
+      targetPort: 3000 # The dcba-backend continer port (internal pod port)
+
+---
+# ------------------------------- MongoDB Deployment ------------------------------- #
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: dcba-mongo-db
+  namespace: tango-development
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: dcba-mongo-db
+  template:
+    metadata:
+      labels:
+        app: dcba-mongo-db
+    spec:
+      imagePullSecrets:
+        - name: regcred
+      containers:
+        - name: dcba-mongo-db
+          image: harbor.tango.rid-intrasoft.eu/dcba/dcba-mongo-db:latest-dev
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 27017
+          env:
+            - name: MONGO_INITDB_ROOT_USERNAME
+              value: "admin-username"
+            - name: MONGO_INITDB_ROOT_PASSWORD
+              value: "admin-password"
+            - name: MONGO_INITDB_DATABASE
+              value: "dcba-mongo-db-v1"
+          volumeMounts:
+            - name: mongo-storage
+              mountPath: /data/db/devices
+      volumes:
+        - name: mongo-storage
+          emptyDir: {}
+
+---
+# ------------------------------- MongoDB Service ------------------------------- #
+apiVersion: v1
+kind: Service
+metadata:
+  name: dcba-mongo-db
+  namespace: tango-development
+  labels:
+    app: dcba-mongo-db
+spec:
+  selector:
+    app: dcba-mongo-db
+  ports:
+    - port: 27018       # Port exposed in the internal cluster (external pod port)
+      targetPort: 27017 # The mongo-db continer port (internal pod port)
+
+---
+# ------------------------------- InfluxDB Deployment ------------------------------- #
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: dcba-influx-db
+  namespace: tango-development
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: dcba-influx-db
+  template:
+    metadata:
+      labels:
+        app: dcba-influx-db
+    spec:
+      imagePullSecrets:
+        - name: regcred
+      containers:
+        - name: dcba-influx-db
+          image: harbor.tango.rid-intrasoft.eu/dcba/dcba-influx-db:latest-dev
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 8086
+          env:
+            - name: DOCKER_INFLUXDB_INIT_MODE
+              value: "setup"
+            - name: DOCKER_INFLUXDB_INIT_USERNAME
+              value: "admin-username"
+            - name: DOCKER_INFLUXDB_INIT_PASSWORD
+              value: "admin-password"
+            - name: DOCKER_INFLUXDB_INIT_ORG
+              value: "DCBA"
+            - name: DOCKER_INFLUXDB_INIT_BUCKET
+              value: "DCBA"
+            - name: DOCKER_INFLUXDB_INIT_ADMIN_TOKEN
+              value: "QzaDsrfh8LkP0dnTmxj4fB4KAtQVZb-68BHqTTqWv2jie5daMLpEqeugbn1hIfbTcduNEuR8HAoUtVFjC2M3bw=="
+
+---
+# ------------------------------- InfluxDB Service ------------------------------- #
+apiVersion: v1
+kind: Service
+metadata:
+  name: dcba-influx-db
+  namespace: tango-development
+  labels:
+    app: dcba-influx-db
+spec:
+  selector:
+    app: dcba-influx-db
+  ports:
+    - port: 8087       # Port exposed in the internal cluster (external pod port)
+      targetPort: 8086 # The InfluxDB continer port (internal pod port)
