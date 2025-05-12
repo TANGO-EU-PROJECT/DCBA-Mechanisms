@@ -74,7 +74,7 @@ spec:
             - name: MONGO_DISABLE_IPV6
               value: "true"
             - name: MONGO_DB_URI
-              value: "mongodb://admin-username:admin-password@dcba-mongo-db:27017/dcba-mongo-db-v1?authSource=admin"
+              value: "mongodb://admin-username:admin-password@dcba-mongo-db:27018/dcba-mongo-db-v1?authSource=admin"
             - name: MONGO_DB_DEVICE_SCHEME_PATH
               value: "MONGO_DB/MODELS/DEVICE.js"
             - name: MONGO_DB_SESSION_REQUEST_SCHEME_PATH
@@ -161,6 +161,8 @@ spec:
               value: "admin-username"
             - name: MONGO_INITDB_ROOT_PASSWORD
               value: "admin-password"
+            - name: MONGO_INITDB_DATABASE
+              value: "dcba-mongo-db-v1"
           volumeMounts:
             - name: mongo-storage
               mountPath: /data/db/devices
