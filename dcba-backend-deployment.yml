@@ -20,6 +20,14 @@ spec:
     spec:
       imagePullSecrets:
         - name: regcred
+      initContainers:
+        - name: wait-for-mongo
+          image: busybox
+          command: ['sh', '-c', 'until nc -z dcba-mongo-db 27017; do echo waiting for mongo; sleep 2; done;']
+        
+        - name: wait-for-influx
+          image: busybox
+          command: ['sh', '-c', 'until nc -z dcba-influx-db 8086; do echo waiting for influx; sleep 2; done;']
       containers:
         - name: dcba-backend
           image: harbor.tango.rid-intrasoft.eu/dcba/dcba-backend:latest-dev
