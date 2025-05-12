@@ -75,7 +75,7 @@ pipeline {
 
     stages {
         /* Stage 1: Checkout the source code from the Git repository */
-        stage('Checkout') {
+        stage('Checkout the source code from the Git repository') {
             steps {
                 echo 'Checkout SCM' /* Print a message to indicate the checkout process */
                 checkout scm 
@@ -89,7 +89,7 @@ pipeline {
 
 
         /* Stage 2: Building the DCBA-Backend Image */
-        stage('Build DCBA-Backend Image') {
+        stage('Building the DCBA-Backend Image') {
             steps {
                 echo 'Building Backend Docker Image'
                 script {
@@ -102,7 +102,7 @@ pipeline {
 
 
         /* Stage 3: Building the DCBA-MongoDB Image */
-        stage('Build DCBA-MongoDB Image') {
+        stage('Building the DCBA-MongoDB Image') {
             steps {
                 echo 'Building MongoDB Image'
                 script {
@@ -114,7 +114,7 @@ pipeline {
 
 
         /* Stage 4: Building the DCBA-InfluxDB Image */
-        stage('Build DCBA-InfluxDB Image') {
+        stage('Building the DCBA-InfluxDB Image') {
             steps {
                 echo 'Building InfluxDB Image'
                 script {
@@ -125,8 +125,8 @@ pipeline {
         }
 
 
-        /* Stage 5: Pushing Images to Docker Registry */
-        stage("Push Images to Registry") {
+        /* Stage 5: Pushing Images to Harbor Docker Registry */
+        stage("Pushing Images to Harbor Docker Registry") {
             steps {
                 withCredentials([[$class: 'UsernamePasswordMultiBinding', credentialsId: 'harbor-jenkins-creds', usernameVariable: 'USERNAME', passwordVariable: 'PASSWORD']]) {
                     script {
@@ -161,7 +161,7 @@ pipeline {
 
 
         /* Stage 6: Removing Docker images locally to free up space */
-        stage('Docker Remove Images Locally') {
+        stage('Removing Docker images locally to free up space') {
             steps {
                 script {
                     echo "***** Removing Backend Images *****"
@@ -186,7 +186,7 @@ pipeline {
         }
 
         /* Stage 7: Deleting the previous deployment */
-        stage("Delete Previous Deployment") {
+        stage("Deleting the previous deployment") {
             steps {
                 withKubeConfig([credentialsId: 'K8s-config-file', serverUrl: 'https://167.235.66.115:6443', namespace: 'tango-development']) {
                     sh 'kubectl delete -f dcba-backend-deployment.yml || true' // Deletes the deployment if it exists
@@ -196,7 +196,7 @@ pipeline {
 
 
         /* Stage 8: Deploying the new deployment */
-        stage("Deployment") {
+        stage("Deploying the new deployment") {
             steps {
                 /* Use the kubeconfig file to interact with the Kubernetes cluster */
                 withKubeConfig([credentialsId: 'K8s-config-file', serverUrl: 'https://167.235.66.115:6443', namespace: 'tango-development']) {
