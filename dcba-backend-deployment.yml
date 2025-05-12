@@ -66,9 +66,9 @@ spec:
             - name: MONGO_CONTAINER
               value: "dcba-mongo-db"
             - name: MONGO_INITDB_INTERNAL_PORT
-              value: "27018"
-            - name: MONGO_INITDB_EXTERNAL_PORT
               value: "27017"
+            - name: MONGO_INITDB_EXTERNAL_PORT
+              value: "27018"
             - name: MONGO_REPLICA_SET_NAME
               value: "rs0"
             - name: MONGO_DISABLE_IPV6
@@ -94,11 +94,11 @@ spec:
             - name: INFLUX_INITDB_BUCKET
               value: "DCBA"
             - name: INFLUXDB_INTERNAL_PORT
-              value: "8087"
+              value: "8086"
             - name: INFLUXDB_EXTERNAL_PORT
-              value: "8088"
+              value: "8087"
             - name: INFLUX_DB_URI
-              value: "http://dcba-influx-db:8086"
+              value: "http://dcba-influx-db:8087" # use the external port of the InfluxDB, since it runs in separate pod than the dcba backend 
             - name: LAT0
               value: "39.365858279847544"
             - name: LON0
@@ -128,8 +128,8 @@ spec:
     app: dcba-backend
   type: NodePort
   ports:
-    - port: 3001
-      targetPort: 3000
+    - port: 3001       # Port exposed in the internal cluster (external pod port)
+      targetPort: 3000 # The dcba-backend continer port (internal pod port)
 
 ---
 # ------------------------------- MongoDB Deployment ------------------------------- #
@@ -176,8 +176,8 @@ spec:
   selector:
     app: dcba-mongo-db
   ports:
-    - port: 27018
-      targetPort: 27017
+    - port: 27018       # Port exposed in the internal cluster (external pod port)
+      targetPort: 27017 # The mongo-db continer port (internal pod port)
 
 ---
 # ------------------------------- InfluxDB Deployment ------------------------------- #
@@ -218,5 +218,5 @@ spec:
   selector:
     app: dcba-influx-db
   ports:
-    - port: 8087
-      targetPort: 8086
+    - port: 8087       # Port exposed in the internal cluster (external pod port)
+      targetPort: 8086 # The InfluxDB continer port (internal pod port)

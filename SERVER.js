@@ -119,10 +119,11 @@ initializeWebSocketServer(wss);
 /* ------------------------- SERVER STARTUP ------------------------- */
 
 // Get the server's port number from environment variables
-const port = process.env.SERVER_INTERNAL_BIND_PORT; 
+const internalPort = process.env.SERVER_INTERNAL_BIND_PORT; 
+const externalPort = process.env.SERVER_EXTERNAL_BIND_PORT;
 // Get the server's IP address from the configuration (bind to all interfaces in production or localhost in development)
 const ip = config.ServerIPAddr; 
 // Start the Express server and listen on the specified IP address and port
-server.listen(port, ip, () => {
-  console.log(`\n${magenta}============================= ${green}SERVER IS NOW LISTENING${reset} ${magenta}=============================\n${green}🔹 ${lightBlue}SERVER HOSTED AT:${reset} ${green}{ ${ip}:${port} } ${lightBlue}✔️ ${reset}\n${magenta}===================================================================================${reset}\n`);
+server.listen(internalPort, ip, () => {
+  console.log(`\n${magenta}============================= ${green}SERVER IS NOW LISTENING${reset} ${magenta}=============================\n${green}🔹 ${lightBlue}SERVER HOSTED AT:${reset} ${green}{ ${ip} }${reset}\n${magenta}---- Internally: ${green}${internalPort}${reset}\n${magenta}---- Externally: ${green}${externalPort}${reset}\n${magenta}===================================================================================${reset}\n`);
 });
