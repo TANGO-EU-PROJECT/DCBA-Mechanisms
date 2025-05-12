@@ -20,15 +20,6 @@ spec:
     spec:
       imagePullSecrets:
         - name: regcred
-      initContainers:
-        - name: wait-for-mongo
-          image: busybox
-          command: ['sh', '-c', 'until nc -z dcba-mongo-db.tango-development.svc.cluster.local 27017; do echo waiting for mongo; sleep 2; done;']
-
-        - name: wait-for-influx
-          image: busybox
-          command: ['sh', '-c', 'until nc -z dcba-influx-db.tango-development.svc.cluster.local 8086; do echo waiting for influx; sleep 2; done;']
-
       
       containers:
         - name: dcba-backend
@@ -75,9 +66,9 @@ spec:
             - name: MONGO_CONTAINER
               value: "dcba-mongo-db"
             - name: MONGO_INITDB_INTERNAL_PORT
-              value: "27017"
-            - name: MONGO_INITDB_EXTERNAL_PORT
               value: "27018"
+            - name: MONGO_INITDB_EXTERNAL_PORT
+              value: "27017"
             - name: MONGO_REPLICA_SET_NAME
               value: "rs0"
             - name: MONGO_DISABLE_IPV6
@@ -103,9 +94,9 @@ spec:
             - name: INFLUX_INITDB_BUCKET
               value: "DCBA"
             - name: INFLUXDB_INTERNAL_PORT
-              value: "8086"
-            - name: INFLUXDB_EXTERNAL_PORT
               value: "8087"
+            - name: INFLUXDB_EXTERNAL_PORT
+              value: "8088"
             - name: INFLUX_DB_URI
               value: "http://dcba-influx-db:8086"
             - name: LAT0
