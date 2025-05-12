@@ -101,7 +101,7 @@ pipeline {
         }
 
 
-        /* Stage 3: Build the DCBA-MongoDB Image */
+        /* Stage 3: Building the DCBA-MongoDB Image */
         stage('Build DCBA-MongoDB Image') {
             steps {
                 echo 'Building MongoDB Image'
@@ -113,7 +113,7 @@ pipeline {
         }
 
 
-        /* Stage 4: Build the DCBA-InfluxDB Image */
+        /* Stage 4: Building the DCBA-InfluxDB Image */
         stage('Build DCBA-InfluxDB Image') {
             steps {
                 echo 'Building InfluxDB Image'
@@ -125,7 +125,7 @@ pipeline {
         }
 
 
-        /* Stage 5: Push Images to Docker Registry */
+        /* Stage 5: Pushing Images to Docker Registry */
         stage("Push Images to Registry") {
             steps {
                 withCredentials([[$class: 'UsernamePasswordMultiBinding', credentialsId: 'harbor-jenkins-creds', usernameVariable: 'USERNAME', passwordVariable: 'PASSWORD']]) {
@@ -160,7 +160,7 @@ pipeline {
         }
 
 
-        /* Stage 6: Remove Docker images locally to free up space */
+        /* Stage 6: Removing Docker images locally to free up space */
         stage('Docker Remove Images Locally') {
             steps {
                 script {
@@ -185,7 +185,7 @@ pipeline {
             }
         }
 
-        /* Stage 7: Delete the previous deployment */
+        /* Stage 7: Deleting the previous deployment */
         stage("Delete Previous Deployment") {
             steps {
                 withKubeConfig([credentialsId: 'K8s-config-file', serverUrl: 'https://167.235.66.115:6443', namespace: 'tango-development']) {
@@ -195,7 +195,7 @@ pipeline {
         }
 
 
-        /* Stage 8: Deploy the application to Kubernetes */
+        /* Stage 8: Deploying the new deployment */
         stage("Deployment") {
             steps {
                 /* Use the kubeconfig file to interact with the Kubernetes cluster */
