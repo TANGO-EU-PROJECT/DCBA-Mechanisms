@@ -17,7 +17,7 @@ This repository contains all components required for the **TANGO DCBA** service,
 
 ### BACKEND/
 
-This directory contains the server-side code and all related resources essential for the TANGO backend implementation. It includes a `Dockerfile` responsible for building the image suitable for K8s deployment, along with the corresponding `.dockerignore` file.
+This directory contains the server-side code and all related resources essential for the DCBA TANGO backend implementation. It includes a `Dockerfile` responsible for building the image suitable for K8s deployment, along with the corresponding `.dockerignore` file.
 
 
 #### Subdirectories:
