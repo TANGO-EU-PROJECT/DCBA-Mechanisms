@@ -139,7 +139,7 @@ metadata:
   name: dcba-mongo-db
   namespace: tango-development
 spec:
-  replicas: 1
+  replicas: 2
   selector:
     matchLabels:
       app: dcba-mongo-db
@@ -194,7 +194,7 @@ metadata:
   name: dcba-influx-db
   namespace: tango-development
 spec:
-  replicas: 1
+  replicas: 2
   selector:
     matchLabels:
       app: dcba-influx-db
