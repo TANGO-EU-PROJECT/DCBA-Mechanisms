@@ -2,7 +2,6 @@
 const express = require('express');                                              /* Import Express framework                            */
 const morgan = require('morgan');                                                /* Import Morgan for HTTP request logging              */
 const config = require('./BACKEND/CONFIG/config');                               /* Import server configuration settings                */
-const routes = require('./BACKEND/API/routes/routes');                           /* Import API routes                                   */
 const controller = require('./BACKEND/API/controllers/controller');              /* Import controller for route handlers                */
 const dotenv = require('dotenv');                                                /* Import dotenv for environment variable management   */
 const mongoose = require('mongoose');                                            /* Import Mongoose for MongoDB object modeling         */
@@ -42,8 +41,6 @@ DCBA_SERVER.use(cookieParser());
 /* Middleware for logging HTTP requests using Morgan (set to 'tiny' log format) */
 DCBA_SERVER.use(morgan('tiny'));
 
-console.log(process.env.INFLUX_DB_URI); // Should not be undefined
-console.log(process.env.MONGO_DB_URI); // Should not be undefined
 
 /************************************************************************************************************************************************************************************************/
 
@@ -87,7 +84,7 @@ checkInfluxWithQuery();
 
 /* ------------------------- ROUTE CONFIGURATION ------------------------- */
 
-// Import routes for handling interaction with employee devices via the Authenticator app
+// Import routes for handling interaction with employee's devices via the Authenticator app
 DCBA_SERVER.use('/authenticator', authenticatorRoutes);
 
 // Import routes for handling interaction with external API services

@@ -1,10 +1,6 @@
 # Use the official Node.js image as the base image
 FROM nikolaik/python-nodejs:python3.11-nodejs18	
 
-# Declare the build-time argument (only just to create a new artifact in Harbor each time the mongo is re-built)
-ARG BUILD_TIME
-LABEL build_time="$BUILD_TIME"
-
 # Set the working directory inside the container
 WORKDIR /production
 
@@ -27,6 +23,9 @@ RUN update-ca-certificates
 
 # Copy the rest of the application code to the working directory
 COPY . .
+
+# Expose the port that your Node.js app will run on
+EXPOSE ${SERVER_INTERNAL_BIND_PORT}
 
 # Command to run the server with nodemon, ignoring the specified files and directories
 WORKDIR /production

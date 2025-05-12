@@ -569,7 +569,7 @@ exports.handleAuthTokenValidation = async (req, res) => {
           logEvent({
             event: 'RE-AUTHENTICATION ATTEMPT WITH AUTH-TOKEN',
             status: 'FAILED ❌',
-            cause: 'AUTH-TOKEN EXPIRED > USER MARKED AS OFFLINE',
+            cause: 'AUTH-TOKEN EXPIRED > DEVICE MARKED AS OFFLINE',
             did,
             ip: req.ip,
           });
@@ -578,7 +578,7 @@ exports.handleAuthTokenValidation = async (req, res) => {
           logEvent({
             event: 'RE-AUTHENTICATION ATTEMPT WITH AUTH-TOKEN',
             status: 'FAILED ❌',
-            cause: `USER WITH DID ${did} NOT FOUND IN DATABASE`,
+            cause: `DEVICE ASSOCIATED WITH DID ${did} NOT FOUND IN DATABASE`,
             ip: req.ip,
           });
 
@@ -673,7 +673,7 @@ exports.handleLogout = async (req, res) => {
       device.status = 'offline';
       await device.save();  // Save the updated device document to mark them as offline
       logEvent({
-        event: 'USER STATUS UPDATED',
+        event: 'DEVICE STATUS UPDATED',
         status: 'SUCCESS ✅',
         cause: 'DEVICE MARKED AS OFFLINE',
         did: clientDid,
@@ -681,7 +681,7 @@ exports.handleLogout = async (req, res) => {
       });
     } else {
       logEvent({
-        event: 'USER STATUS UPDATE ATTEMPT',
+        event: 'DEVICE STATUS UPDATE ATTEMPT',
         status: 'FAILED ❌',
         cause: `DEVICE WITH DID ${clientDid} NOT FOUND IN DATABASE`,
         ip: req.ip
@@ -967,10 +967,14 @@ exports.handleAuthCallback = async (req, res) => {
     });
 
     // Respond to the AUTHENTICATOR via the web socket
-    processSessionRequest(authToken, state, did, sub, heatmap);
+    const result = await processSessionRequest(authToken, state, did, sub, heatmap);
 
-    // Respond with success and the decoded payload
-    res.status(200).json({ status: "success", message: 'Authentication successful.', decodedPayload: decodedPayload });
+    // Response with success only if the response is 200(auth-success)
+    res.status(result.status).json({
+      status: result.status === 200 ? "success" : "failed",
+      message: result.message,
+      decodedPayload: decodedPayload
+    });
   } catch (err) {
     // Catch any errors during the request
     logEvent({

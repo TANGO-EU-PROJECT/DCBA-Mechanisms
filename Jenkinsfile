@@ -185,8 +185,17 @@ pipeline {
             }
         }
 
+        /* Stage 7: Delete the previous deployment */
+        stage("Delete Previous Deployment") {
+            steps {
+                withKubeConfig([credentialsId: 'K8s-config-file', serverUrl: 'https://167.235.66.115:6443', namespace: 'tango-development']) {
+                    sh 'kubectl delete -f dcba-backend-deployment.yml || true' // Deletes the deployment if it exists
+                }
+            }
+        }
 
-        /* Stage 7: Deploy the application to Kubernetes */
+
+        /* Stage 8: Deploy the application to Kubernetes */
         stage("Deployment") {
             steps {
                 /* Use the kubeconfig file to interact with the Kubernetes cluster */
