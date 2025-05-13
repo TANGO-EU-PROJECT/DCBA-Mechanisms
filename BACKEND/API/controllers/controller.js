@@ -796,30 +796,30 @@ exports.beginSession = async (req, res) => {
 
     // Construct the login QR URL with the device_id and other required parameters
     //const loginQRUrl = `https://ips-verifier.tango.io/api/v1/loginQR?state=${qr_scanner_state_request}&client_callback=http%3A%2F%2F${process.env.HOSTNAME_STATIC_IP_CALLBACK_TANGO_VERIFIER}%3A${process.env.SERVER_EXTERNAL_BIND_PORT}%2Fauthenticator%2Fauth-callback&client_id=`;
-    const loginQRUrl = `https://ips-verifier.k8s-cluster.tango.rid-intrasoft.eu/api/v1/loginQR?state=${qr_scanner_state_request}&client_callback=https%3A%2F%2F${process.env.HOSTNAME_DNS_INTRASOFT_DCBA_BACKEND_SERVICE}%3A${process.env.SERVER_EXTERNAL_BIND_PORT}%2Fdevelopment%2Fdcba-backend%2Fauthenticator%2Fauth-callback&client_id=`;
+    const loginQRUrl = `https://ips-verifier.k8s-cluster.tango.rid-intrasoft.eu/api/v1/loginQR?state=${qr_scanner_state_request}&client_callback=https%3A%2F%2F${process.env.HOSTNAME_DNS_INTRASOFT_DCBA_BACKEND_SERVICE}%2Fdevelopment%2Fdcba-backend%2Fauthenticator%2Fauth-callback&client_id=`;
 
 
     // Define the certificate path
-    const certPath = '/usr/local/share/ca-certificates/ca.crt';
-    let cert;
-    try {
-      // Read the certificate file from the specified path
-      cert = fs.readFileSync(certPath);
-    } catch (err) {
-      logEvent({
-        event: 'READING CERTIFICATE FILE',
-        status: 'FAILED ❌',
-        cause: `AN ERROR OCCURRED DURING READING CERTIFICATE FILE: ${err}`,
-        device_id: device_id,
-        ip: req.ip
-      });
+    // const certPath = '/usr/local/share/ca-certificates/ca.crt';
+    // let cert;
+    // try {
+    //   // Read the certificate file from the specified path
+    //   cert = fs.readFileSync(certPath);
+    // } catch (err) {
+    //   logEvent({
+    //     event: 'READING CERTIFICATE FILE',
+    //     status: 'FAILED ❌',
+    //     cause: `AN ERROR OCCURRED DURING READING CERTIFICATE FILE: ${err}`,
+    //     device_id: device_id,
+    //     ip: req.ip
+    //   });
       
-      return res.status(200).json({ status: "failed", message: 'Error reading the certificate.' });
-    }
+    //   return res.status(200).json({ status: "failed", message: 'Error reading the certificate.' });
+    // }
 
     // Create an HTTPS agent with the certificate for secure communication
     const httpsAgent = new https.Agent({
-      ca: cert, // Use the custom CA certificate
+      //ca: cert, // Use the custom CA certificate
       rejectUnauthorized: false // Ensure SSL verification is enabled
     });
 
@@ -905,28 +905,28 @@ exports.handleAuthCallback = async (req, res) => {
     'grant_type': 'authorization_code',
     'code': code,
     //'redirect_uri': `http://${process.env.HOSTNAME_DNS_INTRASOFT_DCBA_BACKEND_SERVICE}:${process.env.SERVER_EXTERNAL_BIND_PORT}/authenticator/auth-callback` // Ensure this matches the web "credential verifier" URL exactly
-    redirect_uri: `https://${process.env.HOSTNAME_DNS_INTRASOFT_DCBA_BACKEND_SERVICE}:${process.env.SERVER_EXTERNAL_BIND_PORT}/development/dcba-backend/authenticator/auth-callback`
+    redirect_uri: `https://${process.env.HOSTNAME_DNS_INTRASOFT_DCBA_BACKEND_SERVICE}/development/dcba-backend/authenticator/auth-callback`
   });
 
   // Load the custom CA certificate (ensure the path is correct)
-  const certPath = '/usr/local/share/ca-certificates/ca.crt';
-  let cert;
-  try {
-    cert = fs.readFileSync(certPath); // Read the certificate file
-  } catch (err) {
-    logEvent({
-      event: 'READING CERTIFICATE FILE',
-      status: 'FAILED ❌',
-      cause: `AN ERROR OCCURRED DURING READING CERTIFICATE FILE: ${err}`,
-      ip: req.ip
-    });
-    return res.status(200).json({ status: "failed", message: 'Error reading the certificate.' });
+  // const certPath = '/usr/local/share/ca-certificates/ca.crt';
+  // let cert;
+  // try {
+  //   cert = fs.readFileSync(certPath); // Read the certificate file
+  // } catch (err) {
+  //   logEvent({
+  //     event: 'READING CERTIFICATE FILE',
+  //     status: 'FAILED ❌',
+  //     cause: `AN ERROR OCCURRED DURING READING CERTIFICATE FILE: ${err}`,
+  //     ip: req.ip
+  //   });
+  //   return res.status(200).json({ status: "failed", message: 'Error reading the certificate.' });
 
-  }
+  // }
 
   // Create a custom HTTPS agent with the CA certificate
   const httpsAgent = new https.Agent({
-    ca: cert, // Provide the certificate to verify the server's certificate,
+    //ca: cert, // Provide the certificate to verify the server's certificate,
     rejectUnauthorized: false // Ensure SSL verification is enabled
   });
 
