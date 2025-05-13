@@ -443,7 +443,7 @@ const processRequest = async (req, res, did) => {
             }
 
             // Update the Frontend
-            await updateFrontend(FRONTEND_CONNECTION, 'UPDATE_DEVICE_LOCATION', { deviceDid, latitude, longitude });
+            //await updateFrontend(FRONTEND_CONNECTION, 'UPDATE_DEVICE_LOCATION', { deviceDid, latitude, longitude });
           } 
 
         } catch (localizationError) {
@@ -692,7 +692,7 @@ exports.handleLogout = async (req, res) => {
       });
     }
     const FRONTEND_CONNECTION = getFrontendConnection();
-    await updateFrontend(FRONTEND_CONNECTION, 'UPDATE_DEVICES');
+    //await updateFrontend(FRONTEND_CONNECTION, 'UPDATE_DEVICES');
 
     // Proceed with logout and return a success message
     return res.status(200).json({
