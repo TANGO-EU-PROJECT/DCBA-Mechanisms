@@ -816,7 +816,6 @@ exports.beginSession = async (req, res) => {
       
     //   return res.status(200).json({ status: "failed", message: 'Error reading the certificate.' });
     // }
-
     // Create an HTTPS agent with the certificate for secure communication
     const httpsAgent = new https.Agent({
       //ca: cert, // Use the custom CA certificate
