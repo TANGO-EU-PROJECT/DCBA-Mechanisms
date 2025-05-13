@@ -411,7 +411,7 @@ const processRequest = async (req, res, did) => {
             const longitude = result['Estimated Location (Longitude)'];
 
             // Now, send the extracted values to the frontend
-            const FRONTEND_CONNECTION = getFrontendConnection();
+            //const FRONTEND_CONNECTION = getFrontendConnection();
 
             // Find the device by `did` and update their `last_coordinates`
             const updatedDeviceDocument = await DEVICE.findOneAndUpdate(
