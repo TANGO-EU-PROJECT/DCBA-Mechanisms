@@ -796,10 +796,9 @@ exports.beginSession = async (req, res) => {
 
     // Construct the login QR URL with the device_id and other required parameters
     //const loginQRUrl = `https://ips-verifier.tango.io/api/v1/loginQR?state=${qr_scanner_state_request}&client_callback=http%3A%2F%2F${process.env.HOSTNAME_STATIC_IP_CALLBACK_TANGO_VERIFIER}%3A${process.env.SERVER_EXTERNAL_BIND_PORT}%2Fauthenticator%2Fauth-callback&client_id=`;
-    //const loginQRUrl = `https://ips-verifier.k8s-cluster.tango.rid-intrasoft.eu/api/v1/loginQR?state=${qr_scanner_state_request}&client_callback=http%3A%2F%2F${process.env.HOSTNAME_DNS_INTRASOFT_DCBA_BACKEND_SERVICE}%3A${process.env.SERVER_EXTERNAL_BIND_PORT}%2Fauth_callback&client_id=`;
     const loginQRUrl = `https://ips-verifier.k8s-cluster.tango.rid-intrasoft.eu/api/v1/loginQR?state=${qr_scanner_state_request}&client_callback=https%3A%2F%2F${process.env.HOSTNAME_DNS_INTRASOFT_DCBA_BACKEND_SERVICE}%2Fdevelopment%2Fdcba-backend%2Fauthenticator%2Fauth-callback&client_id=`;
 
-    
+
     // Define the certificate path
     const certPath = '/usr/local/share/ca-certificates/ca.crt';
     let cert;
