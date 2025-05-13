@@ -52,7 +52,7 @@ spec:
             - name: LSO_HEATMAP_PATH
               value: "BACKEND/SCRIPTS/LOCALIZATION/WiFi_Heatmap_Least_Squares_Optimization.csv"
             - name: LOCALIZATION_ALGORITHM_APPLIED
-              value: "LSO"
+              value: "ED"
             - name: JWT_SECRET_KEY
               value: "G&5@dWvX9#jY^!kL6f3F+v4V2r2OaKp7zQ1e8bZ*H9uN!cR"
             - name: BACKEND_CONTAINER
