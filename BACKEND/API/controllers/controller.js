@@ -32,7 +32,9 @@ const {
   readLSOHeatmapCSV,
   processSessionRequest,
   getFrontendConnection,
-  updateFrontend
+  updateFrontend,
+  findDeviceByDeviceID,
+  findDeviceByDID
   
 } = require('../../UTILITIES/functions');          // Import utility functions (database interactions, hashing, signatures, etc.)
 const { MinPriorityQueue } = require('@datastructures-js/priority-queue'); // Import Min Heap
