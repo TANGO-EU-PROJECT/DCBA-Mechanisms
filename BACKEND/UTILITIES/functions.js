@@ -27,7 +27,7 @@ const sessionRequestModelPath = process.env.MONGO_DB_SESSION_REQUEST_SCHEME_PATH
 const DEVICE = require(path.resolve(deviceModelPath));
 const SESSION_REQUEST = require(path.resolve(sessionRequestModelPath));
 const DEVICES = new Map();       // Store connected devices
-let FRONTEND_CONNECTION = null;  // Store only one frontend connection
+//let FRONTEND_CONNECTION = null;  // Store only one frontend connection
 
 // ──────────────────────────────────────────────────────────────────────────────
 // ANSI escape codes for colored console output to improve log readability
@@ -545,10 +545,10 @@ function initializeWebSocketServer(wss) {
       // Parse the query parameters from the request URL
       const urlParams = new URLSearchParams(req.url.replace('/?', ''));
       const qr_scanner_state_request = urlParams.get('qr_scanner_state_request');
-      const front_connection = urlParams.get('front_connection'); // New parameter for front-end WebSocket
+      //const front_connection = urlParams.get('front_connection'); // New parameter for front-end WebSocket
 
       // Handle device connections
-      if (qr_scanner_state_request && !front_connection) {
+      if (qr_scanner_state_request) {
         DEVICES.set(qr_scanner_state_request, ws);
         logEvent({
           event: `DEVICE WITH QR STATE "${qr_scanner_state_request}" CONNECTED VIA WEBSOCKET`,
@@ -558,33 +558,33 @@ function initializeWebSocketServer(wss) {
       }
 
       // Handle WebSocket connections for the frontend (with the "front_connection" query)
-      if (front_connection) {
-        if (FRONTEND_CONNECTION) {
-          // If there's already a frontend connection, close it before accepting the new one
-          FRONTEND_CONNECTION.close();
-          logEvent({
-            event: 'REPLACING EXISTING FRONTEND CONNECTION',
-            status: 'SUCCESS ✅',
-            cause: 'RECONNECTING TO FRONTEND'
-          });
-        }
+      // if (front_connection) {
+      //   if (FRONTEND_CONNECTION) {
+      //     // If there's already a frontend connection, close it before accepting the new one
+      //     FRONTEND_CONNECTION.close();
+      //     logEvent({
+      //       event: 'REPLACING EXISTING FRONTEND CONNECTION',
+      //       status: 'SUCCESS ✅',
+      //       cause: 'RECONNECTING TO FRONTEND'
+      //     });
+      //   }
 
-        // Assign the new frontend WebSocket connection
-        FRONTEND_CONNECTION = ws;
+      //   // Assign the new frontend WebSocket connection
+      //   FRONTEND_CONNECTION = ws;
 
-        logEvent({
-          event: `FRONTEND CONNECTION ESTABLISHED VIA WEBSOCKET`,
-          status: 'SUCCESS ✅',
-          cause: 'CONNECTED TO FRONTEND'
-        });
+      //   logEvent({
+      //     event: `FRONTEND CONNECTION ESTABLISHED VIA WEBSOCKET`,
+      //     status: 'SUCCESS ✅',
+      //     cause: 'CONNECTED TO FRONTEND'
+      //   });
 
-        // Send an initial verification message to the frontend
-        ws.send(JSON.stringify({
-          event: 'CONNECTION_VERIFIED',
-          message: 'WebSocket connection established with the frontend.',
-          status: "success"
-        }));
-      }
+      //   // Send an initial verification message to the frontend
+      //   ws.send(JSON.stringify({
+      //     event: 'CONNECTION_VERIFIED',
+      //     message: 'WebSocket connection established with the frontend.',
+      //     status: "success"
+      //   }));
+      // }
 
       // Handle WebSocket messages from both device devices and frontend
       ws.on('message', (message) => {
@@ -606,7 +606,7 @@ function initializeWebSocketServer(wss) {
 
       // Handle WebSocket disconnection for both devices and frontend
       ws.on('close', () => {
-        if (qr_scanner_state_request && !front_connection) {
+        if (qr_scanner_state_request) {
           DEVICES.delete(qr_scanner_state_request);
           logEvent({
             event: `DEVICE WITH QR STATE "${qr_scanner_state_request}" DISCONNECTED FROM WEBSOCKET`,
@@ -615,14 +615,14 @@ function initializeWebSocketServer(wss) {
           });
         }
 
-        if (front_connection && FRONTEND_CONNECTION === ws) {
-          FRONTEND_CONNECTION = null;  // Reset the frontend connection on close
-          logEvent({
-            event: `FRONTEND CONNECTION DISCONNECTED FROM WEBSOCKET`,
-            status: 'SUCCESS ✅',
-            cause: 'DISCONNECTED FROM FRONTEND'
-          });
-        }
+        // if (front_connection && FRONTEND_CONNECTION === ws) {
+        //   FRONTEND_CONNECTION = null;  // Reset the frontend connection on close
+        //   logEvent({
+        //     event: `FRONTEND CONNECTION DISCONNECTED FROM WEBSOCKET`,
+        //     status: 'SUCCESS ✅',
+        //     cause: 'DISCONNECTED FROM FRONTEND'
+        //   });
+        // }
       });
     });
 
@@ -864,7 +864,7 @@ async function updateFrontend(frontend_connection, event, arguments) {
  * @param {WebSocket} ws - The WebSocket instance to store as the active frontend connection.
  */
 function setFrontendConnection(ws) {
-  FRONTEND_CONNECTION = ws;
+  //FRONTEND_CONNECTION = ws;
 }
 
 /** [16]
