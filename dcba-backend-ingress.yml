@@ -3,6 +3,8 @@ kind: Ingress
 metadata:
   name: dcba-backend-ingress-rule
   namespace: tango-development
+  labels: 
+    app: back-end
   annotations:
     nginx.ingress.kubernetes.io/use-regex: "true"
     nginx.ingress.kubernetes.io/rewrite-target: /$2

@@ -35,8 +35,8 @@ spec:
               value: "127.0.0.1"
             - name: HOSTNAME_PROD
               value: "0.0.0.0"
-            - name: HOSTNAME_STATIC_IP_CALLBACK_TANGO_VERIFIER
-              value: "10.102.149.176" # PUBLIC IP DBCA BACKEND TANGO: 10.102.149.176, Static IP Nitlab: "10.64.44.121"
+            - name: HOSTNAME_DNS_INTRASOFT_DCBA_BACKEND_SERVICE
+              value: "k8s-cluster.tango.rid-intrasoft.eu" # Static IP Nitlab: "10.64.44.121" HOSTNAME_STATIC_IP_CALLBACK_TANGO_VERIFIER
             - name: SERVER_INTERNAL_BIND_PORT
               value: "3000"
             - name: SERVER_EXTERNAL_BIND_PORT
