@@ -110,8 +110,6 @@ exports.fetchDevices = async (req, res) => {
 };
 
 
-
-
 /* [2]
  * Function to handle the Android Logs received from the device devices
  * Endpoint: POST /devices/post-logs
