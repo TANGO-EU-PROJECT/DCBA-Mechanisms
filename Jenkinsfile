@@ -198,13 +198,19 @@ pipeline {
         /* Stage 8: Deploying the new deployment */
         stage("Deploying the new deployment") {
             steps {
-                /* Use the kubeconfig file to interact with the Kubernetes cluster */
                 withKubeConfig([credentialsId: 'K8s-config-file', serverUrl: 'https://167.235.66.115:6443', namespace: 'tango-development']) {
-                    sh 'kubectl apply -f dcba-backend-deployment.yml' /* Apply the Kubernetes deployment manifest to update or deploy the application */
-                    sh 'kubectl get pods'                            /* Verify that the deployment is running by listing the pods in the namespace  */
+                    // Apply deployment
+                    sh 'kubectl apply -f dcba-backend-deployment.yml'
+
+                    // ✅ Apply Ingress rule
+                    sh 'kubectl apply -f dcba-backend-ingress.yml'
+
+                    // Verify pod status
+                    sh 'kubectl get pods'
                 }
             }
         }
+
 
     }
 
