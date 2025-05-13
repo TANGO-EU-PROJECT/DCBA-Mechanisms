@@ -451,7 +451,7 @@ async function processSessionRequest(authToken, qr_scanner_state_request, did, s
           // If no device found associated with this DID, create it
           await createDeviceDocument(did, sub, device_id, log_file_uri, heatmap);
           notifyDevice(authToken, qr_scanner_state_request, device_id, did, sub, log_file_uri, "session-request-valid");
-          await updateFrontend(FRONTEND_CONNECTION, 'UPDATE_DEVICES');
+          //await updateFrontend(FRONTEND_CONNECTION, 'UPDATE_DEVICES');
           return { status: 200, message: "Device status updated to online." };
         } else {
           // Someone tried to log in from his/her device, using an existing DID
@@ -479,7 +479,7 @@ async function processSessionRequest(authToken, qr_scanner_state_request, did, s
               device_id: device_id,
             });
             notifyDevice(authToken, qr_scanner_state_request, device_id, did, sub, log_file_uri, "session-request-valid");
-            await updateFrontend(FRONTEND_CONNECTION, 'UPDATE_DEVICES');
+            //await updateFrontend(FRONTEND_CONNECTION, 'UPDATE_DEVICES');
             return { status: 200, message: "Device status updated to online." };
           } else {
             // The specific device is already online
