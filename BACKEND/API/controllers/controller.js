@@ -892,8 +892,9 @@ exports.handleAuthCallback = async (req, res) => {
     });
     
   }
-
-  const url = 'https://ips-verifier.tango.io/token';
+ 
+  //const url = 'https://ips-verifier.tango.io/token';
+  const url = `https://ips-verifier.k8s-cluster.tango.rid-intrasoft.eu/token`
   const headers = {
     'accept': 'application/json',
     'Content-Type': 'application/x-www-form-urlencoded'
