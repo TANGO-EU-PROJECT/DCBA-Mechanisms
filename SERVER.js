@@ -25,7 +25,6 @@ const magenta = '\x1b[35m';   /* Magenta color                       */
 const reset = '\x1b[0m';      /* Reset color to default              */
 const RETRY_INTERVAL_MS = 5000; /* Retry interval in milliseconds */
 
-
 /* Create an instance of the Express application */
 const DCBA_SERVER = express();
 
