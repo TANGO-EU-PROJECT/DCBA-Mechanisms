@@ -543,8 +543,11 @@ function initializeWebSocketServer(wss) {
     // When a new WebSocket connection is established
     wss.on('connection', (ws, req) => {
       // Parse the query parameters from the request URL
-      const urlParams = new URLSearchParams(req.url.replace('/?', ''));
+      // const urlParams = new URLSearchParams(req.url.replace('/?', ''));
+      // const qr_scanner_state_request = urlParams.get('qr_scanner_state_request');
+      const urlParams = new URLSearchParams(req.url.split('?')[1]);  // Split to get the query part after "?"
       const qr_scanner_state_request = urlParams.get('qr_scanner_state_request');
+
       //const front_connection = urlParams.get('front_connection'); // New parameter for front-end WebSocket
 
       // Handle device connections
