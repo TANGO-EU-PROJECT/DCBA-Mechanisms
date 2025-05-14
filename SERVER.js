@@ -30,7 +30,6 @@ const DCBA_SERVER = express();
 
 /* Create HTTP server */
 const server = http.createServer(DCBA_SERVER); 
-server.setTimeout(10 * 60 * 1000); // 10 minutes
 
 /* Middleware to parse JSON request bodies */
 DCBA_SERVER.use(express.json());
