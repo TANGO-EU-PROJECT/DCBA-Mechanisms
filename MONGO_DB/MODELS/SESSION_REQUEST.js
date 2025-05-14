@@ -23,7 +23,7 @@ const sessionRequestSchema = new mongoose.Schema({
   createdAt: {
     type: Date,
     default: Date.now, // Automatically set the current date and time
-    expires: 10        // Documents will expire after 10 seconds
+    expires: 60        // Documents will expire after 60 seconds
   },
 }, schema_opts);
 
