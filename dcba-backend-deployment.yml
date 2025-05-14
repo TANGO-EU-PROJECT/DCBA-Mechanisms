@@ -8,7 +8,7 @@ metadata:
     app: dcba-backend
     type: back-end
 spec:
-  replicas: 2
+  replicas: 1
   selector:
     matchLabels:
       type: back-end

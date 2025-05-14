@@ -643,105 +643,6 @@ function initializeWebSocketServer(wss) {
   }
 }
 
-function initializeSocketIOServer(io) {
-  try {
-    io.on('connection', (socket) => {
-      const qr_scanner_state_request = socket.handshake.query.qr_scanner_state_request;
-      // const front_connection = socket.handshake.query.front_connection; // Uncomment if needed
-
-      // Handle device connections
-      if (qr_scanner_state_request) {
-        DEVICES.set(qr_scanner_state_request, socket);
-
-        logEvent({
-          event: `DEVICE WITH QR STATE "${qr_scanner_state_request}" CONNECTED VIA SOCKET.IO`,
-          status: 'SUCCESS ✅',
-          cause: 'INITIATING SESSION'
-        });
-      }
-
-      // // Handle frontend connection if you decide to use it
-      // if (front_connection) {
-      //   if (FRONTEND_CONNECTION) {
-      //     FRONTEND_CONNECTION.disconnect(true);
-      //     logEvent({
-      //       event: 'REPLACING EXISTING FRONTEND CONNECTION',
-      //       status: 'SUCCESS ✅',
-      //       cause: 'RECONNECTING TO FRONTEND'
-      //     });
-      //   }
-
-      //   FRONTEND_CONNECTION = socket;
-
-      //   logEvent({
-      //     event: `FRONTEND CONNECTION ESTABLISHED VIA SOCKET.IO`,
-      //     status: 'SUCCESS ✅',
-      //     cause: 'CONNECTED TO FRONTEND'
-      //   });
-
-      //   socket.emit('CONNECTION_VERIFIED', {
-      //     event: 'CONNECTION_VERIFIED',
-      //     message: 'Socket.IO connection established with the frontend.',
-      //     status: "success"
-      //   });
-      // }
-
-      // Handle messages
-      socket.on('message', (data) => {
-        let parsedMessage;
-        try {
-          parsedMessage = typeof data === 'string' ? JSON.parse(data) : data;
-        } catch (err) {
-          return;
-        }
-
-        if (parsedMessage.event === 'VERIFY_CONNECTION') {
-          socket.emit('CONNECTION_VERIFIED', {
-            event: 'CONNECTION_VERIFIED',
-            message: 'Backend successfully verified the Socket.IO connection.',
-            status: 'success'
-          });
-        }
-
-        // Handle other events as needed
-      });
-
-      // Handle disconnections
-      socket.on('disconnect', () => {
-        if (qr_scanner_state_request) {
-          DEVICES.delete(qr_scanner_state_request);
-          logEvent({
-            event: `DEVICE WITH QR STATE "${qr_scanner_state_request}" DISCONNECTED FROM SOCKET.IO`,
-            status: 'SUCCESS ✅',
-            cause: 'SESSION INITIATED'
-          });
-        }
-
-        // if (front_connection && FRONTEND_CONNECTION === socket) {
-        //   FRONTEND_CONNECTION = null;
-        //   logEvent({
-        //     event: `FRONTEND CONNECTION DISCONNECTED FROM SOCKET.IO`,
-        //     status: 'SUCCESS ✅',
-        //     cause: 'DISCONNECTED FROM FRONTEND'
-        //   });
-        // }
-      });
-    });
-
-    logEvent({
-      event: `SOCKET.IO SERVER INITIALIZED SUCCESSFULLY AT ${moment().format('YYYY-MM-DD HH:mm:ss')}`,
-      status: 'SUCCESS ✅',
-    });
-
-  } catch (error) {
-    logEvent({
-      event: `SOCKET.IO SERVER FAILED TO INITIALIZE AT ${moment().format('YYYY-MM-DD HH:mm:ss')}`,
-      status: 'FAILED ❌',
-    });
-  }
-}
-
-
 
 
 /** [13]
@@ -1089,7 +990,6 @@ module.exports = {
   initializeWebSocketServer,      // Initialize the web socket server connection
   setFrontendConnection,
   getFrontendConnection,
-  updateFrontend,
-  initializeSocketIOServer
+  updateFrontend
 };
 

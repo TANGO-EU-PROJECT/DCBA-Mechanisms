@@ -7,7 +7,7 @@ const mongoose = require('mongoose');                                           
 const { InfluxDBClient } = require('@influxdata/influxdb3-client');
 const http = require('http');                                                    /* Import http for creating a HTTP server              */
 const WebSocket = require('ws');                                                 /* Import WebSocket library                            */
-const { initializeWebSocketServer, initializeSocketIOServer } = require('./BACKEND/UTILITIES/functions');  /* Import WebSocket functions from utilities           */
+const { initializeWebSocketServer } = require('./BACKEND/UTILITIES/functions');  /* Import WebSocket functions from utilities           */
 const moment = require('moment');
 const cors = require('cors');
 const frontendRoutes = require('./BACKEND/API/routes/frontendRoutes');         /* Import FRONTEND API routes */
@@ -108,13 +108,9 @@ async function startServer() {
   const ip = config.ServerIPAddr;
 
   // Initialize WebSocket Server
-  // const wss = new WebSocket.Server({ server });
-  // initializeWebSocketServer(wss);
-  // Create the Socket.IO server, using the same HTTP server
-  const io = new Server(server, {
-    transports: ['websocket'], // Match client config
-  });
-  initializeSocketIOServer(io);
+  const wss = new WebSocket.Server({ server });
+  initializeWebSocketServer(wss);
+
   // Define the routes
   DCBA_SERVER.use('/authenticator', authenticatorRoutes);
   DCBA_SERVER.use('/devices', externalServicesRoutes);
