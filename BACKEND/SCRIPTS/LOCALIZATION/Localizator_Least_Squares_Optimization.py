@@ -231,6 +231,7 @@ def WiFiLocalization(log_data, device_id, did, heatmap):
     # Write the result to stdout (the result will be captured in JS)
     # Assume you have variables for lat_est and lon_est (latitude and longitude)
     outputResult = {
+        "Localization Algorithm": "Least Squares Optimization (LSO)",
         "Device ID": device_id,
         "Employee DID": did,
         "Estimated Location (Latitude)": lat_est,

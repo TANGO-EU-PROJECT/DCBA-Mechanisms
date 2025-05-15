@@ -142,6 +142,7 @@ def WiFiLocalization(log_data, device_id, did, heatmap):
     EstimatedLocation = WiFi_euclidean_distance(device_id_rssi, heatmap_dict)
 
     outputResult = {
+        "Localization Algorithm": "Euclidean Distance (ED)",
         "Device ID": device_id,
         "Employee DID": did,
         "Estimated Location": EstimatedLocation
