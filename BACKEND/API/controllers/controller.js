@@ -790,32 +790,44 @@ exports.beginSession = async (req, res) => {
     }
 
     try {
-      // Check if a session request already exists for this device_id
-      const existingSessionRequest = await SESSION_REQUEST.findOne({
-        device_id: device_id,
-        qr_scanner_state_request: qr_scanner_state_request
-      });
+      // // Check if a session request already exists for this device_id
+      // const existingSessionRequest = await SESSION_REQUEST.findOne({
+      //   device_id: device_id,
+      //   qr_scanner_state_request: qr_scanner_state_request
+      // });
       
-      if (existingSessionRequest) {
-        // If found, delete the existing session request
-        await SESSION_REQUEST.deleteOne({ device_id });
-        logEvent({
-          event: 'DELETED EXISTED SESSION REQUEST',
-          status: 'SUCCESS ✅',
-          device_id: device_id,
-          ip: req.ip
-        });
-      }
+      // if (existingSessionRequest) {
+      //   // If found, delete the existing session request
+      //   await SESSION_REQUEST.deleteOne({ device_id });
+      //   logEvent({
+      //     event: 'DELETED EXISTED SESSION REQUEST',
+      //     status: 'SUCCESS ✅',
+      //     device_id: device_id,
+      //     ip: req.ip
+      //   });
+      // }
 
-      // Create a new SESSION_REQUEST instance
-      const sessionRequest = new SESSION_REQUEST({
-        device_id,
-        qr_scanner_state_request,
-        log_file_uri
-      });
+      // // Create a new SESSION_REQUEST instance
+      // const sessionRequest = new SESSION_REQUEST({
+      //   device_id,
+      //   qr_scanner_state_request,
+      //   log_file_uri
+      // });
 
-      // Save to the database
-      savedSessionRequest = await sessionRequest.save();
+      // // Save to the database
+      // savedSessionRequest = await sessionRequest.save();
+      savedSessionRequest = await SESSION_REQUEST.replaceOne(
+        { device_id: device_id },
+        {
+          device_id,
+          qr_scanner_state_request,
+          log_file_uri,
+          timestamp: new Date(),
+          // any other required/default fields
+        },
+        { upsert: true }
+      );
+      
       logEvent({
         event: 'CREATED NEW SESSION REQUEST',
         status: 'SUCCESS ✅',
