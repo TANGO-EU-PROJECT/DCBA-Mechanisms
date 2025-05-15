@@ -534,9 +534,9 @@ const processRequest = async (req, res, did, deviceID) => {
 };
 
 // Helper function to handle the exec command asynchronously
-const runLocalizationScript = (line, deviceID, escapedHeatmapJSON) => {
+const runLocalizationScript = (line, deviceID, did, escapedHeatmapJSON) => {
   return new Promise((resolve, reject) => {
-    exec(`python3 "${LocalizationScriptPath}" "${line}" "${deviceID}" "${escapedHeatmapJSON}"`, (error, stdout, stderr) => {
+    exec(`python3 "${LocalizationScriptPath}" "${line}" "${deviceID}" "${did}" "${escapedHeatmapJSON}"`, (error, stdout, stderr) => {
       if (error) {
         reject(`Error executing localization script: ${error.message}`);
       }
