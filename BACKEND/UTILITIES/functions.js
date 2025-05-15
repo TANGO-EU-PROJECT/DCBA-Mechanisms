@@ -551,6 +551,8 @@ function initializeWebSocketServer(wss) {
       const qr_scanner_state_request = urlParams.get('qr_scanner_state_request');
       const device_id = urlParams.get('device_id'); // Extract device_id
 
+      console.log(qr_scanner_state_request, device_id)
+
       //const front_connection = urlParams.get('front_connection'); // New parameter for front-end WebSocket
 
       // Handle device connections
