@@ -331,7 +331,7 @@ const processDeviceQueue = async (deviceID) => {
     // Process all requests in the queue, one at a time
     while (!deviceQueue.isEmpty()) {  
       // Dequeue the next request; it includes the request, response, and did token and the deviceID
-      const { req, res, did, deviceID } = deviceQueue.dequeue();
+      const { req, res, timestamp, did, deviceID } = deviceQueue.dequeue();
       try {
         // Process the request with the previously verified token
         await processRequest(req, res, did, deviceID);
@@ -340,7 +340,7 @@ const processDeviceQueue = async (deviceID) => {
         logEvent({
           event: 'PROCESSING SESSION REQUEST',
           status: 'FAILED ❌',
-          cause: `AN ERROR OCCURRED DURING PROCESSING SESSION REQUEST: ${error}`,
+          cause: `AN ERROR OCCURRED DURING THE PROCESSING OF THE SESSION REQUEST: ${error}`,
           did: did,
           device_id: deviceID
         });
