@@ -27,7 +27,6 @@ const sessionRequestModelPath = process.env.MONGO_DB_SESSION_REQUEST_SCHEME_PATH
 const DEVICE = require(path.resolve(deviceModelPath));
 const SESSION_REQUEST = require(path.resolve(sessionRequestModelPath));
 const WSS_CONNECTIONS_FROM_QR_SCANNER_REQUESTS = new Map(); // returns the wss connections associated with their qr_state_requests
-//let FRONTEND_CONNECTION = null;  // Store only one frontend connection
 
 // ──────────────────────────────────────────────────────────────────────────────
 // ANSI escape codes for colored console output to improve log readability
@@ -117,7 +116,7 @@ const createDeviceDocument = async (did, sub, device_id, log_file_uri, heatmap) 
   } catch (error) {
     // Log any errors encountered during the process
     logEvent({
-      event: 'DEVICE REGISTRATION TO DATABASE',
+      event: 'DEVICE REGISTERED TO THE DATABASE',
       status: 'FAILED ❌',
       did: did,
       device_id: device_id,
@@ -147,10 +146,10 @@ const findDeviceByDID = async (did) => {
     if (!device) {
       // Log a message if the device does not exist in the database
       logEvent({
-        event: 'DEVICE DOES NOT EXIST',
+        event: 'SEARCH FOR DEVICE',
         status: 'FAILED ❌',
         did: did,
-        cause: 'NOT FOUND'
+        cause: `DEVICE ASSOCIATED WITH DID ${did} NOT FOUND`
       });
       return null;
     }
@@ -160,7 +159,7 @@ const findDeviceByDID = async (did) => {
   } catch (error) {
     // Log any errors encountered during the database query
     logEvent({
-      event: 'DEVICE SEARCH IN DATABASE',
+      event: 'SEARCH FOR DEVICE',
       status: 'FAILED ❌',
       did: did,
       cause: `AN ERROR OCCURRED DURING DEVICE SEARCH IN THE DATABASE: ${error}`
@@ -184,7 +183,7 @@ const findDeviceByDID = async (did) => {
  * @param {string} log - The log message to be stored in the database.
  * @param {Function} [onComplete] - Optional callback function that executes once the log is stored.
  */
-async function storeLogsToInfluxDB(did, log, onComplete) {
+async function storeLogsToInfluxDB(device_id, did, log, onComplete) {
 
 
   try {
@@ -203,7 +202,7 @@ async function storeLogsToInfluxDB(did, log, onComplete) {
 
     // Create a new data point for InfluxDB
     const point = new Point('ANDROID_LOGS_MEASUREMENT')
-      .tag('did', did)                 // Tag the data point by device's DID
+      .tag('device_id', device_id)     // Tag the data point by device's ID
       .stringField('LOG_MESSAGE', log) // Store the log message as a string field
       .timestamp(new Date());          // Use the extracted timestamp for the data point
 
@@ -217,6 +216,7 @@ async function storeLogsToInfluxDB(did, log, onComplete) {
     logEvent({
       event: '📥 ANDROID LOG STORED TO INFLUX DATABASE',
       status: 'SUCCESS ✅',
+      device_id: device_id,
       did: did,
       cause: 'DEVICE DEVICE UPLOADING LOGS -- ACTIVE SESSION'
     });
@@ -228,6 +228,7 @@ async function storeLogsToInfluxDB(did, log, onComplete) {
       event: '📥 ANDROID LOG STORED TO INFLUX DATABASE',
       status: 'FAILED ❌',
       did: did,
+      device_id: device_id,
       cause: `AN ERROR OCCURRED WHILE STORING THE ANDROID LOG TO THE INFLUXDB DATABASE: ${error}`
     });
 
@@ -378,17 +379,17 @@ function readEDHeatmapCSV(filePath) {
  * Retrieves the device's localization heatmap from the database using its did.
  * This function queries the database to fetch the device's heatmap data based on the provided did.
  *
- * @param {string} deviceID - The unique identifier id of the device whose heatmap data is being retrieved.
+ * @param {string} device_id - The unique identifier id of the device whose heatmap data is being retrieved.
  * @returns {Promise<Object|null>} - A promise that resolves to the device's heatmap data if found, otherwise resolves to `null`.
  */
-const getDeviceHeatmap = async (deviceID) => {
+const getDeviceHeatmap = async (device_id) => {
   try {
     // Attempt to fetch the device's document from the database using the provided did
-    const device = await findDeviceByDeviceID(deviceID);
+    const device = await findDeviceByDeviceID(device_id);
 
     // If no device is found, throw an error with a descriptive message
     if (!device) {
-      throw new Error(`Device associated with id "${deviceID}" not found.`);
+      throw new Error(`Device associated with id "${device_id}" not found.`);
     }
 
     // Return the device's heatmap data if the device is found
@@ -398,7 +399,7 @@ const getDeviceHeatmap = async (deviceID) => {
     logEvent({
       event: 'FETCHING DEVICE HEATMAP',
       status: 'FAILED ❌',
-      device_id: deviceID,
+      device_id: device_id,
       cause: `AN ERROR OCCURRED WHILE FETCHING THE DEVICE HEATMAP: ${error}`
     });
     
@@ -411,7 +412,7 @@ const getDeviceHeatmap = async (deviceID) => {
 
 
 
-/** [11]
+/** [10]
  * Handles the session request lookup and notification process.
  * This function searches for a session request in the database using the provided qr state(state), 
  * notifies the relevant device, and creates a new device record if necessary.
@@ -453,13 +454,12 @@ async function processSessionRequest(authToken, qr_scanner_state_request, did, s
           // If no device found associated with this DID, create it
           await createDeviceDocument(did, sub, device_id, log_file_uri, heatmap);
           notifyDevice(authToken, qr_scanner_state_request, device_id, did, sub, log_file_uri, "session-request-valid");
-          //await updateFrontend(FRONTEND_CONNECTION, 'UPDATE_DEVICES');
           return { status: 200, message: "Device status updated to online." };
         } else {
           // Someone tried to log in from his/her device, using an existing DID
           notifyDevice(authToken, qr_scanner_state_request, device_id, did, sub, log_file_uri, "potential-credential-sharing");
           logEvent({
-            event: 'UNAUTHORIZED ATTEMPT USING CREDENTIALS FROM ANOTHER DEVICE',
+            event: 'UNAUTHORIZED ATTEMPT FROM USING CREDENTIALS FROM ANOTHER DEVICE',
             status: 'FAILED ❌',
             did: did,
             device_id: device_id,
@@ -481,7 +481,6 @@ async function processSessionRequest(authToken, qr_scanner_state_request, did, s
               device_id: device_id,
             });
             notifyDevice(authToken, qr_scanner_state_request, device_id, did, sub, log_file_uri, "session-request-valid");
-            //await updateFrontend(FRONTEND_CONNECTION, 'UPDATE_DEVICES');
             return { status: 200, message: "Device status updated to online." };
           } else {
             // The specific device is already online
@@ -507,7 +506,6 @@ async function processSessionRequest(authToken, qr_scanner_state_request, did, s
           return { status: 401, message: "Credentials don't match this device." };
         }
       }
-      //await updateFrontend(FRONTEND_CONNECTION, 'UPDATE_DEVICES');
     } else {
       // Notify the device that the session request is expired, in order to re-generate a new unique QR
       notifyDevice(authToken, qr_scanner_state_request, "unknown", did, sub, "unknown", "session-request-expired");
@@ -533,7 +531,7 @@ async function processSessionRequest(authToken, qr_scanner_state_request, did, s
 
 
 
-/** [12]
+/** [11]
  * Initializes a WebSocket server and handles client connections.
  * The function listens for WebSocket connections, associates qr_scanner_state_request with their WebSocket instances,
  * and manages disconnections.
@@ -544,16 +542,9 @@ function initializeWebSocketServer(wss) {
   try {
     // When a new WebSocket connection is established
     wss.on('connection', (ws, req) => {
-      // Parse the query parameters from the request URL
-      // const urlParams = new URLSearchParams(req.url.replace('/?', ''));
-      // const qr_scanner_state_request = urlParams.get('qr_scanner_state_request');
-
       const urlParams = new URLSearchParams(req.url.split('?')[1]);  // Split to get the query part after "?"
       const qr_scanner_state_request = urlParams.get('qr_scanner_state_request');
       const device_id = urlParams.get('device_id'); // Extract device_id
-
-
-      //const front_connection = urlParams.get('front_connection'); // New parameter for front-end WebSocket
 
       // Handle device connections
       if (qr_scanner_state_request && device_id) {
@@ -566,53 +557,12 @@ function initializeWebSocketServer(wss) {
         });
       }
 
-      // Handle WebSocket connections for the frontend (with the "front_connection" query)
-      // if (front_connection) {
-      //   if (FRONTEND_CONNECTION) {
-      //     // If there's already a frontend connection, close it before accepting the new one
-      //     FRONTEND_CONNECTION.close();
-      //     logEvent({
-      //       event: 'REPLACING EXISTING FRONTEND CONNECTION',
-      //       status: 'SUCCESS ✅',
-      //       cause: 'RECONNECTING TO FRONTEND'
-      //     });
-      //   }
-
-      //   // Assign the new frontend WebSocket connection
-      //   FRONTEND_CONNECTION = ws;
-
-      //   logEvent({
-      //     event: `FRONTEND CONNECTION ESTABLISHED VIA WEBSOCKET`,
-      //     status: 'SUCCESS ✅',
-      //     cause: 'CONNECTED TO FRONTEND'
-      //   });
-
-      //   // Send an initial verification message to the frontend
-      //   ws.send(JSON.stringify({
-      //     event: 'CONNECTION_VERIFIED',
-      //     message: 'WebSocket connection established with the frontend.',
-      //     status: "success"
-      //   }));
-      // }
-
-      // Handle WebSocket messages from both device devices and frontend
+      // Handle WebSocket messages from both device devices
       ws.on('message', (message) => {
-        //console.log(`Received message:`, message);
-
-        const parsedMessage = JSON.parse(message);
-        
-        // If the frontend sends a verification message, respond with a verified connection
-        if (parsedMessage.event === 'VERIFY_CONNECTION') {
-          // Respond to frontend with a "CONNECTION_VERIFIED" message
-          ws.send(JSON.stringify({
-            event: 'CONNECTION_VERIFIED',
-            message: 'Backend successfully verified the WebSocket connection.',
-            status: 'success'
-          }));
-        }
+        console.log(`Received message:`, message);
       });
 
-      // Handle WebSocket disconnection for both devices and frontend
+      // Handle WebSocket disconnection for both devices
       ws.on('close', () => {
         if (qr_scanner_state_request && device_id) {
           WSS_CONNECTIONS_FROM_QR_SCANNER_REQUESTS.delete(qr_scanner_state_request);
@@ -623,15 +573,6 @@ function initializeWebSocketServer(wss) {
             device_id: device_id
           });
         }
-
-        // if (front_connection && FRONTEND_CONNECTION === ws) {
-        //   FRONTEND_CONNECTION = null;  // Reset the frontend connection on close
-        //   logEvent({
-        //     event: `FRONTEND CONNECTION DISCONNECTED FROM WEBSOCKET`,
-        //     status: 'SUCCESS ✅',
-        //     cause: 'DISCONNECTED FROM FRONTEND'
-        //   });
-        // }
       });
     });
 
@@ -651,7 +592,7 @@ function initializeWebSocketServer(wss) {
 
 
 
-/** [13]
+/** [12]
  * Notifies a specific client (device) via WebSocket when certain events occur.
  * This function checks if the WebSocket connection for the given device_id is open,
  * and if so, sends the message with the relevant data.
@@ -771,123 +712,8 @@ function notifyDevice(authToken, qr_scanner_state_request, device_id, did, sub, 
   }
 }
 
-/** [14]
- * [updateFrontend]
- * Notifies the frontend via WebSocket with updates based on a specific event type.
- * Supports sending the current list of devices with their status, or other event-driven updates.
- *
- * @param {WebSocket} frontend_connection - The active WebSocket connection to the frontend client.
- * @param {string} event - The type of event to send (e.g., 'UPDATE_DEVICES', 'UPDATE_HEATMAP').
- */
-async function updateFrontend(frontend_connection, event, arguments) {
-  // Check if the WebSocket connection is valid and open
-  if (!frontend_connection || frontend_connection.readyState !== 1) {
-    logEvent({
-      event: 'ERROR ESTABLISHING FRONTEND CONNECTION ⚠️',
-      status: 'FAILED ❌',
-      cause: 'Frontend WebSocket connection is not open or is undefined.'
-    });
-    
-    //return console.warn('⚠️ FRONTEND_CONNECTION is not open or undefined.');
-  }
-
-  // Send updated device list to the frontend
-  if (event === 'UPDATE_DEVICES') {
-    try {
-      // Fetch all devices' DIDs and statuses from the database
-      const allDevices = await DEVICE.find({}, 'device_id did sub status last_coordinates');
-
-      // Separate devices into online and offline groups
-      const devicesOnline = allDevices.filter(device => device.status === 'online');
-      const devicesOffline = allDevices.filter(device => device.status === 'offline');
-
-      // Build the payload to be sent
-      const payload = {
-        event: 'UPDATE_DEVICES',
-        status: 'success',
-        data: {
-          timestamp: new Date().toISOString(),
-          devicesOnline: devicesOnline,
-          devicesOffline: devicesOffline
-        }
-      };
-
-      // Send the data over WebSocket
-      frontend_connection.send(JSON.stringify(payload));
-    } catch (error) {
-      logEvent({
-        event: 'COMMUNICATION BACKEND-FRONTEND ERROR ⚠️',
-        status: 'FAILED ❌',
-        cause: `Error sending device data to frontend: ${error}`
-      });
-      
-      //console.error('❌ Error sending devices data to frontend:', error);
-    }
-
-  // Handle the UPDATE_DEVICE_LOCATION event
-  } else if (event === 'UPDATE_DEVICE_LOCATION') {
-    try {
-      const { deviceDid, latitude, longitude } = arguments; // Destructure the arguments
-
-      // Build the payload for the device location update
-      const payload = {
-        event: 'UPDATE_DEVICE_LOCATION',
-        status: 'success',
-        data: {
-          timestamp: new Date().toISOString(),
-          deviceDid: deviceDid,
-          lastLocation: {
-            latitude,
-            longitude
-          }
-        }
-      };
-
-      // Send the location data over WebSocket
-      frontend_connection.send(JSON.stringify(payload));
-    } catch (error) {
-      logEvent({
-        event: 'COMMUNICATION BACKEND-FRONTEND ERROR ⚠️',
-        status: 'FAILED ❌',
-        cause: `Error sending device location data to frontend: ${error}`
-      });
-      //console.error('❌ Error sending device location data to frontend:', error);
-    }
-
-  } else {
-    // Log unknown event types
-    logEvent({
-      event: 'COMMUNICATION BACKEND-FRONTEND ERROR ⚠️',
-      status: 'FAILED ❌',
-      cause: `Unknown event type received: ${event}`
-    });
-    //console.log(`⚠️ Unknown event type received: ${event}`);
-  }
-}
-
-
-
-/** [15]
- * [setFrontendConnection]
- * Sets the WebSocket connection instance that represents the frontend client.
- *
- * @param {WebSocket} ws - The WebSocket instance to store as the active frontend connection.
- */
-function setFrontendConnection(ws) {
-  //FRONTEND_CONNECTION = ws;
-}
 
 /** [16]
- * [getFrontendConnection]
- * Retrieves the current WebSocket connection for the frontend client.
- *
- * @returns {WebSocket} The current active frontend WebSocket connection.
- */
-function getFrontendConnection() {
-  return FRONTEND_CONNECTION;
-}
-
-/** [17]
  * Finds a device in the MongoDB database by their Device ID .
  * This function queries the "DEVICE" collection to retrieve a device document 
  * that matches the provided device id.
@@ -904,10 +730,10 @@ const findDeviceByDeviceID = async (device_id) => {
     if (!device) {
       // Log a message if the device does not exist in the database
       logEvent({
-        event: 'DEVICE DOES NOT EXIST',
+        event: 'SEARCH FOR DEVICE',
         status: 'FAILED ❌',
         device_id: device_id,
-        cause: 'NOT FOUND'
+        cause: `DEVICE ASSOCIATED WITH ID ${did} NOT FOUND`
       });
       return null;
     }
@@ -917,7 +743,7 @@ const findDeviceByDeviceID = async (device_id) => {
   } catch (error) {
     // Log any errors encountered during the database query
     logEvent({
-      event: 'DEVICE SEARCH IN DATABASE',
+      event: 'SEARCH FOR DEVICE',
       status: 'FAILED ❌',
       did: did,
       cause: `AN ERROR OCCURRED DURING DEVICE SEARCH IN THE DATABASE: ${error}`
@@ -934,16 +760,17 @@ const findDeviceByDeviceID = async (device_id) => {
 
 
 
+
 /********* BACKEND SERVER EVENT LOGGING MECHANISM *********/
 const logEvent = (eventDetails) => {
   // Define unique delimiters for the start and end of each log event
   const logStart = `${magenta}[----------------------- START OF LOG EVENT -----------------------]${reset}\n`;
-  const logEnd = `${magenta}[----------------------- END OF LOG EVENT -----------------------]${reset}\n`;
+  const logEnd = `${magenta}[------------------------ END OF LOG EVENT ------------------------]${reset}\n`;
 
   // Log event details with formatted colors, timestamp, and delimiters
   console.log(
     // Add log start delimiter
-    `${logStart}` +
+    `\n${logStart}` +
     
     // Opening curly brace
     `${green}{${reset}\n` +
@@ -973,7 +800,7 @@ const logEvent = (eventDetails) => {
     `${green}}${reset}` +
     
     // Add log end delimiter
-    `\n${logEnd}`
+    `\n${logEnd}\n`
   );
 };
 /********* BACKEND SERVER EVENT LOGGING MECHANISM *********/
@@ -996,8 +823,5 @@ module.exports = {
   processSessionRequest,          // Process and notifies the devices begin session requests
   notifyDevice,                   // Notify the devices using the web socket connection
   initializeWebSocketServer,      // Initialize the web socket server connection
-  setFrontendConnection,
-  getFrontendConnection,
-  updateFrontend
 };
 

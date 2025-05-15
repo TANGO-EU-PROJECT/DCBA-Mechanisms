@@ -31,8 +31,6 @@ const {
   readEDHeatmapCSV,
   readLSOHeatmapCSV,
   processSessionRequest,
-  getFrontendConnection,
-  updateFrontend,
   findDeviceByDeviceID,
   findDeviceByDID
   
@@ -80,7 +78,7 @@ const SESSION_REQUEST = require(path.resolve(sessionRequestModelPath));
 
 
 
-/** 
+/** [1]
  * Fetches all device data from the MongoDB database and returns it as a JSON response.
  * Endpoint: GET /devices
  * 
@@ -110,9 +108,11 @@ exports.fetchDevices = async (req, res) => {
 };
 
 
-/* [2]
+/** [2]
  * Function to handle the Android Logs received from the device devices
  * Endpoint: POST /devices/post-logs
+ * @param {Object} req - The request object(containing the did, the deviceID, the log and the authToken).
+ * @param {Object} res - The response object.
 */
 exports.handlePostLogs = async (req, res) => {
   const did = req.body.did;
@@ -226,7 +226,6 @@ exports.handlePostLogs = async (req, res) => {
   const deviceQueue = getDeviceQueue(deviceID);
   deviceQueue.enqueue({ req, res, timestamp, did, deviceID});
   processDeviceQueue(deviceID);
-
 };
 
 
@@ -259,18 +258,17 @@ const getDeviceQueue = (deviceID) => {
  * This ensures that each device has a separate lock mechanism 
  * to control concurrent log processing.
  *
- * @param {string} did - The unique identifier for the device.
+ * @param {string} deviceID - The unique identifier for the device.
  * @returns {Object} - The mutex object containing the `locked` status.
  */
-const getMutex = (did) => {
+const getMutex = (deviceID) => {
   // Check if a mutex exists for the device; if not, create one
-  if (!mutexes[did]) {
+  if (!mutexes[deviceID]) {
     // Initialize the mutex with `locked: false` to indicate it's available
-    mutexes[did] = { locked: false };
+    mutexes[deviceID] = { locked: false };
   }
-
   // Return the device's mutex object
-  return mutexes[did];
+  return mutexes[deviceID];
 };
 
 
@@ -281,11 +279,11 @@ const getMutex = (did) => {
  * for the same device at the same time. If the mutex is already locked, 
  * it waits in a loop until the lock is released.
  * 
- * @param {string} did - The unique identifier for the device.
+ * @param {string} deviceID - The unique identifier for the device.
  * @returns {Promise<void>} - Resolves once the lock is acquired.
  */
-const acquireMutex = async (did) => {
-  const mutex = getMutex(did);
+const acquireMutex = async (deviceID) => {
+  const mutex = getMutex(deviceID);
 
   // Wait until the mutex is available (not locked)
   while (mutex.locked) {
@@ -299,14 +297,13 @@ const acquireMutex = async (did) => {
 
 /** [6]
  * Releases the mutex (lock) for a specific device, allowing the next process to proceed.
- * 
  * This function marks the mutex as unlocked, indicating that log processing 
  * for the device is complete and another process can acquire the lock.
  * 
- * @param {string} did - The unique identifier for the device.
+ * @param {string} deviceID - The unique identifier for the device.
  */
-const releaseMutex = (did) => {
-  getMutex(did).locked = false; // Unlock the mutex for the device
+const releaseMutex = (deviceID) => {
+  getMutex(deviceID).locked = false; // Unlock the mutex for the device
 };
 
 
@@ -350,9 +347,6 @@ const processDeviceQueue = async (deviceID) => {
         
         return res.status(200).json({ status: "failed", message: "Internal server error while processing session request." });
       }
-
-      // Introduce a slight delay (500ms) before processing the next request to avoid overload
-      // await new Promise(resolve => setTimeout(resolve, 500));
     }
   } finally {
     // Ensuring that the processing flag is reset and mutex is released, even if an error occurs
@@ -376,11 +370,10 @@ const processDeviceQueue = async (deviceID) => {
  */
 const processRequest = async (req, res, did, deviceID) => {
   const logData = req.body.log;
-  let DID;
 
   try {
     // Store the log data in the InfluxDB database asynchronously
-    await storeLogsToInfluxDB(deviceID, logData, () => {});
+    await storeLogsToInfluxDB(deviceID, did, logData, () => {});
   } catch (error) {
     return res.status(200).json({ status: "failed", message: "Failed to store logs in the Influx Database." });
   }
@@ -392,7 +385,7 @@ const processRequest = async (req, res, did, deviceID) => {
     if (line.trim() !== '') {
       
       if (line.includes("WifiNetworkScannerN")) {
-        // Retrieve the worker heatmap from the database
+        // Retrieve the device heatmap from the database
         const heatmap = await getDeviceHeatmap(deviceID); // Ensure it resolves before continuing
         const heatmapJSON = JSON.stringify(heatmap);
         const escapedHeatmapJSON = heatmapJSON.replace(/"/g, '\\"'); // Escape quotes to ensure they are passed correctly to Python
@@ -416,45 +409,37 @@ const processRequest = async (req, res, did, deviceID) => {
           console.log(JSON.stringify(result, null, 2)); // Pretty print the JSON
 
           if (LOCALIZATION_ALGORITHM_APPLIED === 'LSO') {
-            // Extract the necessary fields from the result object
-            const device_id = result['Device ID']
-            DID = result['Employee DID']
+            // Extract the location fields from the result object
             const latitude = result['Estimated Location (Latitude)'];
             const longitude = result['Estimated Location (Longitude)'];
 
-            // Now, send the extracted values to the frontend
-            //const FRONTEND_CONNECTION = getFrontendConnection();
-
-            // Find the device by `did` and update their `last_coordinates`
+            // Find the device by `did` and `device_id` and update their `last_coordinates`
             const updatedDeviceDocument = await DEVICE.findOneAndUpdate(
-              { did: DID, device_id: device_id },  // Search using both `did` and `device_id`
+              { did: did, device_id: deviceID },  // Search using both `did` and `device_id`
               { 
                 $set: { last_coordinates: { lat: latitude, lon: longitude } }  // Update the last device coordinates
               },
               { new: true }  // Return the updated document
             );
             
-            
             if (!updatedDeviceDocument) {
               logEvent({
                 event: 'PERFORMING LOCALIZATION (LSO)',
                 status: 'FAILED ❌',
-                did: DID,
-                device_id: device_id,
+                did: did,
+                device_id: deviceID,
                 ip: req.ip,
-                cause: 'Device not found or failed to update coordinates.'
+                cause: 'Failed to update device last coordinates.'
               });
-              //console.error('Device not found or failed to update coordinates');
             } else {
               logEvent({
-                event: 'UPDATING DEVICE LOCATION',
+                event: 'UPDATING DEVICE LOCATION (LSO)',
                 status: 'SUCCESS ✅',
-                did: DD,
-                device_id: device_id,
+                did: did,
+                device_id: deviceID,
                 ip: req.ip,
                 cause: `Device coordinates updated: ${JSON.stringify(updatedDeviceDocument.last_coordinates)}`
               });
-              //console.log(`Device coordinates updated: ${JSON.stringify(updatedDeviceDocument.last_coordinates)}`);
             }
 
             // Update the Frontend
@@ -462,43 +447,35 @@ const processRequest = async (req, res, did, deviceID) => {
           } else {
             // Else, the localization algorithm applies is the ED
             // Extract the necessary fields from the result object
-            const device_id = result['Device ID']
-            DID = result['Employee DID']
             const estimatedLocation = result['Estimated Location'];
 
-            // Now, send the extracted values to the frontend
-            //const FRONTEND_CONNECTION = getFrontendConnection();
-
-            // Find the device by `did` and update their `last_coordinates`
+            // Find the device by `did` and `device_id` and update their `last_coordinates`
             const updatedDeviceDocument = await DEVICE.findOneAndUpdate(
-              { did: DID, device_id: device_id },  // Search using both `did` and `device_id`
+              { did: did, device_id: deviceID },  // Search using both `did` and `device_id`
               { 
-                $set: { last_location: { estimatedLocation } }  // Update the last device coordinates
+                $set: { last_location: estimatedLocation }  // Update the last device coordinates
               },
               { new: true }  // Return the updated document
             );
-
 
             if (!updatedDeviceDocument) {
               logEvent({
                 event: 'PERFORMING LOCALIZATION (ED)',
                 status: 'FAILED ❌',
-                did: DID,
-                device_id: device_id,
+                did: did,
+                device_id: deviceID,
                 ip: req.ip,
-                cause: 'Device not found or failed to update last location.'
+                cause: 'Failed to update device last location.'
               });
-              //console.error('Device not found or failed to update coordinates');
             } else {
               logEvent({
-                event: 'UPDATING DEVICE LOCATION',
+                event: 'UPDATING DEVICE LOCATION (ED)',
                 status: 'SUCCESS ✅',
-                did: DD,
-                device_id: device_id,
+                did: did,
+                device_id: deviceID,
                 ip: req.ip,
                 cause: `Device last location updated: ${JSON.stringify(updatedDeviceDocument.last_location)}`
               });
-              //console.log(`Device coordinates updated: ${JSON.stringify(updatedDeviceDocument.last_coordinates)}`);
             }
           }
 
@@ -508,23 +485,12 @@ const processRequest = async (req, res, did, deviceID) => {
             status: 'FAILED ❌',
             cause: `AN ERROR OCCURRED DURING PARSING LOCALIZATION OUTPUT: ${localizationError}`,
             did: did,
+            device_id: deviceID,
             ip: req.ip
           });
 
           return res.status(200).json({ status: "failed", message: "Failed to perform localization." });
         }
-        
-      } else {
-        // Optional: Handle non-localization log lines (Risk Assessment)
-        /*
-        exec(`python3 "${FeatureExtractorScriptPath}" "${line}" "${did}"`, (error, stdout, stderr) => {
-          if (error) {
-            console.error(`Error executing ${FeatureExtractorScriptPath} script: ${error.message}`);
-            return res.status(500).json({ message: "Internal Server Error" });
-          }
-          console.log(stdout);
-        });
-        */
       }
     }
   }
@@ -533,7 +499,11 @@ const processRequest = async (req, res, did, deviceID) => {
   return res.status(200).json({ status: "success", message: "Logs stored, analyzed and processed successfully." });
 };
 
-// Helper function to handle the exec command asynchronously
+
+/* [9]
+ * Function to handle the localization algorithm
+ * Endpoint: GET /authenticator/auth-token-validation
+*/
 const runLocalizationScript = (line, deviceID, did, escapedHeatmapJSON) => {
   return new Promise((resolve, reject) => {
     exec(`python3 "${LocalizationScriptPath}" "${line}" "${deviceID}" "${did}" "${escapedHeatmapJSON}"`, (error, stdout, stderr) => {
@@ -551,16 +521,15 @@ const runLocalizationScript = (line, deviceID, did, escapedHeatmapJSON) => {
 
 
 
-
-
-
-/* [9]
+/* [10]
  * Function to handle validation of the authentication token
  * Endpoint: GET /authenticator/auth-token-validation
 */
 exports.handleAuthTokenValidation = async (req, res) => {
   const authHeader = req.headers.authorization;
   const ip = req.ip;
+  const deviceID = req.query.device_id;
+
 
   // 1. Check missing or malformed Authorization header
   if (!authHeader) {
@@ -568,6 +537,7 @@ exports.handleAuthTokenValidation = async (req, res) => {
       event: 'RE-AUTHENTICATION ATTEMPT WITH AUTH-TOKEN',
       status: 'FAILED ❌',
       cause: 'NO HEADER PROVIDED',
+      device_id: deviceID,
       ip,
     });
     return res.status(401).json({ status: 'failed', message: 'Authentication token is missing.' });
@@ -578,21 +548,25 @@ exports.handleAuthTokenValidation = async (req, res) => {
       event: 'RE-AUTHENTICATION ATTEMPT WITH AUTH-TOKEN',
       status: 'FAILED ❌',
       cause: 'NO BEARER TOKEN PROVIDED',
+      device_id: deviceID,
       ip,
     });
     return res.status(400).json({ status: 'failed', message: "Authentication token is malformed. It should start with 'Bearer '." });
   }
 
+  // If we reach there, it means that the auth header was valid
   const authToken = authHeader.split(' ')[1];
 
   try {
     const decoded = jwt.decode(authToken, { complete: true });
 
+    // Invalid Token Format
     if (!decoded) {
       logEvent({
         event: 'RE-AUTHENTICATION ATTEMPT WITH AUTH-TOKEN',
         status: 'FAILED ❌',
         cause: 'INVALID TOKEN FORMAT',
+        device_id: deviceID,
         ip,
       });
       return res.status(400).json({ status: "failed", message: 'Invalid authentication token format.' });
@@ -605,7 +579,7 @@ exports.handleAuthTokenValidation = async (req, res) => {
     // 2. Check if token expired
     if (exp && currentTime > exp) {
       if (did) {
-        const device = await DEVICE.findOne({ did });
+        const device = await findDeviceByDID(did);
 
         if (device) {
           device.status = 'offline';
@@ -624,6 +598,7 @@ exports.handleAuthTokenValidation = async (req, res) => {
             event: 'RE-AUTHENTICATION ATTEMPT WITH AUTH-TOKEN',
             status: 'FAILED ❌',
             cause: `DEVICE ASSOCIATED WITH DID ${did} NOT FOUND IN DATABASE`,
+            device_id: deviceID,
             ip,
           });
 
@@ -642,7 +617,7 @@ exports.handleAuthTokenValidation = async (req, res) => {
 
     // 3. Valid token
     if (did) {
-      const device = await DEVICE.findOne({ did });
+      const device = await findDeviceByDID(did);
 
       logEvent({
         event: 'RE-AUTHENTICATION ATTEMPT WITH AUTH-TOKEN',
@@ -666,6 +641,7 @@ exports.handleAuthTokenValidation = async (req, res) => {
       event: 'RE-AUTHENTICATION ATTEMPT WITH AUTH-TOKEN',
       status: 'FAILED ❌',
       cause: 'DID MISSING FROM TOKEN',
+      device_id: deviceID,
       ip,
     });
 
@@ -676,6 +652,7 @@ exports.handleAuthTokenValidation = async (req, res) => {
       event: 'RE-AUTHENTICATION ATTEMPT WITH AUTH-TOKEN',
       status: 'FAILED ❌',
       cause: `ERROR DURING TOKEN VALIDATION: ${err.message}`,
+      device_id: deviceID,
       ip,
     });
 
@@ -690,11 +667,7 @@ exports.handleAuthTokenValidation = async (req, res) => {
 
 
 
-
-
-
-
-/* [10]
+/* [11]
  * Function to handle device logout and token revocation
  * Endpoint: POST /devices/logout
 */
@@ -733,6 +706,7 @@ exports.handleLogout = async (req, res) => {
       status: 'SUCCESS ✅',
       cause: 'DEVICE ATTEMPTED TO LOG OUT',
       did: clientDid, // Log the provided did
+      device_id: deviceID,
       ip: req.ip
     });
 
@@ -747,6 +721,7 @@ exports.handleLogout = async (req, res) => {
         status: 'SUCCESS ✅',
         cause: 'DEVICE MARKED AS OFFLINE',
         did: clientDid,
+        device_id: deviceID,
         ip: req.ip
       });
     } else {
@@ -754,6 +729,8 @@ exports.handleLogout = async (req, res) => {
         event: 'DEVICE STATUS UPDATE ATTEMPT',
         status: 'FAILED ❌',
         cause: `DEVICE WITH DID ${clientDid} NOT FOUND IN DATABASE`,
+        device_id: deviceID,
+        did: clientDid,
         ip: req.ip
       });
       return res.status(404).json({
@@ -761,8 +738,6 @@ exports.handleLogout = async (req, res) => {
         message: "Device not found."
       });
     }
-    //const FRONTEND_CONNECTION = getFrontendConnection();
-    //await updateFrontend(FRONTEND_CONNECTION, 'UPDATE_DEVICES');
 
     // Proceed with logout and return a success message
     return res.status(200).json({
@@ -777,6 +752,7 @@ exports.handleLogout = async (req, res) => {
       status: 'FAILED ❌',
       cause: `AN ERROR OCCURRED DURING DEVICE LOGOUT: ${error}`,
       did: req.body.did, // Log the provided did
+      device_id: req.body.deviceID,
       ip: req.ip
     });
 
@@ -789,10 +765,7 @@ exports.handleLogout = async (req, res) => {
 };
 
 
-
-
-
-/* [11]
+/* [12]
  * Function to handle requests , made to check whether the server is up or not
  * Endpoint: GET /server/status
 */
@@ -801,10 +774,7 @@ exports.getServerStatus = (req, res) => {
 };
 
 
-
-
-
-/** [12] 
+/** [13] 
  * Handles the initiation of a device session by generating a QR scanner state,  
  * creating a session request, and retrieving an authentication QR code.  
  * The QR code is extracted from an external authentication service (tango.io).  
@@ -945,10 +915,7 @@ exports.beginSession = async (req, res) => {
 
 
 
-
-
-
-/** [13]
+/** [14]
  * Handle the authentication callback by exchanging the authorization code for an access token.
  * Decodes the received JWT token and processes session requests based on authentication data.
  * @param req - Request object
@@ -1069,7 +1036,7 @@ exports.handleAuthCallback = async (req, res) => {
   }
 };
 
-/** [14]
+/** [15]
  * Fetches the list of devices who are currently online and active.
  * Queries the database for devices with the status 'online' and returns their details such as status, did, and device_id.
  * This route requires a valid JWT authorization token to access.
@@ -1103,7 +1070,7 @@ exports.fetchOnlineDevices = async (req, res) => {
 };
 
 
-/** [15]
+/** [16]
  * Fetches the list of devices who are currently offline and inactive.
  * Queries the database for devices with the status 'offline' and returns their details such as status, did, and device_id.
  * This route requires a valid JWT authorization token to access.
@@ -1137,7 +1104,7 @@ exports.fetchOfflineDevices = async (req, res) => {
 };
 
 
-/** [16]
+/** [17]
  * Retrieves the behavioural score of a specific device using its Decentralized Identifier (DID).
  * 
  * @route   POST /devices/behavioural-score
@@ -1174,12 +1141,13 @@ exports.fetchDeviceBehaviouralScore = async (req, res) => {
 
     let device;
     try {
-      device = await DEVICE.findOne({ did: didRequester });
+      device = await findDeviceByDID(didRequester);
     } catch (dbErr) {
       logEvent({
         event: 'RETRIEVING BEHAVIOURAL SCORE',
         status: 'FAILED ❌',
         did: didRequester,
+        device_id: device.device_id,
         cause: `Error retrieving behavioural score: ${dbErr}`
       });
       //console.error('Error retrieving behavioural score:', dbErr);
@@ -1200,6 +1168,7 @@ exports.fetchDeviceBehaviouralScore = async (req, res) => {
       event: 'RETRIEVING BEHAVIOURAL SCORE',
       status: 'SUCCESS ✅',
       did: didRequester,
+      device_id: device.device_id,
       cause: 'Successfully retrieved behavioural score.'
     });
     
@@ -1210,7 +1179,6 @@ exports.fetchDeviceBehaviouralScore = async (req, res) => {
     });
 
   } catch (err) {
-    //console.error('JWT verification failed:', err);
     logEvent({
       event: 'JWT VERIFICATION',
       status: 'FAILED ❌',
@@ -1233,11 +1201,7 @@ exports.fetchDeviceBehaviouralScore = async (req, res) => {
 };
 
 
-
-
-
-
-/** [17]
+/** [18]
  * Retrieves the last known coordinates (latitude and longitude) of a specific device using its Decentralized Identifier (DID).
  * 
  * @route   POST /devices/last-location
@@ -1274,12 +1238,13 @@ exports.fetchDeviceLastLocation = async (req, res) => {
 
     let device;
     try {
-      device = await DEVICE.findOne({ did: didRequester });
+      device = await findDeviceByDID(didRequester);
     } catch (dbErr) {
       logEvent({
         event: 'RETRIEVING_LAST_COORDINATES',
         status: 'FAILED ❌',
         did: didRequester,
+        device_id: device.device_id,
         cause: `Error retrieving last coordinates requested from didSP '${didSP}': ${err}`
       });
       
@@ -1300,7 +1265,8 @@ exports.fetchDeviceLastLocation = async (req, res) => {
     return res.status(200).json({
       status: "success",
       message: "Device found.",
-      lastCoordinates: device.last_coordinates
+      //lastCoordinates: device.last_coordinates
+      lastLocation: device.last_location
     });
 
   } catch (err) {
@@ -1328,135 +1294,16 @@ exports.fetchDeviceLastLocation = async (req, res) => {
 
 
 
-
-
-
-
-/** [18]
- * @desc    Authenticate frontend user and return a JWT token if credentials are valid
- * @route   POST /frontend/auth-login
- * @access  Public
- */
-exports.frontendAuthLogin = async (req, res) => {
-  const { username, password } = req.body;
-  const { FRONTEND_LOGIN_USERNAME, FRONTEND_LOGIN_PASSWORD, JWT_SECRET_KEY } = process.env;
-
-  if (username === FRONTEND_LOGIN_USERNAME && password === FRONTEND_LOGIN_PASSWORD) {
-    try {
-      const payload = { username };
-      const authToken = jwt.sign(payload, JWT_SECRET_KEY, { expiresIn: '1h' });
-
-      // Set the token in an HttpOnly cookie
-      res.cookie('authToken', authToken, {
-        httpOnly: false,
-        secure: false, // Should be set to true for HTTPS  
-        sameSite: 'Lax',
-        maxAge: 60 * 60 * 1000 // Token expires in 1 hour (same as JWT expiration time)
-      });
-
-      return res.status(200).json({
-        status: 'success',
-        message: 'Authentication successful.',
-      });
-    } catch (error) {
-      return res.status(500).json({
-        status: 'failed',
-        message: 'Error generating authorization token.',
-      });
-    }
-  }
-
-  return res.status(401).json({
-    status: 'failed',
-    message: 'Invalid username or password.',
-  });
-};
-
-
-/** [19]
- * Fetches the list of devices who are currently online and active(prompt for frontend).
- * Queries the database for devices with the status 'online' and returns their details such as status, did, and device_id.
- * This route requires a valid JWT authorization token to access.
- * @route   GET /frontend/devices/online-shifts
- * @desc    Retrieves a list of devices who are marked as "online" in the database. 
- *          This route requires a valid JWT token for authorization.
- * @access  Private (Requires JWT token)
- * @param   req - Request object
- * @param   res - Response object
- */
-exports.fetchOnlineDevicesForFrontend = async (req, res) => {
-  try {
-    // Fetch online devices and exclude the _id field
-    const onlineDevices = await DEVICE.find({ status: 'online' })
-      .lean()
-      .select('device_id did sub last_coordinates -_id');  // Explicitly exclude _id field
-
-    // Return the response with the filtered data
-    return res.status(200).json({
-      status: "success",
-      message: 'Fetched online devices successfully.',
-      data: onlineDevices,
-    });
-  } catch (error) {
-    // Handle any errors
-    return res.status(500).json({
-      status: "failed",
-      message: 'Error fetching online devices.',
-    });
-  }
-};
-
-
-/** [20]
- * Fetches the list of devices who are currently offline and inactive(prompt for frontend).
- * Queries the database for devices with the status 'offline' and returns their details such as status, did, and device_id.
- * This route requires a valid JWT authorization token to access.
- * @route   GET /frontend/devices/offline-shifts
- * @desc    Retrieves a list of devices who are marked as "offline" in the database. 
- *          This route requires a valid JWT token for authorization.
- * @access  Private (Requires JWT token)
- * @param   req - Request object
- * @param   res - Response object
- */
-exports.fetchOfflineDevicesForFrontend = async (req, res) => {
-  try {
-    // Fetch offline devices and exclude the _id field
-    const offlineDevices = await DEVICE.find({ status: 'offline' })
-      .lean()
-      .select('device_id did sub -_id');  // Explicitly exclude _id field
-
-    // Return the response with the filtered data
-    return res.status(200).json({
-      status: "success",
-      message: 'Fetched offline devices successfully.',
-      data: offlineDevices,
-    });
-  } catch (error) {
-    // Handle any errors
-    return res.status(500).json({
-      status: "failed",
-      message: 'Error fetching offline devices.',
-    });
-  }
-};
-
-
-
-
-
-
-
-
 /********* BACKEND SERVER EVENT LOGGING MECHANISM *********/
 const logEvent = (eventDetails) => {
   // Define unique delimiters for the start and end of each log event
   const logStart = `${magenta}[----------------------- START OF LOG EVENT -----------------------]${reset}\n`;
-  const logEnd = `${magenta}[----------------------- END OF LOG EVENT -----------------------]${reset}\n`;
+  const logEnd = `${magenta}[------------------------ END OF LOG EVENT ------------------------]${reset}\n`;
 
   // Log event details with formatted colors, timestamp, and delimiters
   console.log(
     // Add log start delimiter
-    `${logStart}` +
+    `\n${logStart}` +
     
     // Opening curly brace
     `${green}{${reset}\n` +
@@ -1486,7 +1333,7 @@ const logEvent = (eventDetails) => {
     `${green}}${reset}` +
     
     // Add log end delimiter
-    `\n${logEnd}`
+    `\n${logEnd}\n`
   );
 };
 /********* BACKEND SERVER EVENT LOGGING MECHANISM *********/

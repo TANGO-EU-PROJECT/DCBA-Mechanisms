@@ -13,8 +13,6 @@ const cors = require('cors');
 const frontendRoutes = require('./BACKEND/API/routes/frontendRoutes');         /* Import FRONTEND API routes */
 const authenticatorRoutes = require('./BACKEND/API/routes/authenticatorRoutes'); /* Import AUTHENTICATOR routes */
 const externalServicesRoutes = require('./BACKEND/API/routes/externalServicesRoutes'); /* Import EXTERNAL SERVICES routes */
-const { Server } = require('socket.io');
-
 const cookieParser = require('cookie-parser');
 
 /* Define ANSI escape codes for colored console output */                                                                     
