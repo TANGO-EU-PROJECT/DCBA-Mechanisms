@@ -555,7 +555,7 @@ function initializeWebSocketServer(wss) {
 
       // Handle device connections
       if (qr_scanner_state_request && device_id) {
-        DEVICES.set(qr_scanner_state_request, { device_id, ws });
+        DEVICES.set(qr_scanner_state_request);
         logEvent({
           event: `DEVICE WITH QR STATE "${qr_scanner_state_request}" CONNECTED VIA WEBSOCKET`,
           status: 'SUCCESS ✅',
