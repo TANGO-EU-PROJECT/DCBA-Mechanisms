@@ -524,9 +524,8 @@ async function processSessionRequest(authToken, qr_scanner_state_request, did, s
       event: 'PROCESSING SESSION REQUEST',
       status: 'FAILED ❌',
       did: did,
-      cause: `AN ERROR OCCURRED DURING THE PROCESSING OF THE SESSION REQUEST: ${error}`
+      cause: `AN ERROR OCCURRED DURING THE PROCESSING OF THE SESSION REQUEST: ${error.stack}`
     });    
-    console.log(error.message)
     return { status: 500, message: "Internal server error" };
   }
 }
