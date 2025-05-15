@@ -547,6 +547,8 @@ function initializeWebSocketServer(wss) {
       // Parse the query parameters from the request URL
       // const urlParams = new URLSearchParams(req.url.replace('/?', ''));
       // const qr_scanner_state_request = urlParams.get('qr_scanner_state_request');
+      console.log('req.url:', req.url);
+
       const urlParams = new URLSearchParams(req.url.split('?')[1]);  // Split to get the query part after "?"
       const qr_scanner_state_request = urlParams.get('qr_scanner_state_request');
       const device_id = urlParams.get('device_id'); // Extract device_id
