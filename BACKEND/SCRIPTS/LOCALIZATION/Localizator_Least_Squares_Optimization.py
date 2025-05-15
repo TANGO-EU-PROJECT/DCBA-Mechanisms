@@ -171,7 +171,7 @@ def trilaterate(distances):
     return x, y
 
 
-def WiFiLocalization(log_data, deviceDid, heatmap):
+def WiFiLocalization(log_data, device_id, did, heatmap):
     """
     Perform Wi-Fi localization using a predefined heatmap.
 
@@ -189,7 +189,7 @@ def WiFiLocalization(log_data, deviceDid, heatmap):
             return None
 
     if not isinstance(heatmap, list):
-        print(f"Invalid heatmap format for deviceDid {deviceDid}: Expected a list of dictionaries.")
+        print(f"Invalid heatmap format for device {device_id}: Expected a list of dictionaries.")
         return None
 
     # Extract BSSIDs and RSSI levels from log data
@@ -214,7 +214,7 @@ def WiFiLocalization(log_data, deviceDid, heatmap):
                     coordinates_and_rssi.append((ssid, bssid, APsCartesianCoordinateX, APsCartesianCoordinateY, rssi, A))
 
     if not coordinates_and_rssi:
-        print(f"{RED}[----- deviceDid: {deviceDid}, No matching APs found in heatmap. Localization not possible. -----]{RESET}")
+        print(f"{RED}[----- Device ID: {device_id}, No matching APs found in heatmap. Localization not possible. -----]{RESET}")
         return None
 
     # Convert RSSI values to distances
@@ -231,7 +231,8 @@ def WiFiLocalization(log_data, deviceDid, heatmap):
     # Write the result to stdout (the result will be captured in JS)
     # Assume you have variables for lat_est and lon_est (latitude and longitude)
     outputResult = {
-        "deviceDid": deviceDid,
+        "Device ID": device_id,
+        "Employee DID": did,
         "Estimated Location (Latitude)": lat_est,
         "Estimated Location (Longitude)": lon_est
     }
@@ -250,12 +251,14 @@ def WiFiLocalization(log_data, deviceDid, heatmap):
 ######################################### MAIN #########################################
 def main():
     
-    # Get the log data from command line arguments
+     # Get the log data from command line arguments
     log_data = sys.argv[1]
-    # Get the logged in deviceDid
-    deviceDid = sys.argv[2]
+    # Get the logged in device_id
+    device_id = sys.argv[2]
+    # Get the employee did
+    did = sys.argv[3]
     # Get the deviceDid heatmap
-    heatmap = sys.argv[3]
+    heatmap = sys.argv[4]
 
     # Now parse the JSON string 
     try:
@@ -267,7 +270,7 @@ def main():
     # Need to declare if the RSSI values are Wifi or BLe 
     if ("WifiNetworkScannerN" in log_data):
         # Wi-Fi RSSI VALUES
-        WiFiLocalization(log_data, deviceDid, heatmap)
+        WiFiLocalization(log_data, device_id, did, heatmap)
 
 # Entry point of the script
 if __name__ == "__main__":

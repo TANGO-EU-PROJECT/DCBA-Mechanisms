@@ -1,3 +1,4 @@
+# ---------------------------------------------------------------------------------------------------------------------- #
 # ------------------------------- DCBA Backend Deployment ------------------------------- #
 apiVersion: apps/v1
 kind: Deployment
@@ -103,6 +104,8 @@ spec:
               value: "39.365858279847544"
             - name: LON0
               value: "22.923886333496505"
+            - name: DEFAULT_LOCATION
+              value: "FACILITY_ENTRANCE"
             - name: HOSTNAME_FRONT_DEV
               value: "127.0.0.1"
             - name: HOSTNAME_FRONT_PROD
@@ -130,8 +133,28 @@ spec:
   ports:
     - port: 3001       # Port exposed in the internal cluster (external pod port)
       targetPort: 3000 # The dcba-backend continer port (internal pod port)
-
 ---
+# ---------------------------------------------------------------------------------------------------------------------- #
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+# ---------------------------------------------------------------------------------------------------------------------- #
 # ------------------------------- MongoDB Deployment ------------------------------- #
 apiVersion: apps/v1
 kind: Deployment
@@ -187,6 +210,27 @@ spec:
       targetPort: 27017 # The mongo-db continer port (internal pod port)
 
 ---
+# ---------------------------------------------------------------------------------------------------------------------- #
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+# ---------------------------------------------------------------------------------------------------------------------- #
 # ------------------------------- InfluxDB Deployment ------------------------------- #
 apiVersion: apps/v1
 kind: Deployment
@@ -240,3 +284,4 @@ spec:
   ports:
     - port: 8087       # Port exposed in the internal cluster (external pod port)
       targetPort: 8086 # The InfluxDB continer port (internal pod port)
+# ---------------------------------------------------------------------------------------------------------------------- #

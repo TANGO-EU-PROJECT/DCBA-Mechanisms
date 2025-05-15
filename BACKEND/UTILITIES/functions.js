@@ -89,6 +89,7 @@ const createDeviceDocument = async (did, sub, device_id, log_file_uri, heatmap) 
     // Define the default coordinates
     const LAT0 = process.env.LAT0;
     const LON0 = process.env.LON0;
+    const DEFAULT_LOCATION = process.env.DEFAULT_LOCATION;
 
     // Create a new device document with the provided attributes
     const newDevice = new DEVICE({
@@ -98,7 +99,8 @@ const createDeviceDocument = async (did, sub, device_id, log_file_uri, heatmap) 
       log_file_uri,
       heatmap,            // device's WiFi heatmap data (array)
       status: 'online',   // Set the status as 'online' by default, since the accounts are registered dynamically during their first active session
-      last_coordinates: { lat: LAT0, lon: LON0 } // Add default coordinates to the device
+      last_coordinates: { lat: LAT0, lon: LON0 }, // Add default coordinates to the device
+      last_location: DEFAULT_LOCATION
     });
 
     // Save the new device record to the MongoDB database
@@ -376,17 +378,17 @@ function readEDHeatmapCSV(filePath) {
  * Retrieves the device's localization heatmap from the database using its did.
  * This function queries the database to fetch the device's heatmap data based on the provided did.
  *
- * @param {string} did - The unique identifier did of the device whose heatmap data is being retrieved.
+ * @param {string} deviceID - The unique identifier id of the device whose heatmap data is being retrieved.
  * @returns {Promise<Object|null>} - A promise that resolves to the device's heatmap data if found, otherwise resolves to `null`.
  */
-const getDeviceHeatmap = async (did) => {
+const getDeviceHeatmap = async (deviceID) => {
   try {
     // Attempt to fetch the device's document from the database using the provided did
-    const device = await findDeviceByDID(did);
+    const device = await findDeviceByDeviceID(deviceID);
 
     // If no device is found, throw an error with a descriptive message
     if (!device) {
-      throw new Error(`Device associated with did "${did}" not found.`);
+      throw new Error(`Device associated with id "${deviceID}" not found.`);
     }
 
     // Return the device's heatmap data if the device is found
@@ -396,7 +398,7 @@ const getDeviceHeatmap = async (did) => {
     logEvent({
       event: 'FETCHING DEVICE HEATMAP',
       status: 'FAILED ❌',
-      did: did,
+      device_id: deviceID,
       cause: `AN ERROR OCCURRED WHILE FETCHING THE DEVICE HEATMAP: ${error}`
     });
     
@@ -547,16 +549,18 @@ function initializeWebSocketServer(wss) {
       // const qr_scanner_state_request = urlParams.get('qr_scanner_state_request');
       const urlParams = new URLSearchParams(req.url.split('?')[1]);  // Split to get the query part after "?"
       const qr_scanner_state_request = urlParams.get('qr_scanner_state_request');
+      const device_id = urlParams.get('device_id'); // Extract device_id
 
       //const front_connection = urlParams.get('front_connection'); // New parameter for front-end WebSocket
 
       // Handle device connections
-      if (qr_scanner_state_request) {
-        DEVICES.set(qr_scanner_state_request, ws);
+      if (qr_scanner_state_request && device_id) {
+        DEVICES.set(qr_scanner_state_request, { device_id, ws });
         logEvent({
           event: `DEVICE WITH QR STATE "${qr_scanner_state_request}" CONNECTED VIA WEBSOCKET`,
           status: 'SUCCESS ✅',
-          cause: 'INITIATING SESSION'
+          cause: 'INITIATING SESSION',
+          device_id: device_id
         });
       }
 
@@ -609,12 +613,13 @@ function initializeWebSocketServer(wss) {
 
       // Handle WebSocket disconnection for both devices and frontend
       ws.on('close', () => {
-        if (qr_scanner_state_request) {
+        if (qr_scanner_state_request && device_id) {
           DEVICES.delete(qr_scanner_state_request);
           logEvent({
             event: `DEVICE WITH QR STATE "${qr_scanner_state_request}" DISCONNECTED FROM WEBSOCKET`,
             status: 'SUCCESS ✅',
-            cause: 'SESSION INITIATED'
+            cause: 'SESSION INITIATED',
+            device_id: device_id
           });
         }
 

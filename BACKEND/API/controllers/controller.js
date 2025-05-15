@@ -116,6 +116,7 @@ exports.fetchDevices = async (req, res) => {
 */
 exports.handlePostLogs = async (req, res) => {
   const did = req.body.did;
+  const deviceID = req.body.deviceID;
   const logData = req.body.log;
   const authToken = req.body.authToken;
 
@@ -124,6 +125,7 @@ exports.handlePostLogs = async (req, res) => {
       event: 'ANDROID LOG CAPTURE',
       status: 'FAILED ❌',
       cause: 'LOG DATA CANNOT BE EMPTY',
+      device_id: deviceID,
       did: did,
       ip: req.ip
     });
@@ -135,6 +137,7 @@ exports.handlePostLogs = async (req, res) => {
       event: 'ANDROID LOG CAPTURE',
       status: 'FAILED ❌',
       cause: 'MALFORMED LOG DETECTED',
+      device_id: deviceID,
       did: did,
       ip: req.ip
     });
@@ -148,6 +151,7 @@ exports.handlePostLogs = async (req, res) => {
       status: 'FAILED ❌',
       cause: 'AUTH TOKEN IS REQUIRED',
       did: did,
+      device_id: deviceID,
       ip: req.ip
     });
     return res.status(200).json({ status: "failed", message: 'Authentication token is required.' });
@@ -162,6 +166,7 @@ exports.handlePostLogs = async (req, res) => {
       status: 'FAILED ❌',
       cause: `AN ERROR OCCURRED DURING ANDROID LOG CAPTURE. INVALID AUTHENTICATION TOKEN FORMAT: ${error}`,
       did: did,
+      device_id: deviceID,
       ip: req.ip
     });
     
@@ -174,6 +179,7 @@ exports.handlePostLogs = async (req, res) => {
       status: 'FAILED ❌',
       cause: 'ACCESS TOKEN DECODE FAILED',
       did: did,
+      device_id: deviceID,
       ip: req.ip
     });
     return res.status(200).json({ status: "failed", message: 'Failed to decode authentication token.' });
@@ -186,6 +192,7 @@ exports.handlePostLogs = async (req, res) => {
       status: 'FAILED ❌',
       cause: 'ACCESS TOKEN EXPIRED',
       did: did,
+      device_id: deviceID,
       ip: req.ip
     });
     return res.status(200).json({ status: "failed", message: 'Authentication token has expired.' });
@@ -197,6 +204,7 @@ exports.handlePostLogs = async (req, res) => {
       status: 'FAILED ❌',
       cause: 'ACCESS TOKEN DID SHOULD MATCH THE PROVIDED DID',
       did: did,
+      device_id: deviceID,
       ip: req.ip
     });
     return res.status(200).json({ status: "failed", message: 'Authentication token did does not match the provided did.' });
@@ -209,14 +217,15 @@ exports.handlePostLogs = async (req, res) => {
       status: 'FAILED ❌',
       cause: 'MISSING TIMESTAMP FROM LOG ENTRY',
       did: did,
+      device_id: deviceID,
       ip: req.ip
     });
     return res.status(200).json({ status: "failed", message: 'Invalid log data. Missing timestamp.' });
   }
 
-  const deviceQueue = getDeviceQueue(did);
-  deviceQueue.enqueue({ req, res, timestamp, did });
-  processDeviceQueue(did);
+  const deviceQueue = getDeviceQueue(deviceID);
+  deviceQueue.enqueue({ req, res, timestamp, did, deviceID});
+  processDeviceQueue(deviceID);
 
 };
 
@@ -228,18 +237,18 @@ exports.handlePostLogs = async (req, res) => {
  * If the queue does not exist, it initializes a MinPriorityQueue
  * that orders logs based on their timestamps (earliest first).
  *
- * @param {string} did - The unique identifier for the device.
+ * @param {string} deviceID - The unique identifier for the device.
  * @returns {MinPriorityQueue} - The priority queue for the given device.
  */
-const getDeviceQueue = (did) => {
+const getDeviceQueue = (deviceID) => {
   // Check if this device based on its did already has a queue; if not, create one
-  if (!devicesQueues[did]) {
+  if (!devicesQueues[deviceID]) {
     // Initialize a MinPriorityQueue where logs are prioritized by timestamp (smallest first)
-    devicesQueues[did] = new MinPriorityQueue((log) => log.timestamp);
+    devicesQueues[deviceID] = new MinPriorityQueue((log) => log.timestamp);
   }
 
   // Return the device's queue
-  return devicesQueues[did];
+  return devicesQueues[deviceID];
 };
 
 
@@ -308,27 +317,27 @@ const releaseMutex = (did) => {
  * by dequeuing the earliest log first. It also prevents concurrent processing
  * for the same device by using a mutex lock.
  *
- * @param {string} did - The unique identifier for the device.
+ * @param {string} deviceID - The unique identifier for the device.
  */
-const processDeviceQueue = async (did) => {
+const processDeviceQueue = async (deviceID) => {
   // If there's already an ongoing processing for this device, exit early
-  if (processingQueue[did]) return;
+  if (processingQueue[deviceID]) return;
 
   // Acquire a mutex lock to prevent concurrent processing for the same device
-  await acquireMutex(did);
-  processingQueue[did] = true; // Mark this device as being processed
+  await acquireMutex(deviceID);
+  processingQueue[deviceID] = true; // Mark this device as being processed
 
   try {
     // Retrieve the device's queue that holds pending log capture requests
-    const deviceQueue = getDeviceQueue(did);
+    const deviceQueue = getDeviceQueue(deviceID);
 
     // Process all requests in the queue, one at a time
     while (!deviceQueue.isEmpty()) {  
-      // Dequeue the next request; it includes the request, response, and decoded token
-      const { req, res, did } = deviceQueue.dequeue();
+      // Dequeue the next request; it includes the request, response, and did token and the deviceID
+      const { req, res, did, deviceID } = deviceQueue.dequeue();
       try {
         // Process the request with the previously verified token
-        await processRequest(req, res, did);
+        await processRequest(req, res, did, deviceID);
       } catch (error) {
         // Handle any errors during request processing and return a 500 response
         logEvent({
@@ -336,6 +345,7 @@ const processDeviceQueue = async (did) => {
           status: 'FAILED ❌',
           cause: `AN ERROR OCCURRED DURING PROCESSING SESSION REQUEST: ${error}`,
           did: did,
+          device_id: deviceID
         });
         
         return res.status(200).json({ status: "failed", message: "Internal server error while processing session request." });
@@ -346,8 +356,8 @@ const processDeviceQueue = async (did) => {
     }
   } finally {
     // Ensuring that the processing flag is reset and mutex is released, even if an error occurs
-    processingQueue[did] = false;
-    releaseMutex(did);
+    processingQueue[deviceID] = false;
+    releaseMutex(deviceID);
   }
 };
 
@@ -364,12 +374,13 @@ const processDeviceQueue = async (did) => {
  * @param {Object} res - The Express response object used to send a response.
  * @param {Object} decodedToken - The decoded authentication token containing device details.
  */
-const processRequest = async (req, res, did) => {
+const processRequest = async (req, res, did, deviceID) => {
   const logData = req.body.log;
+  let DID;
 
   try {
     // Store the log data in the InfluxDB database asynchronously
-    await storeLogsToInfluxDB(did, logData, () => {});
+    await storeLogsToInfluxDB(deviceID, logData, () => {});
   } catch (error) {
     return res.status(200).json({ status: "failed", message: "Failed to store logs in the Influx Database." });
   }
@@ -382,13 +393,13 @@ const processRequest = async (req, res, did) => {
       
       if (line.includes("WifiNetworkScannerN")) {
         // Retrieve the worker heatmap from the database
-        const heatmap = await getDeviceHeatmap(did); // Ensure it resolves before continuing
+        const heatmap = await getDeviceHeatmap(deviceID); // Ensure it resolves before continuing
         const heatmapJSON = JSON.stringify(heatmap);
         const escapedHeatmapJSON = heatmapJSON.replace(/"/g, '\\"'); // Escape quotes to ensure they are passed correctly to Python
         
         try {
           // Run the Localizator Script to estimate the current device location
-          const stdout = await runLocalizationScript(line, did, escapedHeatmapJSON);
+          const stdout = await runLocalizationScript(line, deviceID, did, escapedHeatmapJSON);
 
           // Extract JSON part from stdout
           const result = JSON.parse(stdout);
@@ -397,6 +408,7 @@ const processRequest = async (req, res, did) => {
             event: 'PERFORMING LOCALIZATION',
             status: 'SUCCESS ✅',
             did: did,
+            device_id: deviceID,
             ip: req.ip
           });
 
@@ -404,9 +416,9 @@ const processRequest = async (req, res, did) => {
           console.log(JSON.stringify(result, null, 2)); // Pretty print the JSON
 
           if (LOCALIZATION_ALGORITHM_APPLIED === 'LSO') {
-            // LSO Localization to update the FRONTEND
             // Extract the necessary fields from the result object
-            const deviceDid = result.deviceDid;
+            const device_id = result['Device ID']
+            DID = result['Employee DID']
             const latitude = result['Estimated Location (Latitude)'];
             const longitude = result['Estimated Location (Longitude)'];
 
@@ -415,18 +427,20 @@ const processRequest = async (req, res, did) => {
 
             // Find the device by `did` and update their `last_coordinates`
             const updatedDeviceDocument = await DEVICE.findOneAndUpdate(
-            { did: deviceDid },  // Search for the device using the `did`
-            { 
-              $set: { last_coordinates: { lat: latitude, lon: longitude } }  // Update the last device coordinates
-            },
-            { new: true }  // Return the updated document
+              { did: DID, device_id: device_id },  // Search using both `did` and `device_id`
+              { 
+                $set: { last_coordinates: { lat: latitude, lon: longitude } }  // Update the last device coordinates
+              },
+              { new: true }  // Return the updated document
             );
+            
             
             if (!updatedDeviceDocument) {
               logEvent({
-                event: 'PERFORMING LOCALIZATION',
+                event: 'PERFORMING LOCALIZATION (LSO)',
                 status: 'FAILED ❌',
-                did: did,
+                did: DID,
+                device_id: device_id,
                 ip: req.ip,
                 cause: 'Device not found or failed to update coordinates.'
               });
@@ -435,7 +449,8 @@ const processRequest = async (req, res, did) => {
               logEvent({
                 event: 'UPDATING DEVICE LOCATION',
                 status: 'SUCCESS ✅',
-                did: did,
+                did: DD,
+                device_id: device_id,
                 ip: req.ip,
                 cause: `Device coordinates updated: ${JSON.stringify(updatedDeviceDocument.last_coordinates)}`
               });
@@ -444,7 +459,48 @@ const processRequest = async (req, res, did) => {
 
             // Update the Frontend
             //await updateFrontend(FRONTEND_CONNECTION, 'UPDATE_DEVICE_LOCATION', { deviceDid, latitude, longitude });
-          } 
+          } else {
+            // Else, the localization algorithm applies is the ED
+            // Extract the necessary fields from the result object
+            const device_id = result['Device ID']
+            DID = result['Employee DID']
+            const estimatedLocation = result['Estimated Location'];
+
+            // Now, send the extracted values to the frontend
+            //const FRONTEND_CONNECTION = getFrontendConnection();
+
+            // Find the device by `did` and update their `last_coordinates`
+            const updatedDeviceDocument = await DEVICE.findOneAndUpdate(
+              { did: DID, device_id: device_id },  // Search using both `did` and `device_id`
+              { 
+                $set: { last_location: { estimatedLocation } }  // Update the last device coordinates
+              },
+              { new: true }  // Return the updated document
+            );
+
+
+            if (!updatedDeviceDocument) {
+              logEvent({
+                event: 'PERFORMING LOCALIZATION (ED)',
+                status: 'FAILED ❌',
+                did: DID,
+                device_id: device_id,
+                ip: req.ip,
+                cause: 'Device not found or failed to update last location.'
+              });
+              //console.error('Device not found or failed to update coordinates');
+            } else {
+              logEvent({
+                event: 'UPDATING DEVICE LOCATION',
+                status: 'SUCCESS ✅',
+                did: DD,
+                device_id: device_id,
+                ip: req.ip,
+                cause: `Device last location updated: ${JSON.stringify(updatedDeviceDocument.last_location)}`
+              });
+              //console.log(`Device coordinates updated: ${JSON.stringify(updatedDeviceDocument.last_coordinates)}`);
+            }
+          }
 
         } catch (localizationError) {
           logEvent({
@@ -478,9 +534,9 @@ const processRequest = async (req, res, did) => {
 };
 
 // Helper function to handle the exec command asynchronously
-const runLocalizationScript = (line, did, escapedHeatmapJSON) => {
+const runLocalizationScript = (line, deviceID, escapedHeatmapJSON) => {
   return new Promise((resolve, reject) => {
-    exec(`python3 "${LocalizationScriptPath}" "${line}" "${did}" "${escapedHeatmapJSON}"`, (error, stdout, stderr) => {
+    exec(`python3 "${LocalizationScriptPath}" "${line}" "${deviceID}" "${escapedHeatmapJSON}"`, (error, stdout, stderr) => {
       if (error) {
         reject(`Error executing localization script: ${error.message}`);
       }
@@ -504,35 +560,28 @@ const runLocalizationScript = (line, did, escapedHeatmapJSON) => {
 */
 exports.handleAuthTokenValidation = async (req, res) => {
   const authHeader = req.headers.authorization;
+  const ip = req.ip;
 
-  // Check if the Authorization header exists
+  // 1. Check missing or malformed Authorization header
   if (!authHeader) {
     logEvent({
       event: 'RE-AUTHENTICATION ATTEMPT WITH AUTH-TOKEN',
       status: 'FAILED ❌',
       cause: 'NO HEADER PROVIDED',
-      ip: req.ip,
+      ip,
     });
-    return res.status(200).json({
-      status: 'failed',
-      message: 'Authentication token is missing.',
-    });
+    return res.status(401).json({ status: 'failed', message: 'Authentication token is missing.' });
   }
 
-  // Check if the Authorization header starts with "Bearer "
   if (!authHeader.startsWith('Bearer ')) {
     logEvent({
       event: 'RE-AUTHENTICATION ATTEMPT WITH AUTH-TOKEN',
       status: 'FAILED ❌',
       cause: 'NO BEARER TOKEN PROVIDED',
-      ip: req.ip,
+      ip,
     });
-    return res.status(200).json({
-      status: 'failed',
-      message: "Authentication token is malformed. It should start with 'Bearer '.",
-    });
+    return res.status(400).json({ status: 'failed', message: "Authentication token is malformed. It should start with 'Bearer '." });
   }
-
 
   const authToken = authHeader.split(' ')[1];
 
@@ -544,25 +593,21 @@ exports.handleAuthTokenValidation = async (req, res) => {
         event: 'RE-AUTHENTICATION ATTEMPT WITH AUTH-TOKEN',
         status: 'FAILED ❌',
         cause: 'INVALID TOKEN FORMAT',
-        ip: req.ip,
+        ip,
       });
-      return res.status(200).json({
-        status: "failed",
-        message: 'Invalid authentication token format.'
-      });
+      return res.status(400).json({ status: "failed", message: 'Invalid authentication token format.' });
     }
 
     const { exp, sub, verifiableCredential } = decoded.payload;
+    const did = verifiableCredential?.id;
     const currentTime = Math.floor(Date.now() / 1000);
 
+    // 2. Check if token expired
     if (exp && currentTime > exp) {
-      const did = verifiableCredential?.id;
-
       if (did) {
         const device = await DEVICE.findOne({ did });
 
         if (device) {
-          // Device found, mark it as offline
           device.status = 'offline';
           await device.save();
 
@@ -571,59 +616,76 @@ exports.handleAuthTokenValidation = async (req, res) => {
             status: 'FAILED ❌',
             cause: 'AUTH-TOKEN EXPIRED > DEVICE MARKED AS OFFLINE',
             did,
-            ip: req.ip,
+            device_id: device.device_id,
+            ip,
           });
         } else {
-          // Device not found, log the event
           logEvent({
             event: 'RE-AUTHENTICATION ATTEMPT WITH AUTH-TOKEN',
             status: 'FAILED ❌',
             cause: `DEVICE ASSOCIATED WITH DID ${did} NOT FOUND IN DATABASE`,
-            ip: req.ip,
+            ip,
           });
 
-          // Respond with a specific error message for device not found
-          return res.status(200).json({
+          return res.status(404).json({
             status: "failed",
             message: "Device not found."
           });
         }
       }
 
-      return res.status(200).json({
+      return res.status(401).json({
         status: "failed",
         message: 'Authentication token has expired.'
       });
     }
 
+    // 3. Valid token
+    if (did) {
+      const device = await DEVICE.findOne({ did });
+
+      logEvent({
+        event: 'RE-AUTHENTICATION ATTEMPT WITH AUTH-TOKEN',
+        status: 'SUCCESS ✅',
+        did,
+        device_id: device?.device_id,
+        ip,
+      });
+
+      return res.status(200).json({
+        status: "success",
+        message: 'valid',
+        did,
+        sub,
+        verifiableCredential,
+      });
+    }
+
+    // 4. Did not found in payload
     logEvent({
       event: 'RE-AUTHENTICATION ATTEMPT WITH AUTH-TOKEN',
-      status: 'SUCCESS ✅',
-      did: verifiableCredential?.id,
-      ip: req.ip,
+      status: 'FAILED ❌',
+      cause: 'DID MISSING FROM TOKEN',
+      ip,
     });
 
-    return res.status(200).json({
-      status: "success",
-      message: 'valid',
-      did: verifiableCredential?.id,
-      sub,
-      verifiableCredential,
-    });
+    return res.status(400).json({ status: "failed", message: 'DID missing from token.' });
+
   } catch (err) {
     logEvent({
       event: 'RE-AUTHENTICATION ATTEMPT WITH AUTH-TOKEN',
       status: 'FAILED ❌',
       cause: `ERROR DURING TOKEN VALIDATION: ${err.message}`,
-      ip: req.ip,
+      ip,
     });
 
-    return res.status(200).json({
+    return res.status(500).json({
       status: "failed",
       message: 'Internal server error while validating authentication token.'
     });
   }
 };
+
 
 
 
@@ -643,7 +705,7 @@ exports.handleLogout = async (req, res) => {
 
     // Check if the authToken exists
     if (!authToken) {
-      return res.status(200).json({
+      return res.status(400).json({
         status: "failed",
         message: 'Missing required authentication token.'
       });
@@ -651,7 +713,7 @@ exports.handleLogout = async (req, res) => {
 
     // Check if the did exists (it is sent from the client)
     if (!clientDid) {
-      return res.status(200).json({
+      return res.status(400).json({
         status: "failed",
         message: 'Missing required did.'
       });
@@ -659,7 +721,7 @@ exports.handleLogout = async (req, res) => {
 
     // Check if the did exists (it is sent from the client)
     if (!deviceID) {
-      return res.status(200).json({
+      return res.status(400).json({
         status: "failed",
         message: 'Missing required device ID.'
       });
@@ -694,7 +756,7 @@ exports.handleLogout = async (req, res) => {
         cause: `DEVICE WITH DID ${clientDid} NOT FOUND IN DATABASE`,
         ip: req.ip
       });
-      return res.status(200).json({
+      return res.status(404).json({
         status: "failed",
         message: "Device not found."
       });
@@ -719,7 +781,7 @@ exports.handleLogout = async (req, res) => {
     });
 
     // Return a 200 OK response but indicate failure within the response body
-    return res.status(200).json({
+    return res.status(500).json({
       status: "failed",
       message: 'Internal server error while handling logout.'
     });
@@ -754,10 +816,10 @@ exports.beginSession = async (req, res) => {
     let savedSessionRequest;
 
     if (!device_id) {
-      return res.status(200).json({ status: "failed", message: 'Device ID is missing, session request failed.' });
+      return res.status(400).json({ status: "failed", message: 'Device ID is missing, session request failed.' });
     }
     if (!qr_scanner_state_request) {
-      return res.status(200).json({ status: "failed", message: 'QR scanner state request is missing, session request failed.' });
+      return res.status(400).json({ status: "failed", message: 'QR scanner state request is missing, session request failed.' });
     }
 
     try {
@@ -799,7 +861,7 @@ exports.beginSession = async (req, res) => {
         device_id: device_id,
         ip: req.ip
       });      
-      return res.status(200).json({ status: "failed", message: 'Error handling session request.' });
+      return res.status(500).json({ status: "failed", message: 'Error handling session request.' });
     }
 
     // Construct the login QR URL with the device_id and other required parameters
@@ -862,7 +924,7 @@ exports.beginSession = async (req, res) => {
         device_id: device_id,
         ip: req.ip
       });
-      res.status(200).json({ status: "failed", message: 'QR code not found.' });
+      res.status(502).json({ status: "failed", message: 'QR code not found in the verifier service response.' });
     }
   } catch (err) {
     // Handle errors, such as network failures or parsing issues
@@ -870,11 +932,11 @@ exports.beginSession = async (req, res) => {
       event: 'EXTRACTING QR CODE BASE64',
       status: 'FAILED ❌',
       cause: `AN ERROR OCCURRED DURING EXTRACTING QR CODE BASE64: ${err}`,
-      device_id: device_id,
+      device_id: req.body?.device_id || 'UNKNOWN',
       ip: req.ip
     });
     
-    res.status(200).json({ status: "failed", message: 'Failed to extract QR code.' });
+    res.status(500).json({ status: "failed", message: 'Failed to extract QR code due to an internal server error.' });
   }
 };
 
@@ -894,7 +956,7 @@ exports.handleAuthCallback = async (req, res) => {
 
   // Check if required parameters (code, state) are missing
   if (!code || !state) {
-    return res.status(200).json({
+    return res.status(400).json({
       status: "failed",
       message: 'Missing required parameters: code or state.'
     });
@@ -945,7 +1007,7 @@ exports.handleAuthCallback = async (req, res) => {
     // Check if the response contains the access token
     const authToken = response.data.access_token;
     if (!authToken) {
-      return res.status(200).json({
+      return res.status(401).json({
         status: "failed",
         message: 'Authentication token not received.'
       });
@@ -960,7 +1022,7 @@ exports.handleAuthCallback = async (req, res) => {
     const sub = decodedPayload.payload?.sub;
 
     if (!did || !sub) {
-      return res.status(200).json({
+      return res.status(401).json({
         status: "failed",
         message: 'Invalid authentication token payload.'
       });
@@ -997,7 +1059,7 @@ exports.handleAuthCallback = async (req, res) => {
     
     if (err.response) {
     }
-    return res.status(200).json({
+    return res.status(500).json({
       status: "failed",
       message: 'Authentication failed.'
     });

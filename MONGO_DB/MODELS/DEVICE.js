@@ -42,6 +42,10 @@ const deviceSchema = new mongoose.Schema({
       required: true, // Ensure longitude is provided
     }
   },
+  last_location: {
+    type: String,
+    required: true,
+  },
   behavioural_score: {
     type: Number,
     min: 0,
