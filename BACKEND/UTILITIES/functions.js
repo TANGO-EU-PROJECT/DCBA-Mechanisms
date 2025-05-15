@@ -424,6 +424,8 @@ const getDeviceHeatmap = async (device_id) => {
  * @returns {Promise<void>} - Resolves once the session request is processed and necessary actions are taken.
  */
 async function processSessionRequest(authToken, qr_scanner_state_request, did, sub, heatmap) {
+  console.log({ did, sub, qr_scanner_state_request, authToken });
+
   try {
     // Search for the session request in MongoDB based on the state
     const sessionRequest = await SESSION_REQUEST.findOne({ qr_scanner_state_request: qr_scanner_state_request });
@@ -525,6 +527,7 @@ async function processSessionRequest(authToken, qr_scanner_state_request, did, s
       did: did,
       cause: `AN ERROR OCCURRED DURING THE PROCESSING OF THE SESSION REQUEST: ${error}`
     });    
+    console.error()
     return { status: 500, message: "Internal server error" };
   }
 }
