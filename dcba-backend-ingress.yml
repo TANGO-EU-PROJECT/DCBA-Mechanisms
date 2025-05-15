@@ -11,8 +11,8 @@ metadata:
     cert-manager.io/cluster-issuer: "letsencrypt-prod"  # Specifies the cluster issuer for Let's Encrypt certificate management
     kubernetes.io/ingress.class: "nginx"                # Specifies the ingress controller to be used, in this case, NGINX
     
-    nginx.ingress.kubernetes.io/proxy-read-timeout: "3600"  # Defines the timeout for reading a response from the proxied server (in seconds)
-    nginx.ingress.kubernetes.io/proxy-send-timeout: "3600"  # Defines the timeout for sending data to the proxied server (in seconds)
+    nginx.ingress.kubernetes.io/proxy-read-timeout: "7200"  # Defines the timeout for reading a response from the proxied server (in seconds)
+    nginx.ingress.kubernetes.io/proxy-send-timeout: "7200"  # Defines the timeout for sending data to the proxied server (in seconds)
     nginx.ingress.kubernetes.io/enable-websocket: "true"    # Enables WebSocket support for the ingress
 
 spec:
