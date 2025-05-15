@@ -164,7 +164,7 @@ exports.handlePostLogs = async (req, res) => {
     logEvent({
       event: 'ANDROID LOG CAPTURE',
       status: 'FAILED ❌',
-      cause: `AN ERROR OCCURRED DURING ANDROID LOG CAPTURE. INVALID AUTHENTICATION TOKEN FORMAT: ${error}`,
+      cause: `AN ERROR OCCURRED DURING ANDROID LOG CAPTURE. INVALID AUTHENTICATION TOKEN FORMAT: ${error.stack}`,
       did: did,
       device_id: deviceID,
       ip: req.ip
@@ -340,7 +340,7 @@ const processDeviceQueue = async (deviceID) => {
         logEvent({
           event: 'PROCESSING SESSION REQUEST',
           status: 'FAILED ❌',
-          cause: `AN ERROR OCCURRED DURING THE PROCESSING OF THE SESSION REQUEST: ${error}`,
+          cause: `AN ERROR OCCURRED DURING THE PROCESSING OF THE SESSION REQUEST: ${error.stack}`,
           did: did,
           device_id: deviceID
         });
@@ -747,7 +747,7 @@ exports.handleLogout = async (req, res) => {
     logEvent({
       event: 'LOGOUT ATTEMPT',
       status: 'FAILED ❌',
-      cause: `AN ERROR OCCURRED DURING DEVICE LOGOUT: ${error}`,
+      cause: `AN ERROR OCCURRED DURING DEVICE LOGOUT: ${error.stack}`,
       did: req.body.did, // Log the provided did
       device_id: req.body.deviceID,
       ip: req.ip
@@ -827,7 +827,7 @@ exports.beginSession = async (req, res) => {
       logEvent({
         event: 'HANDLING SESSION REQUEST',
         status: 'FAILED ❌',
-        cause: `AN ERROR OCCURRED DURING HANDLING SESSION REQUEST: ${error}`,
+        cause: `AN ERROR OCCURRED DURING HANDLING SESSION REQUEST: ${error.stack}`,
         device_id: device_id,
         ip: req.ip
       });      
