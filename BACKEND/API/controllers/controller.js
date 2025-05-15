@@ -824,8 +824,11 @@ exports.beginSession = async (req, res) => {
 
     try {
       // Check if a session request already exists for this device_id
-      const existingSessionRequest = await SESSION_REQUEST.findOne({ device_id });
-
+      const existingSessionRequest = await SESSION_REQUEST.findOne({
+        device_id: device_id,
+        qr_scanner_state_request: qr_scanner_state_request
+      });
+      
       if (existingSessionRequest) {
         // If found, delete the existing session request
         await SESSION_REQUEST.deleteOne({ device_id });

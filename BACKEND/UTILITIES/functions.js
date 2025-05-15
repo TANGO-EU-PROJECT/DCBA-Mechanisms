@@ -599,7 +599,6 @@ function initializeWebSocketServer(wss) {
       ws.on('message', (message) => {
         //console.log(`Received message:`, message);
 
-        // Handle different message types here (e.g., device location updates, UI commands, etc.)
         const parsedMessage = JSON.parse(message);
         
         // If the frontend sends a verification message, respond with a verified connection
@@ -666,6 +665,9 @@ function initializeWebSocketServer(wss) {
 function notifyDevice(authToken, qr_scanner_state_request, device_id, did, sub, log_file_uri, message) {
   // Retrieve the WebSocket connection associated with the device_id
   const device = DEVICES.get(qr_scanner_state_request);
+  console.log(qr_scanner_state_request)
+
+  console.log(device)
   
   // Check if the device's WebSocket connection exists and is open
   if (device && device.readyState === WebSocket.OPEN) {
