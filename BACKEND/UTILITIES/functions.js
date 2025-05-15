@@ -61,7 +61,7 @@ const getDeviceURI = async (did) => {
       event: 'RETRIEVING DEVICE URI',
       status: 'FAILED ❌',
       did: did,
-      cause: `AN ERROR OCCURRED WHILE RETRIEVING THE DEVICE URI: ${error}`
+      cause: `AN ERROR OCCURRED WHILE RETRIEVING THE DEVICE URI: ${error.stack}`
     });
     
     return null;
@@ -120,7 +120,7 @@ const createDeviceDocument = async (did, sub, device_id, log_file_uri, heatmap) 
       status: 'FAILED ❌',
       did: did,
       device_id: device_id,
-      cause: `AN ERROR OCCURRED DURING DEVICE REGISTRATION TO THE DATABASE: ${error}`
+      cause: `AN ERROR OCCURRED DURING DEVICE REGISTRATION TO THE DATABASE: ${error.stack}`
     });
   }
 };
@@ -154,6 +154,14 @@ const findDeviceByDID = async (did) => {
       return null;
     }
 
+    
+    logEvent({
+      event: 'SEARCH FOR DEVICE',
+      status: 'SUCCESS ✅',
+      did: did,
+      cause: `DEVICE ASSOCIATED WITH DID ${did} FOUND`,
+      device_id: device.device_id
+    });
     // Return the device document if found
     return device;
   } catch (error) {
@@ -162,7 +170,7 @@ const findDeviceByDID = async (did) => {
       event: 'SEARCH FOR DEVICE',
       status: 'FAILED ❌',
       did: did,
-      cause: `AN ERROR OCCURRED DURING DEVICE SEARCH IN THE DATABASE: ${error}`
+      cause: `AN ERROR OCCURRED DURING DEVICE SEARCH IN THE DATABASE: ${error.stack}`
     });
     
 
@@ -229,7 +237,7 @@ async function storeLogsToInfluxDB(device_id, did, log, onComplete) {
       status: 'FAILED ❌',
       did: did,
       device_id: device_id,
-      cause: `AN ERROR OCCURRED WHILE STORING THE ANDROID LOG TO THE INFLUXDB DATABASE: ${error}`
+      cause: `AN ERROR OCCURRED WHILE STORING THE ANDROID LOG TO THE INFLUXDB DATABASE: ${error.stack}`
     });
 
     // Ensure the callback is invoked even in case of error to prevent blocking execution
@@ -400,7 +408,7 @@ const getDeviceHeatmap = async (device_id) => {
       event: 'FETCHING DEVICE HEATMAP',
       status: 'FAILED ❌',
       device_id: device_id,
-      cause: `AN ERROR OCCURRED WHILE FETCHING THE DEVICE HEATMAP: ${error}`
+      cause: `AN ERROR OCCURRED WHILE FETCHING THE DEVICE HEATMAP: ${error.stack}`
     });
     
     // Return null if an error occurs or if no device is found
@@ -725,7 +733,7 @@ function notifyDevice(authToken, qr_scanner_state_request, device_id, did, sub, 
  */
 const findDeviceByDeviceID = async (device_id) => {
   try {
-    // Query the "DEVICE" collection to find a device by the specified DID
+    // Query the "DEVICE" collection to find a device by the specified device id
     const device = await DEVICE.findOne({ device_id: device_id });
 
     if (!device) {
@@ -734,7 +742,7 @@ const findDeviceByDeviceID = async (device_id) => {
         event: 'SEARCH FOR DEVICE',
         status: 'FAILED ❌',
         device_id: device_id,
-        cause: `DEVICE ASSOCIATED WITH ID ${did} NOT FOUND`
+        cause: `DEVICE ASSOCIATED WITH ID ${device_id} NOT FOUND`
       });
       return null;
     }
@@ -746,8 +754,8 @@ const findDeviceByDeviceID = async (device_id) => {
     logEvent({
       event: 'SEARCH FOR DEVICE',
       status: 'FAILED ❌',
-      did: did,
-      cause: `AN ERROR OCCURRED DURING DEVICE SEARCH IN THE DATABASE: ${error}`
+      device_id: device_id,
+      cause: `AN ERROR OCCURRED DURING DEVICE SEARCH IN THE DATABASE: ${error.stack}`
     });
     
 
