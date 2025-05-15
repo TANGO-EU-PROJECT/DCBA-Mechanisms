@@ -10,7 +10,6 @@ const WebSocket = require('ws');                                                
 const { initializeWebSocketServer } = require('./BACKEND/UTILITIES/functions');  /* Import WebSocket functions from utilities           */
 const moment = require('moment');
 const cors = require('cors');
-const frontendRoutes = require('./BACKEND/API/routes/frontendRoutes');         /* Import FRONTEND API routes */
 const authenticatorRoutes = require('./BACKEND/API/routes/authenticatorRoutes'); /* Import AUTHENTICATOR routes */
 const externalServicesRoutes = require('./BACKEND/API/routes/externalServicesRoutes'); /* Import EXTERNAL SERVICES routes */
 const cookieParser = require('cookie-parser');
@@ -113,7 +112,6 @@ async function startServer() {
   DCBA_SERVER.use('/authenticator', authenticatorRoutes);
   DCBA_SERVER.use('/devices', externalServicesRoutes);
   DCBA_SERVER.get('/server/status', controller.getServerStatus);
-  DCBA_SERVER.use('/frontend', frontendRoutes);
 
   // Start the Express server
   server.listen(internalPort, ip, () => {
