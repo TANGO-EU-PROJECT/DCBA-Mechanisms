@@ -1,34 +1,35 @@
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-  name: dcba-backend-ingress-rule
-  namespace: tango-development
+  name: dcba-backend-ingress-rule  # Name of the ingress resource
+  namespace: tango-development     # Namespace where the ingress resource is deployed
   labels: 
-    app: back-end
+    app: back-end                  # Label to categorize the resource for the application
   annotations:
-    nginx.ingress.kubernetes.io/use-regex: "true"
-    nginx.ingress.kubernetes.io/rewrite-target: /$2
-    cert-manager.io/cluster-issuer: "letsencrypt-prod"
-    kubernetes.io/ingress.class: "nginx"
+    nginx.ingress.kubernetes.io/use-regex: "true"       # Enables regular expression-based path matching
+    nginx.ingress.kubernetes.io/rewrite-target: /$2     # Rewrites the incoming request path, preserving the captured groups
+    cert-manager.io/cluster-issuer: "letsencrypt-prod"  # Specifies the cluster issuer for Let's Encrypt certificate management
+    kubernetes.io/ingress.class: "nginx"                # Specifies the ingress controller to be used, in this case, NGINX
     
-    # ✅ Add these 3 lines:
-    nginx.ingress.kubernetes.io/proxy-read-timeout: "3600"
-    nginx.ingress.kubernetes.io/proxy-send-timeout: "3600"
-    nginx.ingress.kubernetes.io/enable-websocket: "true"
+    nginx.ingress.kubernetes.io/proxy-read-timeout: "3600"  # Defines the timeout for reading a response from the proxied server (in seconds)
+    nginx.ingress.kubernetes.io/proxy-send-timeout: "3600"  # Defines the timeout for sending data to the proxied server (in seconds)
+    nginx.ingress.kubernetes.io/enable-websocket: "true"    # Enables WebSocket support for the ingress
+
 spec:
-  ingressClassName: nginx
+  ingressClassName: nginx  # Defines the class of the ingress (nginx in this case)
   tls:
     - hosts:
-        - k8s-cluster.tango.rid-intrasoft.eu
-      secretName: dcba-backend-cert-tls
+        - k8s-cluster.tango.rid-intrasoft.eu  # The domain for which TLS is being configured
+      secretName: dcba-backend-cert-tls       # Name of the secret containing the TLS certificate
+
   rules:
-    - host: k8s-cluster.tango.rid-intrasoft.eu
+    - host: k8s-cluster.tango.rid-intrasoft.eu  # Defines the domain for the ingress rule
       http:
         paths:
-          - path: /development/dcba-backend(/|$)(.*)
-            pathType: ImplementationSpecific
+          - path: /development/dcba-backend(/|$)(.*)  # Regex path matching, captures the rest of the URL after this prefix
+            pathType: ImplementationSpecific          # Allows path matching based on the ingress controller's specific implementation
             backend:
               service:
-                name: dcba-backend
+                name: dcba-backend  # The name of the service that will handle the request
                 port:
-                  number: 3001
+                  number: 3001      # The port on the backend service to route traffic to

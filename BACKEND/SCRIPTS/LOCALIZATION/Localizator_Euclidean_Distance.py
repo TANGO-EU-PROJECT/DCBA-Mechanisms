@@ -81,7 +81,7 @@ def WiFi_BSSID_RSSI_extractor(log_data):
 
 
 # A function tha computes the Euclidean Distances based on the RSSI values received from the nearby APs #
-def WiFi_euclidean_distance(did_rssi, heatmap_dict):
+def WiFi_euclidean_distance(device_id_rssi, heatmap_dict):
     """
     Computes the Euclidean distance between real-time RSSI values and the heatmap RSSI values,
     while handling missing AP values properly.
@@ -89,14 +89,14 @@ def WiFi_euclidean_distance(did_rssi, heatmap_dict):
     
     euclidean_distances = []
     
-    for location in did_rssi:  # Iterate over each location in the heatmap
+    for location in device_id_rssi:  # Iterate over each location in the heatmap
         heatmap_rssi_values = []
         real_rssi_values = []
 
         for bssid in heatmap_dict:
-            if location in heatmap_dict[bssid] and bssid in did_rssi[location]:
+            if location in heatmap_dict[bssid] and bssid in device_id_rssi[location]:
                 heatmap_rssi_values.append(heatmap_dict[bssid][location])
-                real_rssi_values.append(did_rssi[location][bssid])
+                real_rssi_values.append(device_id_rssi[location][bssid])
 
         # Compute Euclidean distance only if we have common APs
         if heatmap_rssi_values and real_rssi_values:
@@ -116,7 +116,7 @@ def WiFi_euclidean_distance(did_rssi, heatmap_dict):
 
         
 # A Function to perform the WiFi Localization based on the pre-defined MAP, listed in the file WiFi_MAP.csv #
-def WiFiLocalization(log_data, deviceDid, heatmap):
+def WiFiLocalization(log_data, device_id, did, heatmap):
     """
     Perform WiFi localization based on RSSI values and a given heatmap.
     """
@@ -131,18 +131,19 @@ def WiFiLocalization(log_data, deviceDid, heatmap):
     }
 
     # Prepare a dictionary of real RSSI values **organized by location**
-    did_rssi = {location: {} for location in next(iter(heatmap_dict.values()))}  # Initialize per location
+    device_id_rssi = {location: {} for location in next(iter(heatmap_dict.values()))}  # Initialize per location
 
     for bssid, real_rssi in matches:
         if bssid in heatmap_dict:  # Only use APs that exist in the heatmap
             for location in heatmap_dict[bssid]:  
-                did_rssi[location][bssid] = int(real_rssi)  # Store real RSSI per location per BSSID
+                device_id_rssi[location][bssid] = int(real_rssi)  # Store real RSSI per location per BSSID
 
     # Calculate the estimated location using Euclidean distance
-    EstimatedLocation = WiFi_euclidean_distance(did_rssi, heatmap_dict)
+    EstimatedLocation = WiFi_euclidean_distance(device_id_rssi, heatmap_dict)
 
     outputResult = {
-        "deviceDid": deviceDid,
+        "Device ID": device_id,
+        "Employee DID": did,
         "Estimated Location": EstimatedLocation
     }
 
@@ -157,10 +158,12 @@ def WiFiLocalization(log_data, deviceDid, heatmap):
 def main():
     # Get the log data from command line arguments
     log_data = sys.argv[1]
-    # Get the logged in deviceDid
-    deviceDid = sys.argv[2]
+    # Get the logged in device_id
+    device_id = sys.argv[2]
+    # Get the employee did
+    did = sys.argv[3]
     # Get the deviceDid heatmap
-    heatmap = sys.argv[3]
+    heatmap = sys.argv[4]
 
     # Now parse the JSON string 
     try:
@@ -172,7 +175,7 @@ def main():
     # Need to declare if the RSSI values are Wifi or BLe 
     if ("WifiNetworkScannerN" in log_data):
         # Wi-Fi RSSI VALUES
-        WiFiLocalization(log_data, deviceDid, heatmap)
+        WiFiLocalization(log_data, device_id, did, heatmap)
 
 # Entry point of the script
 if __name__ == "__main__":
