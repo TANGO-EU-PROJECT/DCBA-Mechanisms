@@ -441,9 +441,6 @@ const processRequest = async (req, res, did, deviceID) => {
                 cause: `Device coordinates updated: ${JSON.stringify(updatedDeviceDocument.last_coordinates)}`
               });
             }
-
-            // Update the Frontend
-            //await updateFrontend(FRONTEND_CONNECTION, 'UPDATE_DEVICE_LOCATION', { deviceDid, latitude, longitude });
           } else {
             // Else, the localization algorithm applies is the ED
             // Extract the necessary fields from the result object

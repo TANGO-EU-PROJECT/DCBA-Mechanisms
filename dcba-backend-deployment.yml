@@ -110,12 +110,6 @@ spec:
               value: "127.0.0.1"
             - name: HOSTNAME_FRONT_PROD
               value: "0.0.0.0"
-            - name: FRONTEND_SERVER_BIND_PORT
-              value: "8080"
-            - name: FRONTEND_LOGIN_USERNAME
-              value: "admin"
-            - name: FRONTEND_LOGIN_PASSWORD
-              value: "admin"
 
 ---
 # ------------------------------- DCBA Backend Service ------------------------------- #
