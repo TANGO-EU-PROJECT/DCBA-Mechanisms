@@ -138,6 +138,18 @@ def WiFiLocalization(log_data, device_id, did, heatmap):
             for location in heatmap_dict[bssid]:  
                 device_id_rssi[location][bssid] = int(real_rssi)  # Store real RSSI per location per BSSID
 
+    # <-- Add the check here BEFORE calling WiFi_euclidean_distance
+    if all(len(rssi_dict) == 0 for rssi_dict in device_id_rssi.values()):
+        # No matching APs found in log compared to heatmap
+        outputResult = {
+            "Localization Algorithm": "Euclidean Distance (ED)",
+            "Device ID": device_id,
+            "Employee DID": did,
+            "Estimated Location": "Unknown. No matching APs from heatmap found in log"
+        }
+        sys.stdout.write(json.dumps(outputResult))
+        return
+
     # Calculate the estimated location using Euclidean distance
     EstimatedLocation = WiFi_euclidean_distance(device_id_rssi, heatmap_dict)
 
