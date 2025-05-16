@@ -926,7 +926,7 @@ paths:
         This endpoint accepts `logs` from Android devices along with a session `authToken` and device identifier (`did`) for authentication and validation.
         It performs multiple checks, including validation of log format, session token validity, expiration, and DID match.
         Upon successful validation, the log is queued for processing.
-        Always returns HTTP 200 status regardless of the operation result, to maintain client-side stability.. Check the `status` field in the response body for operation result.
+        Always returns HTTP 200 status regardless of the operation result, to maintain client-side stability. Check the `status` field in the response body for operation result.
       tags:
         - Authenticator Endpoints
       requestBody:
@@ -1041,8 +1041,7 @@ paths:
       summary: Validate the provided Bearer JWT authentication token to ensure the employee remains logged into the Authenticator Android Application
       description: |
         This endpoint validates the provided Bearer JWT token and checks if it is expired or malformed.
-        Always returns HTTP 200 status regardless of the operation result, to maintain client-side stability. 
-        Check the `status` field in the response body for the operation result.
+        Returns appropriate HTTP status codes based on validation results.
       tags:
         - Authenticator Endpoints
       parameters:
@@ -1053,70 +1052,146 @@ paths:
           schema:
             type: string
             example: Bearer <your-jwt-token>
+        - in: query
+          name: device_id
+          required: false
+          description: Optional device ID associated with the token.
+          schema:
+            type: string
       responses:
         '200':
-          description: A successful response containing the status of token validation. Always returns 200 regardless of the operation result, to maintain client-side stability. Check the `status` field in the response body.
+          description: Valid token, device found.
           content:
             application/json:
               schema:
                 type: object
+                required:
+                  - status
+                  - message
+                  - did
+                  - sub
+                  - verifiableCredential
                 properties:
                   status:
                     type: string
-                    description: The status of the token validation operation.
+                    enum: [success]
                     example: success
+                    description: Indicates successful validation.
                   message:
                     type: string
-                    description: A human-readable message providing more context.
-                    example: "valid"
+                    example: valid
+                    description: Human-readable status message.
                   did:
                     type: string
+                    example: did:web:ips.k8s-cluster.tango.rid-intrasoft.eu:did
                     description: The DID (Decentralized Identifier) associated with the token.
-                    example: "did:example:1234567890abcdef"
                   sub:
                     type: string
-                    description: The subject associated with the token.
-                    example: "user-123"
+                    example: did:my:wallet
+                    description: Subject claim from the token.
                   verifiableCredential:
                     type: object
-                    description: The verifiable credential associated with the token.
+                    description: The verifiable credential from the token payload.
                     example:
-                      id: "did:example:1234567890abcdef"
+                      id: urn:uuid:869f17ef-a48d-46d2-9567-322abea828a9
+        '400':
+          description: Bad request - malformed or invalid token.
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - status
+                  - message
+                properties:
+                  status:
+                    type: string
+                    enum: [failed]
+                    example: failed
+                  message:
+                    type: string
+                    description: Explanation of the error.
               examples:
-                Success:
-                  summary: Successful validation of token
-                  value:
-                    status: success
-                    message: valid
-                    did: "did:example:1234567890abcdef"
-                    sub: "user-123"
-                    verifiableCredential:
-                      id: "did:example:1234567890abcdef"
-                NoBearerToken:
-                  summary: Missing Authentication header
-                  value:
-                    status: failed
-                    message: "Authentication token is missing."
-                InvalidTokenFormat:
-                  summary: Malformed Authentication header 
+                MalformedToken:
+                  summary: Token does not start with 'Bearer '
                   value:
                     status: failed
                     message: "Authentication token is malformed. It should start with 'Bearer '."
-                TokenExpired:
+                InvalidFormat:
+                  summary: Token format is invalid or cannot be decoded
+                  value:
+                    status: failed
+                    message: "Invalid authentication token format."
+                MissingDID:
+                  summary: DID missing from token payload
+                  value:
+                    status: failed
+                    message: "DID missing from token."
+
+        '401':
+          description: Unauthorized - missing or expired token.
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - status
+                  - message
+                properties:
+                  status:
+                    type: string
+                    enum: [failed]
+                    example: failed
+                  message:
+                    type: string
+                    description: Explanation of why the authentication failed.
+              examples:
+                MissingToken:
+                  summary: Authentication token is missing
+                  value:
+                    status: failed
+                    message: "Authentication token is missing."
+                ExpiredToken:
                   summary: Authentication token has expired
                   value:
                     status: failed
                     message: "Authentication token has expired."
-                DeviceNotFound:
-                  summary: Device not found in the database
-                  value:
-                    status: failed
-                    message: "Device not found."
-                InternalServerError:
-                  summary: Internal server error
-                  value:
-                    status: failed
-                    message: "Internal server error while validating authentication token."
+
+        '404':
+          description: Device associated with DID not found.
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - status
+                  - message
+                properties:
+                  status:
+                    type: string
+                    enum: [failed]
+                    example: failed
+                  message:
+                    type: string
+                    example: "Device not found."
+        '500':
+          description: Internal server error during token validation.
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - status
+                  - message
+                properties:
+                  status:
+                    type: string
+                    enum: [failed]
+                    example: failed
+                  message:
+                    type: string
+                    example: "Internal server error while validating authentication token."
+
 
 
   # [5] POST /authenticator/logout
