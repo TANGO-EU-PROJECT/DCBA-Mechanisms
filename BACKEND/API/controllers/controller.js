@@ -932,6 +932,7 @@ exports.beginSession = async (req, res) => {
  */
 exports.handleAuthCallback = async (req, res) => {
   const { code, state } = req.query;
+  console.log(code, state)
 
   // Check if required parameters (code, state) are missing
   if (!code || !state) {
