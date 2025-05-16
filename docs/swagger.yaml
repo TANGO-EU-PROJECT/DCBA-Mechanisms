@@ -877,7 +877,7 @@ paths:
                     description: Indicates the request could not be completed due to a conflict.
                   message:
                     type: string
-                    const: Device already online.
+                    enum: [Device already online.]
                     example: Device already online.
                     description: Conflict reason indicating the device is already marked as online.
 
@@ -898,7 +898,7 @@ paths:
                     description: Indicates the resource is no longer available.
                   message:
                     type: string
-                    const: Session request expired.
+                    enum: [Session request expired.]
                     example: Session request expired.
                     description: The session request has expired and is no longer valid.
 
