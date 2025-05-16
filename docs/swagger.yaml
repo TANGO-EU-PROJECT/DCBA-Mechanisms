@@ -350,12 +350,15 @@ paths:
               properties:
                 didSP:
                   type: string
+                  description: The Decentralized Identifier (DID) of the service provider initiating the request.
                   example: "did:example:serviceprovider123"
                 didRequester:
                   type: string
+                  description: The Decentralized Identifier (DID) of the requesting employee.
                   example: "did:example:device456"
                 jwtAuth:
                   type: string
+                  description: The JSON Web Token (JWT) used for authenticating the request.
                   example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
 
             examples:
@@ -469,12 +472,15 @@ paths:
               properties:
                 didSP:
                   type: string
+                  description: The Decentralized Identifier (DID) of the service provider initiating the request.
                   example: "did:example:serviceprovider123"
                 didRequester:
                   type: string
+                  description: The Decentralized Identifier (DID) of the requesting employee.
                   example: "did:example:device456"
                 jwtAuth:
                   type: string
+                  description: The JSON Web Token (JWT) used for authenticating the request.
                   example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
             examples:
               validRequest:
@@ -1044,21 +1050,25 @@ paths:
         Returns appropriate HTTP status codes based on validation results.
       tags:
         - Authenticator Endpoints
-      parameters:
-        - in: header
-          name: Authorization
-          required: true
-          description: Bearer token to authenticate.
-          schema:
-            type: string
-            example: Bearer <your-jwt-token>
-        - in: query
-          name: device_id
-          required: true
-          description: Optional device ID associated with the token.
-          schema:
-            type: string
-            example: 5c487cb4a62cb29d
+      requestBody:
+        required: true
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              required:
+                - authToken
+                - deviceID
+              properties:
+                authToken:
+                  type: string
+                  description: Bearer token to authenticate.
+                  example: Bearer <your-jwt-token>
+                deviceID:
+                  type: string
+                  description: Optional device ID associated with the token.
+                  example: 5c487cb4a62cb29d
+
       responses:
         '200':
           description: Valid token, device found.
@@ -1308,7 +1318,7 @@ paths:
                     example: Internal server error while handling logout.
               examples:
                 InternalServerError:
-                  summary: Unexpected error
+                  summary: Internal Server Error
                   value:
                     status: failed
                     message: Internal server error while handling logout.
