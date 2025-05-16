@@ -1054,7 +1054,7 @@ paths:
             example: Bearer <your-jwt-token>
         - in: query
           name: device_id
-          required: false
+          required: true
           description: Optional device ID associated with the token.
           schema:
             type: string
@@ -1113,7 +1113,7 @@ paths:
                     description: Explanation of the error.
               examples:
                 MalformedToken:
-                  summary: Token does not start with 'Bearer '
+                  summary: Malformed Authorization Token
                   value:
                     status: failed
                     message: "Authentication token is malformed. It should start with 'Bearer '."
@@ -1123,10 +1123,10 @@ paths:
                     status: failed
                     message: "Invalid authentication token format."
                 MissingDID:
-                  summary: DID missing from token payload
+                  summary: Device ID missing from token payload
                   value:
                     status: failed
-                    message: "DID missing from token."
+                    message: "Device ID missing from authentication token."
 
         '401':
           description: Unauthorized - missing or expired token.
