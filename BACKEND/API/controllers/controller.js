@@ -833,7 +833,6 @@ exports.beginSession = async (req, res) => {
         device_id: device_id,
         ip: req.ip
       });
-
     } catch (error) {
       logEvent({
         event: 'HANDLING SESSION REQUEST',
