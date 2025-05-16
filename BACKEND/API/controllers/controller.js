@@ -1022,11 +1022,17 @@ exports.handleAuthCallback = async (req, res) => {
     const result = await processSessionRequest(authToken, state, did, sub, heatmap);
 
     // Response with success only if the response is 200(auth-success)
-    res.status(result.status).json({
+    const ApiResponse = {
       status: result.status === 200 ? "success" : "failed",
-      message: result.message,
-      decodedPayload: decodedPayload
-    });
+      message: result.message
+    };
+    
+    if (result.status === 200) {
+      ApiResponse.decodedPayload = decodedPayload;
+    }
+    
+    res.status(result.status).json(ApiResponse);
+    
   } catch (err) {
     // Catch any errors during the request
     logEvent({
@@ -1040,7 +1046,7 @@ exports.handleAuthCallback = async (req, res) => {
     }
     return res.status(500).json({
       status: "failed",
-      message: 'Authentication failed.'
+      message: 'Internal server error. Authentication failed.'
     });
   }
 };

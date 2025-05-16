@@ -550,7 +550,7 @@ async function processSessionRequest(authToken, qr_scanner_state_request, did, s
       did: did,
       cause: `AN ERROR OCCURRED DURING THE PROCESSING OF THE SESSION REQUEST: ${error.stack}`
     });    
-    return { status: 500, message: "Internal server error" };
+    return { status: 500, message: "Internal server error. Authentication failed." };
   }
 }
 
