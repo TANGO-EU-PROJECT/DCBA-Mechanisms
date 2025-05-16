@@ -370,6 +370,10 @@ const processDeviceQueue = async (deviceID) => {
  */
 const processRequest = async (req, res, did, deviceID) => {
   const logData = req.body.log;
+  console.log("------------------------ NEARBY ACCESS POINTS ------------------------")
+  console.log(logData)
+  console.log("------------------------ NEARBY ACCESS POINTS ------------------------")
+
 
   try {
     // Store the log data in the InfluxDB database asynchronously
