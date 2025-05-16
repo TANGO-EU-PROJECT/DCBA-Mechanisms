@@ -431,7 +431,7 @@ const getDeviceHeatmap = async (device_id) => {
  * @param {string} heatmap - The device heatmap data.
  * @returns {Promise<void>} - Resolves once the session request is processed and necessary actions are taken.
  */
-async function processSessionRequest(authToken, qr_scanner_state_request, did, sub, heatmap) {
+async function processSessionRequest(authToken, qr_scanner_state_request, did, sub, heatmap, req) {
 
   try {
     // Search for the session request in MongoDB based on the state
@@ -450,6 +450,7 @@ async function processSessionRequest(authToken, qr_scanner_state_request, did, s
         status: 'SUCCESS ✅',
         did: did,
         device_id: device_id,
+        ip: req.ip
       });
 
       // Look for the device in the DEVICE collection using the findDeviceByDeviceID function
@@ -480,6 +481,7 @@ async function processSessionRequest(authToken, qr_scanner_state_request, did, s
             status: 'FAILED ❌',
             did: did,
             device_id: device_id,
+            ip: req.ip
           });
           return { status: 401, message: "Credentials don't match this device." };
         }
@@ -496,6 +498,7 @@ async function processSessionRequest(authToken, qr_scanner_state_request, did, s
               status: 'SUCCESS ✅',
               did: did,
               device_id: device_id,
+              ip: req.ip
             });
             notifyDevice(authToken, qr_scanner_state_request, device_id, did, sub, log_file_uri, "session-request-valid");
             logEvent({
@@ -514,6 +517,7 @@ async function processSessionRequest(authToken, qr_scanner_state_request, did, s
               status: 'FAILED ❌',
               did: did,
               device_id: device_id,
+              ip: req.ip
             });
             notifyDevice(authToken, qr_scanner_state_request, device_id, did, sub, log_file_uri, "device-already-online");
             return { status: 409, message: "Device already online." };
@@ -527,6 +531,7 @@ async function processSessionRequest(authToken, qr_scanner_state_request, did, s
             status: 'FAILED ❌',
             did: did,
             device_id: device_id,
+            ip: req.ip
           });
           return { status: 401, message: "Credentials don't match this device." };
         }
@@ -538,7 +543,8 @@ async function processSessionRequest(authToken, qr_scanner_state_request, did, s
         event: 'SEARCH FOR SESSION REQUEST FOR DEVICE',
         status: 'FAILED ❌',
         did: did,
-        cause: 'THE SESSION REQUEST HAS EXPIRED'
+        cause: 'THE SESSION REQUEST HAS EXPIRED',
+        ip: req.ip
       });
       return { status: 410, message: "Session request expired." };
     }
@@ -548,7 +554,9 @@ async function processSessionRequest(authToken, qr_scanner_state_request, did, s
       event: 'PROCESSING SESSION REQUEST',
       status: 'FAILED ❌',
       did: did,
-      cause: `AN ERROR OCCURRED DURING THE PROCESSING OF THE SESSION REQUEST: ${error.stack}`
+      cause: `AN ERROR OCCURRED DURING THE PROCESSING OF THE SESSION REQUEST: ${error.stack}`,
+      ip: req.ip
+
     });    
     return { status: 500, message: "Internal server error. Authentication failed." };
   }
