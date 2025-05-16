@@ -78,7 +78,7 @@ const SESSION_REQUEST = require(path.resolve(sessionRequestModelPath));
 
 
 
-/** [1]
+/** [1] 
  * Fetches all device data from the MongoDB database and returns it as a JSON response.
  * Endpoint: GET /devices
  * 
@@ -505,7 +505,7 @@ const runLocalizationScript = (line, deviceID, did, escapedHeatmapJSON) => {
   return new Promise((resolve, reject) => {
     exec(`python3 "${LocalizationScriptPath}" "${line}" "${deviceID}" "${did}" "${escapedHeatmapJSON}"`, (error, stdout, stderr) => {
       if (error) {
-        reject(`Error executing localization script: ${error.message}`);
+        reject(`Error executing localization script: ${error.stack}`);
       }
       if (stderr) {
         reject(`Script stderr: ${stderr}`);
@@ -648,7 +648,7 @@ exports.handleAuthTokenValidation = async (req, res) => {
     logEvent({
       event: 'RE-AUTHENTICATION ATTEMPT WITH AUTH-TOKEN',
       status: 'FAILED ❌',
-      cause: `ERROR DURING TOKEN VALIDATION: ${err.message}`,
+      cause: `ERROR DURING TOKEN VALIDATION: ${err.stack}`,
       device_id: deviceID,
       ip,
     });
@@ -913,7 +913,7 @@ exports.beginSession = async (req, res) => {
     logEvent({
       event: 'EXTRACTING QR CODE BASE64',
       status: 'FAILED ❌',
-      cause: `AN ERROR OCCURRED DURING EXTRACTING QR CODE BASE64: ${err}`,
+      cause: `AN ERROR OCCURRED DURING EXTRACTING QR CODE BASE64: ${err.stack}`,
       device_id: req.body?.device_id || 'UNKNOWN',
       ip: req.ip
     });
@@ -1032,7 +1032,7 @@ exports.handleAuthCallback = async (req, res) => {
     logEvent({
       event: 'AUTHENTICATION CALLBACK',
       status: 'FAILED ❌',
-      cause: `AN ERROR OCCURRED DURING AUTHENTICATION CALLBACK: ${err}`,
+      cause: `AN ERROR OCCURRED DURING AUTHENTICATION CALLBACK: ${err.stack}`,
       ip: req.ip
     });
     
@@ -1192,7 +1192,7 @@ exports.fetchDeviceBehaviouralScore = async (req, res) => {
       event: 'JWT VERIFICATION',
       status: 'FAILED ❌',
       did: didRequester,
-      cause: `Error while verifying JWT of didSP '${didSP}': ${err}`
+      cause: `Error while verifying JWT of didSP '${didSP}': ${err.stack}`
     });
     
     if (err.name === 'TokenExpiredError') {
@@ -1250,17 +1250,17 @@ exports.fetchDeviceLastLocation = async (req, res) => {
       device = await findDeviceByDID(didRequester);
     } catch (dbErr) {
       logEvent({
-        event: 'RETRIEVING_LAST_COORDINATES',
+        event: 'RETRIEVING LAST LOCATION',
         status: 'FAILED ❌',
         did: didRequester,
         device_id: device.device_id,
-        cause: `Error retrieving last coordinates requested from didSP '${didSP}': ${err}`
+        cause: `Error retrieving device last location requested from didSP '${didSP}': ${err.stack}`
       });
       
       //console.error('Error retrieving last coordinates:', dbErr);
       return res.status(500).json({
         status: "failed",
-        message: "Error retrieving last coordinates."
+        message: "Error retrieving device last location."
       });
     }
 
@@ -1284,7 +1284,7 @@ exports.fetchDeviceLastLocation = async (req, res) => {
       event: 'JWT VERIFICATION',
       status: 'FAILED ❌',
       did: didRequester,
-      cause: `Error while verifying JWT of didSP '${didSP}': ${err}`
+      cause: `Error while verifying JWT of didSP '${didSP}': ${err.stack}`
     });
 
     if (err.name === 'TokenExpiredError') {

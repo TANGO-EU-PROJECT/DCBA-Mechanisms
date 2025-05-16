@@ -12,7 +12,7 @@ info:
     **Note**: Currently, the server is not deployed but will be available in the future at the URL specified in the servers section. Therefore, the **Try it out** option is not available right now.
 
 servers:
-  - url: https://tango-eu-project.github.io/DCBA-Mechanisms/
+  - url: https://k8s-cluster.tango.rid-intrasoft.eu/development/dcba-backend/
 
 paths:
   # Service API Endpoints #
@@ -451,10 +451,10 @@ paths:
     post:
       tags:
         - Service API Endpoints
-      summary: Retrieve device last known coordinates
+      summary: Retrieve device last known location
       description: >
-        Returns the last known geographic coordinates (latitude and longitude) of a device
-        based on provided DIDs.
+        Returns the last known location of a device
+        based on provided employee DIDs.
         Requires a valid JWT authorization token passed in the request body.
       requestBody:
         required: true
@@ -485,7 +485,7 @@ paths:
                   jwtAuth: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
       responses:
         '200':
-          description: Last known coordinates retrieved successfully
+          description: Last known device location retrieved successfully
           content:
             application/json:
               schema:
@@ -497,17 +497,9 @@ paths:
                   message:
                     type: string
                     example: "Device found."
-                  lastCoordinates:
-                    type: object
-                    properties:
-                      latitude:
-                        type: number
-                        format: float
-                        example: 39.365858279847544
-                      longitude:
-                        type: number
-                        format: float
-                        example: 22.923886333496505
+                  lastLocation:
+                    type: string
+                    example: "Facility Entrance"
         '400':
           description: Bad Request - Missing required fields
           content:
