@@ -1019,7 +1019,7 @@ exports.handleAuthCallback = async (req, res) => {
     });
 
     // Respond to the AUTHENTICATOR via the web socket
-    const result = await processSessionRequest(authToken, state, did, sub, heatmap);
+    const result = await processSessionRequest(authToken, state, did, sub, heatmap, req);
 
     // Response with success only if the response is 200(auth-success)
     const ApiResponse = {
@@ -1027,7 +1027,7 @@ exports.handleAuthCallback = async (req, res) => {
       message: result.message
     };
 
-    console.log(decodedPayload);
+    //console.log(decodedPayload);
     
     if (result.status === 200) {
       ApiResponse.decodedPayload = decodedPayload;

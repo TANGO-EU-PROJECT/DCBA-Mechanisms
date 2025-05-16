@@ -767,6 +767,36 @@ paths:
                   decodedPayload:
                     type: object
                     description: Decoded JWT payload containing claims such as sub, did, exp, etc.
+                    example:
+                      aud:
+                        - "k8s-cluster.tango.rid-intrasoft.eu"
+                      client_id: "did:web:ips.k8s-cluster.tango.rid-intrasoft.eu:did"
+                      exp: 1747396583
+                      iss: "did:web:ips.k8s-cluster.tango.rid-intrasoft.eu:did"
+                      kid: "ULaW3a1G2l-m_Yh13uBGitxe4ULkzd5cAxh7tTgdeRs"
+                      sub: "did:my:wallet"
+                      verifiableCredential:
+                        "@context":
+                          - "https://www.w3.org/2018/credentials/v1"
+                          - "https://example.com/custom-context"
+                        credentialSchema:
+                          id: "https://example.com/schema.json"
+                          type: "JsonSchemaValidator2018"
+                        credentialSubject:
+                          id: "did:my:wallet"
+                          # Add additional fields as relevant here
+                        id: "urn:uuid:869f17ef-a48d-46d2-9567-322abea828a9"
+                        issuanceDate: "2025-05-16T11:26:01Z"
+                        issued: "2025-05-16T11:26:01Z"
+                        issuer: "did:web:ips.k8s-cluster.tango.rid-intrasoft.eu:did"
+                        proof:
+                          type: "EcdsaSecp256k1VerificationKey2019"
+                          # add other proof fields if desired
+                        type:
+                          - "VerifiableCredential"
+                          - "IDCredential"
+                        validFrom: "2025-05-16T11:26:01Z"
+
 
         '400':
           description: Missing required parameters.
