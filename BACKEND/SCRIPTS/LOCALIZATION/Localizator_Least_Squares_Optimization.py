@@ -220,11 +220,10 @@ def WiFiLocalization(log_data, device_id, did, heatmap):
             "Localization Algorithm": "Least Squares Optimization (LSO)",
             "Device ID": device_id,
             "Employee DID": did,
-            "Estimated Location (Latitude)": lat_est,
-            "Estimated Location (Longitude)": lon_est
+            "Estimated Location (Latitude)": "Unknown. No matching APs from heatmap found in log",
+            "Estimated Location (Longitude)": "Unknown. No matching APs from heatmap found in log"
         }
         sys.stdout.write(json.dumps(outputResult))
-        return
         return None
 
     # Convert RSSI values to distances
@@ -238,16 +237,14 @@ def WiFiLocalization(log_data, device_id, did, heatmap):
 
     # Convert estimated Cartesian coordinates to latitude and longitude
     lat_est, lon_est = cartesian_to_lat_lon(estimated_location[0], estimated_location[1], lat0, lon0)
-    # Write the result to stdout (the result will be captured in JS)
-    # Assume you have variables for lat_est and lon_est (latitude and longitude)
+    # Write the result to stdout (the result will be captured in JS)    
     outputResult = {
         "Localization Algorithm": "Least Squares Optimization (LSO)",
         "Device ID": device_id,
         "Employee DID": did,
-        "Estimated Location (Latitude)": "Unknown. No matching APs from heatmap found in log",
-        "Estimated Location (Longitude)": "Unknown. No matching APs from heatmap found in log"
+        "Estimated Location (Latitude)": lat_est,
+        "Estimated Location (Longitude)": lon_est
     }
-
     # Output only the valid JSON object
     sys.stdout.write(json.dumps(outputResult))
 
