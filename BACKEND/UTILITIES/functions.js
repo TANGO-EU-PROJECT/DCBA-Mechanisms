@@ -471,7 +471,7 @@ async function processSessionRequest(authToken, qr_scanner_state_request, did, s
             device_id: device_id,
             ip: req.ip
           });
-          return { status: 200, message: "Device status updated to online." };
+          return { status: 200, message: "Authentication success. Device status updated to online." };
         } else {
           // Someone tried to log in from his/her device, using an existing DID
           notifyDevice(authToken, qr_scanner_state_request, device_id, did, sub, log_file_uri, "potential-credential-sharing");
@@ -506,7 +506,7 @@ async function processSessionRequest(authToken, qr_scanner_state_request, did, s
               device_id: device_id,
               ip: req.ip
             });
-            return { status: 200, message: "Device status updated to online." };
+            return { status: 200, message: "Authentication success. Device status updated to online." };
           } else {
             // The specific device is already online
             logEvent({

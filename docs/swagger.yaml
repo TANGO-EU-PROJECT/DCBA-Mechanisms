@@ -728,6 +728,8 @@ paths:
       description: >
         Exchanges an authorization code for a token, decodes the JWT, validates the device session request,
         and returns the appropriate status depending on session and device state.
+      tags:
+        - Authenticator Endpoints
       parameters:
         - name: code
           in: query
@@ -760,12 +762,11 @@ paths:
                     description: Indicates the success of the operation.
                   message:
                     type: string
-                    example: Device status updated to online.
+                    example: Authentication success. Device status updated to online.
                     description: A human-readable message explaining the result.
                   decodedPayload:
                     type: object
                     description: Decoded JWT payload containing claims such as sub, did, exp, etc.
-                    additionalProperties: true
 
         '400':
           description: Missing required parameters.
@@ -804,11 +805,24 @@ paths:
                     description: Indicates that authentication was unsuccessful.
                   message:
                     type: string
-                    oneOf:
-                      - const: Authentication token not received.
-                      - const: Invalid authentication token payload.
-                      - const: Credentials don't match this device.
                     description: Specific reason why the request was unauthorized.
+              examples:
+                tokenNotReceived:
+                  summary: Missing authentication token
+                  value:
+                    status: failed
+                    message: Authentication token not received.
+                invalidPayload:
+                  summary: Invalid token payload
+                  value:
+                    status: failed
+                    message: Invalid authentication token payload.
+                credentialsMismatch:
+                  summary: Credentials don't match the device
+                  value:
+                    status: failed
+                    message: Credentials don't match this device.
+
 
         '409':
           description: Conflict — Device is already online.
