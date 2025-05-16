@@ -214,7 +214,17 @@ def WiFiLocalization(log_data, device_id, did, heatmap):
                     coordinates_and_rssi.append((ssid, bssid, APsCartesianCoordinateX, APsCartesianCoordinateY, rssi, A))
 
     if not coordinates_and_rssi:
-        print(f"{RED}[----- Device ID: {device_id}, No matching APs found in heatmap. Localization not possible. -----]{RESET}")
+        #print(f"{RED}[----- Device ID: {device_id}, No matching APs found in heatmap. Localization not possible. -----]{RESET}")
+        # No matching APs found in log compared to heatmap
+        outputResult = {
+            "Localization Algorithm": "Least Squares Optimization (LSO)",
+            "Device ID": device_id,
+            "Employee DID": did,
+            "Estimated Location (Latitude)": lat_est,
+            "Estimated Location (Longitude)": lon_est
+        }
+        sys.stdout.write(json.dumps(outputResult))
+        return
         return None
 
     # Convert RSSI values to distances
@@ -234,8 +244,8 @@ def WiFiLocalization(log_data, device_id, did, heatmap):
         "Localization Algorithm": "Least Squares Optimization (LSO)",
         "Device ID": device_id,
         "Employee DID": did,
-        "Estimated Location (Latitude)": lat_est,
-        "Estimated Location (Longitude)": lon_est
+        "Estimated Location (Latitude)": "Unknown. No matching APs from heatmap found in log",
+        "Estimated Location (Longitude)": "Unknown. No matching APs from heatmap found in log"
     }
 
     # Output only the valid JSON object
