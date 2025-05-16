@@ -499,7 +499,6 @@ const processRequest = async (req, res, did, deviceID) => {
 
 /* [9]
  * Function to handle the localization algorithm
- * Endpoint: GET /authenticator/auth-token-validation
 */
 const runLocalizationScript = (line, deviceID, did, escapedHeatmapJSON) => {
   return new Promise((resolve, reject) => {
@@ -932,7 +931,7 @@ exports.beginSession = async (req, res) => {
  */
 exports.handleAuthCallback = async (req, res) => {
   const { code, state } = req.query;
-  console.log(code, state)
+  //console.log(code, state)
 
   // Check if required parameters (code, state) are missing
   if (!code || !state) {
