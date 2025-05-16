@@ -632,16 +632,16 @@ exports.handleAuthTokenValidation = async (req, res) => {
       });
     }
 
-    // 4. Did not found in payload
+    // 4. Device ID not found in payload
     logEvent({
       event: 'RE-AUTHENTICATION ATTEMPT WITH AUTH-TOKEN',
       status: 'FAILED ❌',
-      cause: 'DID MISSING FROM TOKEN',
+      cause: 'DEVICE ID MISSING FROM TOKEN',
       device_id: deviceID,
       ip,
     });
 
-    return res.status(400).json({ status: "failed", message: 'DID missing from token.' });
+    return res.status(400).json({ status: "failed", message: 'Device ID missing from authentication token.' });
 
   } catch (err) {
     logEvent({
