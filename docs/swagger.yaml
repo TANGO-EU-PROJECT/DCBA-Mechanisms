@@ -53,7 +53,7 @@ paths:
                       properties:
                         device_id:
                           type: string
-                          example: "a4e4cf21ab7e"
+                          example: "5c487cb4a62cb29d"
                         did:
                           type: string
                           example: "did:example:123456789abcdefghi"
@@ -157,7 +157,7 @@ paths:
                       properties:
                         device_id:
                           type: string
-                          example: "a4e4cf21ab7e"
+                          example: "5c487cb4a62cb29d"
                         did:
                           type: string
                           example: "did:example:123456789abcdefghi"
@@ -262,7 +262,7 @@ paths:
                       properties:
                         device_id:
                           type: string
-                          example: "b7f2de59c8e1"
+                          example: "5c487cb4a62cb29d"
                         did:
                           type: string
                           example: "did:example:987654321zyxwvu"
@@ -637,7 +637,7 @@ paths:
                 device_id:
                   type: string
                   description: The ID of the device initiating the session.
-                  example: b7f2de59c8e1
+                  example: 5c487cb4a62cb29d
                 qr_scanner_state_request:
                   type: string
                   description: The state parameter for QR scanner.
@@ -673,7 +673,7 @@ paths:
                     message: QR Code generated successfully.
                     deviceAuthQRCode: "data:image/png;base64,..."
                     sessionRequest:
-                      device_id: "b7f2de59c8e1"
+                      device_id: "5c487cb4a62cb29d"
                       qr_scanner_state_request: "a6f3fn529i2a0"
                       log_file_uri: "file:///data/user/0/com.dcbaauthenticator/files/46299a77c27b0d4c/authenticator_logs.txt"
                       timestamp: "2025-04-26T12:34:56.789Z"
@@ -1058,6 +1058,7 @@ paths:
           description: Optional device ID associated with the token.
           schema:
             type: string
+            example: 5c487cb4a62cb29d
       responses:
         '200':
           description: Valid token, device found.
@@ -1199,7 +1200,7 @@ paths:
     post:
       summary: Logs out a device by marking its status as "offline" in the database
       description: |
-        This endpoint allows a device to log out by providing an `authToken` and `did`. The request validates the authentication token and checks for the presence of a `did`. If the device is found, its status is updated to "offline". The system always returns HTTP 200 status to maintain client-side stability, but the operation result is indicated in the `status` field of the response.
+        This endpoint allows a device to log out by providing an `authToken`, `did`, and `deviceID`. The request validates the authentication token and identifiers. If the device is found, its status is updated to "offline". The operation returns appropriate HTTP status codes with a JSON body indicating success or failure.
       tags:
         - Authenticator Endpoints
       requestBody:
@@ -1211,6 +1212,7 @@ paths:
               required:
                 - authToken
                 - did
+                - deviceID
               properties:
                 authToken:
                   type: string
@@ -1220,9 +1222,13 @@ paths:
                   type: string
                   description: The Decentralized Identifier (DID) of the device.
                   example: "did:example:12345"
+                deviceID:
+                  type: string
+                  description: The unique device identifier.
+                  example: "5c487cb4a62cb29d"
       responses:
         '200':
-          description: The response will always be HTTP 200. The status of the logout operation is provided in the response body.
+          description: Device logged out successfully.
           content:
             application/json:
               schema:
@@ -1230,39 +1236,82 @@ paths:
                 properties:
                   status:
                     type: string
-                    description: The status of the logout operation.
-                    example: "success"
+                    example: success
                   message:
                     type: string
-                    description: A human-readable message providing more context about the operation result.
-                    example: "Device logged out successfully."
+                    example: Device logged out successfully.
               examples:
                 Success:
-                  summary: Device logged out successfully
+                  summary: Successful logout
                   value:
                     status: success
-                    message: "Device logged out successfully."
+                    message: Device logged out successfully.
+        '400':
+          description: Bad request due to missing required fields.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: failed
+                  message:
+                    type: string
+              examples:
                 MissingAuthToken:
                   summary: Missing Authentication token
                   value:
                     status: failed
-                    message: "Missing required authentication token."
+                    message: Missing required authentication token.
                 MissingDid:
-                  summary: Missing device identifier (DID)
+                  summary: Missing DID
                   value:
                     status: failed
-                    message: "Missing required DID."
+                    message: Missing required did.
+                MissingDeviceID:
+                  summary: Missing device ID
+                  value:
+                    status: failed
+                    message: Missing required device ID.
+        '404':
+          description: Device not found in the database.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: failed
+                  message:
+                    type: string
+                    example: Device not found.
+              examples:
                 DeviceNotFound:
-                  summary: Device not found in the database
+                  summary: Device not found
                   value:
                     status: failed
-                    message: "Device not found."
+                    message: Device not found.
+        '500':
+          description: Internal server error during logout.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: failed
+                  message:
+                    type: string
+                    example: Internal server error while handling logout.
+              examples:
                 InternalServerError:
-                  summary: Internal server error during logout
+                  summary: Unexpected error
                   value:
                     status: failed
-                    message: "Internal server error while handling logout."
-
+                    message: Internal server error while handling logout.
   # Authenticator Endpoints #
 
 
