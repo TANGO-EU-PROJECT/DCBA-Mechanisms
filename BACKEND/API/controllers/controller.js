@@ -1026,6 +1026,8 @@ exports.handleAuthCallback = async (req, res) => {
       status: result.status === 200 ? "success" : "failed",
       message: result.message
     };
+
+    console.log(decodedPayload);
     
     if (result.status === 200) {
       ApiResponse.decodedPayload = decodedPayload;
