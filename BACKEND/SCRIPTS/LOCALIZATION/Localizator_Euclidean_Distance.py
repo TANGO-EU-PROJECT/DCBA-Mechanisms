@@ -147,6 +147,7 @@ def WiFiLocalization(log_data, device_id, did, heatmap):
             "Employee DID": did,
             "Estimated Location": "Unknown"
         }
+        
         sys.stdout.write(json.dumps(outputResult))
         return
 
