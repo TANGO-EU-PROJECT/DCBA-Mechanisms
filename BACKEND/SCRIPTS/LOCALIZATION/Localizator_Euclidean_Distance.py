@@ -145,7 +145,7 @@ def WiFiLocalization(log_data, device_id, did, heatmap):
             "Localization Algorithm": "Euclidean Distance (ED)",
             "Device ID": device_id,
             "Employee DID": did,
-            "Estimated Location": "Unknown. No matching APs from heatmap found in log"
+            "Estimated Location": "Unknown"
         }
         sys.stdout.write(json.dumps(outputResult))
         return
