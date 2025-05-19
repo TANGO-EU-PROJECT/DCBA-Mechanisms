@@ -223,6 +223,7 @@ def WiFiLocalization(log_data, device_id, did, heatmap):
             "Estimated Location (Latitude)": "Unknown",
             "Estimated Location (Longitude)": "Unknown"
         }
+        
         sys.stdout.write(json.dumps(outputResult))
         return None
 
