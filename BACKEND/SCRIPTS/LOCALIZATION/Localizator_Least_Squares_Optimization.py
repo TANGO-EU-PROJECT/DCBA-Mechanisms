@@ -220,8 +220,8 @@ def WiFiLocalization(log_data, device_id, did, heatmap):
             "Localization Algorithm": "Least Squares Optimization (LSO)",
             "Device ID": device_id,
             "Employee DID": did,
-            "Estimated Location (Latitude)": "Unknown. No matching APs from heatmap found in log",
-            "Estimated Location (Longitude)": "Unknown. No matching APs from heatmap found in log"
+            "Estimated Location (Latitude)": "Unknown",
+            "Estimated Location (Longitude)": "Unknown"
         }
         sys.stdout.write(json.dumps(outputResult))
         return None
