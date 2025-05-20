@@ -32,8 +32,7 @@ def parse_rssi_line(line, df):
     return rssi_values
 
 
-def classifying_the_area(real_rssi_values, device_id, did):
-    csv_path = "../WiFi_Heatmap_RIASTONE.csv"  # The heatmap dataset
+def classifying_the_area(csv_path, real_rssi_values, device_id, did):
     model_path = "rssi_RIASTONE_classifier.pkl"
     label_encoder_path = "label_encoder.pkl"
 
@@ -133,4 +132,4 @@ if __name__ == "__main__":
     real_time_rssi_values = parse_rssi_line(raw_wifi_scan_line, df)
 
     # Call classification
-    classifying_the_area(real_time_rssi_values, device_id, did)
+    classifying_the_area(csv_path, real_time_rssi_values, device_id, did)
