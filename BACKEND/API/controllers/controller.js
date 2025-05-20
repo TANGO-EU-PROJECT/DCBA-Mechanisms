@@ -404,7 +404,7 @@ const processRequest = async (req, res, did, deviceID) => {
         const heatmap = await getDeviceHeatmap(deviceID); // Ensure it resolves before continuing
         const heatmapJSON = JSON.stringify(heatmap);
         const escapedHeatmapJSON = heatmapJSON.replace(/"/g, '\\"'); // Escape quotes to ensure they are passed correctly to Python
-        
+         
         try {
           // Run the Localizator Script to estimate the current device location
           console.log(line);
