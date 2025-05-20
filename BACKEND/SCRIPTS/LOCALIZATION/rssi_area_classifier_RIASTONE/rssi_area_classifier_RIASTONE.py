@@ -15,7 +15,7 @@ def classifying_the_area(csv_path, real_rssi_values, device_id, did):
     # Load dataset
     if not os.path.exists(csv_path):
         print(f"Error: Dataset CSV file not found at {csv_path}")
-        sys.exit(1)
+        return
 
     df = pd.read_csv(csv_path)
 
@@ -24,7 +24,7 @@ def classifying_the_area(csv_path, real_rssi_values, device_id, did):
 
     if len(real_rssi_values) != X.shape[1]:
         print(f"Error: Expected {X.shape[1]} RSSI values, but got {len(real_rssi_values)}")
-        sys.exit(1)
+        return
 
     # Encode labels
     label_encoder = LabelEncoder()
@@ -82,7 +82,7 @@ if __name__ == "__main__":
     if len(sys.argv) < 4:
         print("Usage: python script.py <device_id> <did> <rssi_values_csv>")
         print("Example: python script.py 5c487cb4a62cb29d urn:uuid:xyz \"-59,-58,-60,...,-52\"")
-        sys.exit(1)
+        return
 
     device_id = sys.argv[1]
     did = sys.argv[2]
@@ -93,7 +93,7 @@ if __name__ == "__main__":
         real_time_rssi_values = [int(v.strip()) for v in rssi_values_str.split(',')]
     except ValueError:
         print("Error: RSSI values must be comma-separated integers.")
-        sys.exit(1)
+        return
 
     csv_path = "../WiFi_Heatmap_RIASTONE.csv"
     classifying_the_area(csv_path, real_time_rssi_values, device_id, did)
