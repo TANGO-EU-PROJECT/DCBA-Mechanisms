@@ -30,6 +30,7 @@ const {
   getDeviceHeatmap,
   readEDHeatmapCSV,
   readLSOHeatmapCSV,
+  readRIASTONEHeatmapCSV,
   processSessionRequest,
   findDeviceByDeviceID,
   findDeviceByDID
@@ -57,11 +58,16 @@ if (LOCALIZATION_ALGORITHM_APPLIED === "LSO") {
   LocalizationHeatmapPath = process.env.LSO_HEATMAP_PATH;
   LocalizationScriptPath = process.env.LSO_LOCALIZATION_PATH;
   readHeatmapCSVFunction = readLSOHeatmapCSV; 
-} else {
+} else if (LOCALIZATION_ALGORITHM_APPLIED === "ED") {
   // Euclidean Distance Localization
   LocalizationHeatmapPath = process.env.ED_HEATMAP_PATH;
   LocalizationScriptPath = process.env.ED_LOCALIZATION_PATH;
   readHeatmapCSVFunction = readEDHeatmapCSV; 
+} else {
+  //LOCALIZATION AGLGORITHM FOR "RIA"
+  LocalizationHeatmapPath = process.env.RIA_HEATMAP_PATH;
+  LocalizationScriptPath = process.env.RIA_LOCALIZATION_PATH;
+  readHeatmapCSVFunction = readRIASTONEHeatmapCSV; 
 }
 
 // Retrieve the paths to MongoDB schema models from the environment variables
@@ -445,7 +451,7 @@ const processRequest = async (req, res, did, deviceID) => {
                 cause: `Device coordinates updated: ${JSON.stringify(updatedDeviceDocument.last_coordinates)}`
               });
             }
-          } else {
+          } else if (LOCALIZATION_ALGORITHM_APPLIED === 'ED'){
             // Else, the localization algorithm applies is the ED
             // Extract the necessary fields from the result object
             const estimatedLocation = result['Estimated Location'];
@@ -461,7 +467,7 @@ const processRequest = async (req, res, did, deviceID) => {
 
             if (!updatedDeviceDocument) {
               logEvent({
-                event: 'PERFORMING LOCALIZATION (ED)',
+                event: 'PERFORMING LOCALIZATION (RIA)',
                 status: 'FAILED ❌',
                 did: did,
                 device_id: deviceID,
@@ -470,7 +476,7 @@ const processRequest = async (req, res, did, deviceID) => {
               });
             } else {
               logEvent({
-                event: 'UPDATING DEVICE LOCATION (ED)',
+                event: 'UPDATING DEVICE LOCATION (RIA)',
                 status: 'SUCCESS ✅',
                 did: did,
                 device_id: deviceID,

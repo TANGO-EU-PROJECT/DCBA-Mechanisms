@@ -789,6 +789,53 @@ const findDeviceByDeviceID = async (device_id) => {
 };
 
 
+/** [17]
+ * Reads heatmap CSV with multiple measurements per area.
+ *
+ * @param {string} filePath - Path to the heatmap CSV file.
+ * @returns {Promise<Object>} - Resolves to an object:
+ *   {
+ *     AREA_NAME: [
+ *       { BSSID1: rssi, BSSID2: rssi, ... },
+ *       { BSSID1: rssi, BSSID2: rssi, ... },
+ *       ...
+ *     ],
+ *     ...
+ *   }
+ */
+function readRIASTONEHeatmapCSV(filePath) {
+  return new Promise((resolve, reject) => {
+    const heatmapData = {};  // { areaName: [ {bssid: rssi}, {...}, ... ] }
+    let bssids = [];
+
+    fs.createReadStream(filePath)
+      .pipe(csv())
+      .on('headers', (headers) => {
+        bssids = headers.slice(1);  // Skip 'AREA' header
+      })
+      .on('data', (row) => {
+        const area = row['AREA'];
+        if (!heatmapData[area]) {
+          heatmapData[area] = [];
+        }
+
+        const measurement = {};
+        bssids.forEach(bssid => {
+          const val = row[bssid];
+          measurement[bssid] = val !== undefined && val !== '' ? parseFloat(val) : null;
+        });
+
+        heatmapData[area].push(measurement);
+      })
+      .on('end', () => {
+        resolve(heatmapData);
+      })
+      .on('error', (err) => {
+        reject(err);
+      });
+  });
+}
+
 
 
 
@@ -851,8 +898,9 @@ module.exports = {
   extractTimestamp,               // Extracts timestamp from logs
   malformedLogsExaminator,        // Examines if logs are malformed
   getDeviceHeatmap,               // Retrieves the device's heatmap from the database
-  readEDHeatmapCSV,               // Reads Extended Data Heatmap CSV
+  readEDHeatmapCSV,               // Reads Euclidean Distance Data Heatmap CSV
   readLSOHeatmapCSV,              // Reads Least Squares Optimization Heatmap CSV
+  readRIASTONEHeatmapCSV,         // Reads Euclidean Distance Data Heatmap CSV, prompted for RIASTONE 
   processSessionRequest,          // Process and notifies the devices begin session requests
   notifyDevice,                   // Notify the devices using the web socket connection
   initializeWebSocketServer,      // Initialize the web socket server connection
