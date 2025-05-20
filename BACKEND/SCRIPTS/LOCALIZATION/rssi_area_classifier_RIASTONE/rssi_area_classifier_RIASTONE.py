@@ -12,10 +12,21 @@ def classifying_the_area(csv_path, real_rssi_values, device_id, did):
     model_path = "rssi_RIASTONE_classifier.pkl"
     label_encoder_path = "label_encoder.pkl"
 
-    # Load dataset
     if not os.path.exists(csv_path):
-        #print(f"Error: Dataset CSV file not found at {csv_path}")
+        error_result = {
+            "Localization Algorithm": "Random Forest Classifier (RF)",
+            "Device ID": device_id,
+            "Employee DID": did,
+            "Estimated Location": None,
+            "Access Status": "Error",
+            "Confidence": 0,
+            "Threshold": 0.6,
+            "Error": f"Dataset CSV file not found at {csv_path}"
+        }
+        sys.stdout.write(json.dumps(error_result))
+        sys.stdout.flush()
         return
+
 
     df = pd.read_csv(csv_path)
 
@@ -23,8 +34,20 @@ def classifying_the_area(csv_path, real_rssi_values, device_id, did):
     y = df['AREA']
 
     if len(real_rssi_values) != X.shape[1]:
-        #print(f"Error: Expected {X.shape[1]} RSSI values, but got {len(real_rssi_values)}")
+        error_result = {
+            "Localization Algorithm": "Random Forest Classifier (RF)",
+            "Device ID": device_id,
+            "Employee DID": did,
+            "Estimated Location": None,
+            "Access Status": "Error",
+            "Confidence": 0,
+            "Threshold": 0.6,
+            "Error": f"Expected {X.shape[1]} RSSI values, but got {len(real_rssi_values)}"
+        }
+        sys.stdout.write(json.dumps(error_result))
+        sys.stdout.flush()
         return
+
 
     # Encode labels
     label_encoder = LabelEncoder()
