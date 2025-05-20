@@ -395,6 +395,7 @@ const processRequest = async (req, res, did, deviceID) => {
         
         try {
           // Run the Localizator Script to estimate the current device location
+          console.log(line);
           const stdout = await runLocalizationScript(line, deviceID, did, escapedHeatmapJSON);
 
           // Extract JSON part from stdout
