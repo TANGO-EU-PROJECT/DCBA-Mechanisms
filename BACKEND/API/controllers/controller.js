@@ -9,6 +9,8 @@ const { exec } = require('child_process');
 const https = require('https');
 const fs = require('fs');
 const qs = require('qs');
+const path = require('path');
+const csv = require('csv-parser');
 
 // ──────────────────────────────────────────────────────────────────────────────
 // ANSI escape codes for colored console output to improve log readability
@@ -409,7 +411,12 @@ const processRequest = async (req, res, did, deviceID) => {
           console.log(line);
           let stdout;
           if (LOCALIZATION_ALGORITHM_APPLIED === 'RIA_CLASSIFIER') {
-            stdout = await runLocalizationClassifier(deviceID, did, line);
+            const bssidOrder = getBssidOrderFromCsv(RIA_HEATMAP_PATH); //CSV FILE
+            const bssidToRssi = parseLogLineToRssiDict(line);
+            const rssiVector = buildRssiVector(bssidOrder, bssidToRssi);
+            const rssiVectorStr = rssiVector.join(',');
+
+            stdout = await runLocalizationClassifier(deviceID, did, rssiVectorStr);
           } else {
             stdout = await runLocalizationScript(line, deviceID, did, escapedHeatmapJSON);
           }
@@ -1377,6 +1384,36 @@ const runLocalizationClassifier = (deviceID, did, rssi_values) => {
     });
   });
 };
+
+// Load the CSV header and get the list of BSSIDs
+function getBssidOrderFromCsv(csvPath) {
+  const firstLine = fs.readFileSync(csvPath, 'utf8').split('\n')[0];
+  const parts = firstLine.trim().split(',');
+  return parts.slice(1).map(bssid => bssid.trim().toLowerCase()); // Normalize!
+}
+
+
+// Parse one log line to extract BSSID -> RSSI
+function parseLogLineToRssiDict(line) {
+  const regex = /BSSID:\s*([0-9a-f:]{17}),\s*Level:\s*(-?\d+)/gi;
+  const bssidToRssi = {};
+
+  let match;
+  while ((match = regex.exec(line)) !== null) {
+    const bssid = match[1].toLowerCase().trim(); // <-- added `.trim()`
+    const rssi = parseInt(match[2]);
+    bssidToRssi[bssid] = rssi;
+  }
+
+  return bssidToRssi;
+}
+
+
+// Build final RSSI vector using header order
+function buildRssiVector(bssidOrder, bssidToRssi) {
+  return bssidOrder.map(bssid => bssidToRssi[bssid.toLowerCase()] ?? -100);
+}
+
 
 
 
