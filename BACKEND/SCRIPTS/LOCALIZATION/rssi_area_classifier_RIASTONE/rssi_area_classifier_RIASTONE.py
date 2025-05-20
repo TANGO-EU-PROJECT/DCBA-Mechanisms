@@ -79,21 +79,12 @@ def classifying_the_area(csv_path, real_rssi_values, device_id, did):
 
 
 if __name__ == "__main__":
-    if len(sys.argv) < 4:
-        print("Usage: python script.py <device_id> <did> <rssi_values_csv>")
-        print("Example: python script.py 5c487cb4a62cb29d urn:uuid:xyz \"-59,-58,-60,...,-52\"")
-        return
 
     device_id = sys.argv[1]
     did = sys.argv[2]
     rssi_values_str = sys.argv[3]
 
-    # Parse string to list of integers
-    try:
-        real_time_rssi_values = [int(v.strip()) for v in rssi_values_str.split(',')]
-    except ValueError:
-        print("Error: RSSI values must be comma-separated integers.")
-        return
+    real_time_rssi_values = [int(v.strip()) for v in rssi_values_str.split(',')]
 
     csv_path = "../WiFi_Heatmap_RIASTONE.csv"
     classifying_the_area(csv_path, real_time_rssi_values, device_id, did)

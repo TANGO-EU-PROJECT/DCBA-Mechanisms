@@ -1384,6 +1384,7 @@ const runLocalizationClassifier = (deviceID, did, rssi_values) => {
   });
 };
 
+
 // Load the CSV header and get the list of BSSIDs
 function getBssidOrderFromCsv(csvPath) {
   const firstLine = fs.readFileSync(csvPath, 'utf8').split('\n')[0];
