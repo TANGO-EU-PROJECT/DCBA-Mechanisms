@@ -410,7 +410,7 @@ const processRequest = async (req, res, did, deviceID) => {
           console.log(line);
           let stdout;
           if (LOCALIZATION_ALGORITHM_APPLIED === 'RIA_CLASSIFIER') {
-            const bssidOrder = getBssidOrderFromCsv(RIA_HEATMAP_PATH); //CSV FILE
+            const bssidOrder = getBssidOrderFromCsv(LocalizationHeatmapPath); //CSV FILE
             const bssidToRssi = parseLogLineToRssiDict(line);
             const rssiVector = buildRssiVector(bssidOrder, bssidToRssi);
             const rssiVectorStr = rssiVector.join(',');
