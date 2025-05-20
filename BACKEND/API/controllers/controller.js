@@ -403,6 +403,7 @@ const processRequest = async (req, res, did, deviceID) => {
           // Run the Localizator Script to estimate the current device location
           console.log(line);
           const stdout = await runLocalizationScript(line, deviceID, did, escapedHeatmapJSON);
+          console.log("ESCAPED HEATMAP: ", escapedHeatmapJSON);
 
           // Extract JSON part from stdout
           const result = JSON.parse(stdout);
@@ -454,6 +455,38 @@ const processRequest = async (req, res, did, deviceID) => {
           } else if (LOCALIZATION_ALGORITHM_APPLIED === 'ED'){
             // Else, the localization algorithm applies is the ED
             // Extract the necessary fields from the result object
+            const estimatedLocation = result['Estimated Location'];
+
+            // Find the device by `did` and `device_id` and update their `last_coordinates`
+            const updatedDeviceDocument = await DEVICE.findOneAndUpdate(
+              { did: did, device_id: deviceID },  // Search using both `did` and `device_id`
+              { 
+                $set: { last_location: estimatedLocation }  // Update the last device coordinates
+              },
+              { new: true }  // Return the updated document
+            );
+
+            if (!updatedDeviceDocument) {
+              logEvent({
+                event: 'PERFORMING LOCALIZATION (ED)',
+                status: 'FAILED ❌',
+                did: did,
+                device_id: deviceID,
+                ip: req.ip,
+                cause: 'Failed to update device last location.'
+              });
+            } else {
+              logEvent({
+                event: 'UPDATING DEVICE LOCATION (ED)',
+                status: 'SUCCESS ✅',
+                did: did,
+                device_id: deviceID,
+                ip: req.ip,
+                cause: `Device last location updated: ${JSON.stringify(updatedDeviceDocument.last_location)}`
+              });
+            }
+          } else {
+            // RIA
             const estimatedLocation = result['Estimated Location'];
 
             // Find the device by `did` and `device_id` and update their `last_coordinates`

@@ -80,7 +80,6 @@ def WiFi_euclidean_distance(device_id_rssi, heatmap_dict):
 def WiFiLocalization(log_data, device_id, did, heatmap_string):
     matches = WiFi_BSSID_RSSI_extractor(log_data)
     heatmap_dict = parse_csv_heatmap(heatmap_string)
-    console.log("HEATMAP DICT: ", heatmap_dict)
 
     # Convert matches into a dict: {bssid: rssi}
     observed_rssi = {bssid: int(rssi) for bssid, rssi in matches}
@@ -136,7 +135,6 @@ def main():
     device_id = sys.argv[2]
     did = sys.argv[3]
     heatmap_string = sys.argv[4]
-    console.log("HEATMAP STRING: ", heatmap_string)
 
     if "WifiNetworkScannerN" in log_data:
         WiFiLocalization(log_data, device_id, did, heatmap_string)
