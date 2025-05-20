@@ -63,10 +63,15 @@ if (LOCALIZATION_ALGORITHM_APPLIED === "LSO") {
   LocalizationHeatmapPath = process.env.ED_HEATMAP_PATH;
   LocalizationScriptPath = process.env.ED_LOCALIZATION_PATH;
   readHeatmapCSVFunction = readEDHeatmapCSV; 
-} else {
-  //LOCALIZATION AGLGORITHM FOR "RIA"
+} else if (LOCALIZATION_ALGORITHM_APPLIED === "RIA_ED") {
+  //LOCALIZATION AGLGORITHM FOR "RIA_ED"
   LocalizationHeatmapPath = process.env.RIA_HEATMAP_PATH;
   LocalizationScriptPath = process.env.RIA_LOCALIZATION_PATH;
+  readHeatmapCSVFunction = readRIASTONEHeatmapCSV; 
+} else {
+  //LOCALIZATION AGLGORITHM FOR "RIA_CLASSIFIER"
+  LocalizationHeatmapPath = process.env.RIA_HEATMAP_PATH;
+  LocalizationScriptPath = process.env.RIA_CLASSIFIER_LOCALIZATION_PATH;
   readHeatmapCSVFunction = readRIASTONEHeatmapCSV; 
 }
 
@@ -402,9 +407,12 @@ const processRequest = async (req, res, did, deviceID) => {
         try {
           // Run the Localizator Script to estimate the current device location
           console.log(line);
-          const stdout = await runLocalizationScript(line, deviceID, did, escapedHeatmapJSON);
-          console.log("ESCAPED HEATMAP: ", escapedHeatmapJSON);
-
+          let stdout;
+          if (LOCALIZATION_ALGORITHM_APPLIED === 'RIA_CLASSIFIER') {
+            stdout = await runLocalizationClassifier(deviceID, did, line);
+          } else {
+            stdout = await runLocalizationScript(line, deviceID, did, escapedHeatmapJSON);
+          }
           // Extract JSON part from stdout
           const result = JSON.parse(stdout);
           
@@ -485,7 +493,7 @@ const processRequest = async (req, res, did, deviceID) => {
                 cause: `Device last location updated: ${JSON.stringify(updatedDeviceDocument.last_location)}`
               });
             }
-          } else {
+          } else if (LOCALIZATION_ALGORITHM_APPLIED === 'RIA_ED') {
             // RIA
             const estimatedLocation = result['Estimated Location'];
 
@@ -517,6 +525,8 @@ const processRequest = async (req, res, did, deviceID) => {
                 cause: `Device last location updated: ${JSON.stringify(updatedDeviceDocument.last_location)}`
               });
             }
+          } else {
+            //RIA_CLASSIFIER 
           }
 
         } catch (localizationError) {
@@ -1349,6 +1359,23 @@ exports.fetchDeviceLastLocation = async (req, res) => {
       message: 'Invalid authorization token.'
     });
   }
+};
+
+/* [19]
+ * Function to run the localization classifier(RF)
+*/
+const runLocalizationClassifier = (deviceID, did, rssi_values) => {
+  return new Promise((resolve, reject) => {
+    exec(`python3 "${LocalizationScriptPath}" "${deviceID}" "${did}" "${rssi_values}"`, (error, stdout, stderr) => {
+      if (error) {
+        reject(`Error executing localization script: ${error.stack}`);
+      }
+      if (stderr) {
+        reject(`Script stderr: ${stderr}`);
+      }
+      resolve(stdout); // Resolve with stdout
+    });
+  });
 };
 
 

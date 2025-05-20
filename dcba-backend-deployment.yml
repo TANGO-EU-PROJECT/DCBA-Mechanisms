@@ -52,12 +52,14 @@ spec:
               value: "BACKEND/SCRIPTS/LOCALIZATION/Localizator_Least_Squares_Optimization.py"
             - name: LSO_HEATMAP_PATH
               value: "BACKEND/SCRIPTS/LOCALIZATION/WiFi_Heatmap_Least_Squares_Optimization.csv"
-            - name: RIA_LOCALIZATION_PATH
-              value: "BACKEND/SCRIPTS/LOCALIZATION/Localizator_RIASTONE.py"
+            - name: RIA_ED_LOCALIZATION_PATH
+              value: "BACKEND/SCRIPTS/LOCALIZATION/Localizator_RIASTONE_ED.py"
+            - name: RIA_CLASSIFIER_LOCALIZATION_PATH
+              value: "BACKEND/SCRIPTS/LOCALIZATION/rssi_area_classifier_RIASTONE/rssi_area_classifier_RIASTONE.py"
             - name: RIA_HEATMAP_PATH
               value: "BACKEND/SCRIPTS/LOCALIZATION/WiFi_Heatmap_RIASTONE.csv"
             - name: LOCALIZATION_ALGORITHM_APPLIED
-              value: "RIA" # or "LSO" or "ED"
+              value: "RIA_CLASSIFIER" # or "LSO" or "ED" or "RIA_ED" or "RIA_CLASSIFIER"
             - name: JWT_SECRET_KEY
               value: "G&5@dWvX9#jY^!kL6f3F+v4V2r2OaKp7zQ1e8bZ*H9uN!cR"
             - name: BACKEND_CONTAINER
