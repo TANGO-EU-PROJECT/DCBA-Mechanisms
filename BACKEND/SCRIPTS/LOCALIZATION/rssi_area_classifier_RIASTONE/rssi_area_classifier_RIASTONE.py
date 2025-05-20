@@ -109,5 +109,5 @@ if __name__ == "__main__":
 
     real_time_rssi_values = [int(v.strip()) for v in rssi_values_str.split(',')]
 
-    csv_path = "../WiFi_Heatmap_RIASTONE.csv"
+    csv_path = "../../SCRIPTS/LOCALIZATION/WiFi_Heatmap_RIASTONE.csv"
     classifying_the_area(csv_path, real_time_rssi_values, device_id, did)
