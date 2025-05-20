@@ -14,7 +14,7 @@ def classifying_the_area(csv_path, real_rssi_values, device_id, did):
 
     # Load dataset
     if not os.path.exists(csv_path):
-        print(f"Error: Dataset CSV file not found at {csv_path}")
+        #print(f"Error: Dataset CSV file not found at {csv_path}")
         return
 
     df = pd.read_csv(csv_path)
@@ -23,7 +23,7 @@ def classifying_the_area(csv_path, real_rssi_values, device_id, did):
     y = df['AREA']
 
     if len(real_rssi_values) != X.shape[1]:
-        print(f"Error: Expected {X.shape[1]} RSSI values, but got {len(real_rssi_values)}")
+        #print(f"Error: Expected {X.shape[1]} RSSI values, but got {len(real_rssi_values)}")
         return
 
     # Encode labels
@@ -34,7 +34,7 @@ def classifying_the_area(csv_path, real_rssi_values, device_id, did):
     if os.path.exists(model_path) and os.path.exists(label_encoder_path):
         clf = joblib.load(model_path)
         label_encoder = joblib.load(label_encoder_path)
-        print("Loaded existing model and label encoder.")
+        #print("Loaded existing model and label encoder.")
     else:
         X_train, X_test, y_train, y_test = train_test_split(
             X, y_encoded, test_size=0.2, random_state=42, stratify=y_encoded
@@ -44,7 +44,7 @@ def classifying_the_area(csv_path, real_rssi_values, device_id, did):
 
         joblib.dump(clf, model_path)
         joblib.dump(label_encoder, label_encoder_path)
-        print("Model and label encoder trained and saved.")
+        #print("Model and label encoder trained and saved.")
 
     # Predict
     example_df = pd.DataFrame([real_rssi_values], columns=X.columns)
