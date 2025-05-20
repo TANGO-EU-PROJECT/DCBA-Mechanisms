@@ -109,5 +109,8 @@ if __name__ == "__main__":
 
     real_time_rssi_values = [int(v.strip()) for v in rssi_values_str.split(',')]
 
-    csv_path = "../../SCRIPTS/LOCALIZATION/WiFi_Heatmap_RIASTONE.csv"
+    # Build absolute path to CSV relative to this script's location
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+    csv_path = os.path.abspath(os.path.join(script_dir, "..", "WiFi_Heatmap_RIASTONE.csv"))
+
     classifying_the_area(csv_path, real_time_rssi_values, device_id, did)
