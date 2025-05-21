@@ -4,17 +4,18 @@ import json
 import pandas as pd
 import numpy as np
 from sklearn.model_selection import train_test_split
-from sklearn.preprocessing import LabelEncoder
-from sklearn.ensemble import RandomForestClassifier
+from sklearn.preprocessing import LabelEncoder, StandardScaler
+from xgboost import XGBClassifier
 import joblib
 
 def classifying_the_area(csv_path, real_rssi_values, device_id, did):
-    model_path = "rssi_RIASTONE_classifier.pkl"
+    model_path = "rssi_RIASTONE_classifier_xgb.pkl"
     label_encoder_path = "label_encoder.pkl"
+    scaler_path = "scaler.pkl"
 
     if not os.path.exists(csv_path):
         error_result = {
-            "Localization Algorithm": "Random Forest Classifier (RF)",
+            "Localization Algorithm": "XGBoost Classifier",
             "Device ID": device_id,
             "Employee DID": did,
             "Estimated Location": None,
@@ -33,7 +34,7 @@ def classifying_the_area(csv_path, real_rssi_values, device_id, did):
 
     if len(real_rssi_values) != X.shape[1]:
         error_result = {
-            "Localization Algorithm": "Random Forest Classifier (RF)",
+            "Localization Algorithm": "XGBoost Classifier",
             "Device ID": device_id,
             "Employee DID": did,
             "Estimated Location": None,
@@ -44,26 +45,32 @@ def classifying_the_area(csv_path, real_rssi_values, device_id, did):
         sys.stdout.flush()
         return
 
-    # Encode AREA labels
+    # Scale features
+    scaler = StandardScaler()
+    X_scaled = scaler.fit_transform(X)
+
+    # Encode labels
     label_encoder = LabelEncoder()
     y_encoded = label_encoder.fit_transform(y)
 
     # Load or train model
-    if os.path.exists(model_path) and os.path.exists(label_encoder_path):
+    if os.path.exists(model_path) and os.path.exists(label_encoder_path) and os.path.exists(scaler_path):
         clf = joblib.load(model_path)
         label_encoder = joblib.load(label_encoder_path)
+        scaler = joblib.load(scaler_path)
     else:
         X_train, X_test, y_train, y_test = train_test_split(
-            X, y_encoded, test_size=0.2, random_state=42, stratify=y_encoded
+            X_scaled, y_encoded, test_size=0.2, random_state=42, stratify=y_encoded
         )
-        clf = RandomForestClassifier(n_estimators=100, random_state=42)
+        clf = XGBClassifier(n_estimators=150, max_depth=10, use_label_encoder=False, eval_metric='mlogloss')
         clf.fit(X_train, y_train)
         joblib.dump(clf, model_path)
         joblib.dump(label_encoder, label_encoder_path)
+        joblib.dump(scaler, scaler_path)
 
-    # Predict
-    example_df = pd.DataFrame([real_rssi_values], columns=X.columns)
-    predicted_label = clf.predict(example_df)[0]
+    # Prepare live input
+    real_rssi_scaled = scaler.transform([real_rssi_values])
+    predicted_label = clf.predict(real_rssi_scaled)[0]
     predicted_area = label_encoder.inverse_transform([predicted_label])[0]
 
     # Retrieve ACCESS_STATUS for predicted AREA
@@ -71,7 +78,7 @@ def classifying_the_area(csv_path, real_rssi_values, device_id, did):
     access_status = access_status_row['ACCESS_STATUS']
 
     outputResult = {
-        "Localization Algorithm": "Random Forest Classifier (RF)",
+        "Localization Algorithm": "XGBoost Classifier",
         "Device ID": device_id,
         "Employee DID": did,
         "Estimated Location": predicted_area,
