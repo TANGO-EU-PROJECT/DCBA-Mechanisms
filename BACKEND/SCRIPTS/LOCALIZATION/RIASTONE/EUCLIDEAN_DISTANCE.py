@@ -183,6 +183,8 @@ import os
 import pandas as pd
 import numpy as np
 from glob import glob
+import json
+
 
 # Signal strength to assign when an Access Point (BSSID) is unobserved in the current scan
 UNOBSERVED_AP_SIGNAL = -120
@@ -335,6 +337,11 @@ def main():
         # Parse observed RSSI values from the log string
         log_rssi_dict = parse_log(log_message)
 
+        # Check that all required reference files exist before proceeding
+        missing_files = [file for file in CSV_FILES if not os.path.exists(file)]
+        if missing_files:
+            raise FileNotFoundError(f"Missing reference files: {', '.join(missing_files)}")
+
         # Predict the best area based on the observed signal levels
         predicted_area, access_status, distance, errors = find_best_area(log_rssi_dict)
 
@@ -358,4 +365,16 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    try:
+        main()
+    except Exception as e:
+        # Force JSON error output even for uncaught exceptions
+        error_output = {
+            "Localization Algorithm": "Euclidean Distance",
+            "Device ID": None,
+            "Employee DID": None,
+            "Estimated Location": None,
+            "Access Status": None,
+            "Error": f"Unhandled Exception: {str(e)}"
+        }
+        print(json.dumps(error_output))
