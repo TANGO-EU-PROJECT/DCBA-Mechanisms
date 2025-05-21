@@ -353,9 +353,7 @@ const processDeviceQueue = async (deviceID) => {
  */
 const processRequest = async (req, res, did, deviceID) => {
   const logData = req.body.log;
-  console.log("------------------------ NEARBY ACCESS POINTS ------------------------")
-  console.log(logData)
-  console.log("------------------------ NEARBY ACCESS POINTS ------------------------")
+  
 
 
   try {
@@ -375,7 +373,9 @@ const processRequest = async (req, res, did, deviceID) => {
          
         try {
           // Run the Localizator Script to estimate the current device location
+          console.log("------------------------ NEARBY ACCESS POINTS ------------------------")
           console.log(line);
+          console.log("------------------------ NEARBY ACCESS POINTS ------------------------")
           let stdout;
           stdout = await runLocalizationEuclideanDistance(deviceID, did, line);
           // Extract JSON part from stdout

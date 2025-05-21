@@ -354,7 +354,8 @@ def main():
         output["Error"] = str(e)
 
     # Print result
-    print(output)
+    print(json.dumps(output))
+
 
 if __name__ == "__main__":
     main()
