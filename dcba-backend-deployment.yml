@@ -42,24 +42,10 @@ spec:
               value: "3000"
             - name: SERVER_EXTERNAL_BIND_PORT
               value: "3001"
-            - name: FEATURE_EXTRACTOR_SCRIPT_PATH
-              value: "BACKEND/SCRIPTS/RISK_ASSESSMENT_ENGINE/DataProcessor.py"
-            - name: ED_LOCALIZATION_PATH
-              value: "BACKEND/SCRIPTS/LOCALIZATION/Localizator_Euclidean_Distance.py"
-            - name: ED_HEATMAP_PATH
-              value: "BACKEND/SCRIPTS/LOCALIZATION/WiFi_Heatmap_Euclidean_Distance.csv"
-            - name: LSO_LOCALIZATION_PATH
-              value: "BACKEND/SCRIPTS/LOCALIZATION/Localizator_Least_Squares_Optimization.py"
-            - name: LSO_HEATMAP_PATH
-              value: "BACKEND/SCRIPTS/LOCALIZATION/WiFi_Heatmap_Least_Squares_Optimization.csv"
-            - name: RIA_ED_LOCALIZATION_PATH
-              value: "BACKEND/SCRIPTS/LOCALIZATION/Localizator_RIASTONE_ED.py"
-            - name: RIA_CLASSIFIER_LOCALIZATION_PATH
-              value: "BACKEND/SCRIPTS/LOCALIZATION/rssi_area_classifier_RIASTONE/rssi_area_classifier_RIASTONE.py"
-            - name: RIA_HEATMAP_PATH
-              value: "BACKEND/SCRIPTS/LOCALIZATION/WiFi_Heatmap_RIASTONE_ED.csv"
             - name: LOCALIZATION_ALGORITHM_APPLIED
-              value: "RIA_CLASSIFIER" # or "LSO" or "ED" or "RIA_ED" or "RIA_CLASSIFIER"
+              value: "RIA-ED" 
+            - name: LOCALIZATION_ALGORITHM_SCRIPT_PATH
+              value: "BACKEND/SCRIPTS/LOCALIZATION/RIASTONE/EUCLIDEAN_DISTANCE.py"
             - name: JWT_SECRET_KEY
               value: "G&5@dWvX9#jY^!kL6f3F+v4V2r2OaKp7zQ1e8bZ*H9uN!cR"
             - name: BACKEND_CONTAINER

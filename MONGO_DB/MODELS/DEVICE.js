@@ -23,10 +23,6 @@ const deviceSchema = new mongoose.Schema({
     type: String,   // Store log file URI as a string
     required: true, // Ensure log_file_uri is provided
   },
-  heatmap: {
-    type: Array,  // Define heatmap as an array
-    default: []   // Set default value as an empty array
-  },
   status: {
     type: String,  // Store status as a string
     enum: ['online', 'offline'],  // Only allow "online" or "offline" as valid values
