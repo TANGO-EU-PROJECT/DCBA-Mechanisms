@@ -189,15 +189,19 @@ import json
 # Signal strength to assign when an Access Point (BSSID) is unobserved in the current scan
 UNOBSERVED_AP_SIGNAL = -120
 
-# List of reference CSV files representing different physical areas
+# Get the absolute path of the directory where the script is located
+SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
+
+# List of reference CSV files with full paths
 CSV_FILES = [
-    "PACKAGING_LINES.csv",
-    "PERMITTED_AREA.csv",
-    "SORTING_LINES_1_TO_3.csv",
-    "SORTING_LINES_4_AND_5.csv",
-    "SORTING_LINES_6_TO_8.csv",
-    "WAREHOUSE.csv"
+    os.path.join(SCRIPT_DIR, "PACKAGING_LINES.csv"),
+    os.path.join(SCRIPT_DIR, "PERMITTED_AREA.csv"),
+    os.path.join(SCRIPT_DIR, "SORTING_LINES_1_TO_3.csv"),
+    os.path.join(SCRIPT_DIR, "SORTING_LINES_4_AND_5.csv"),
+    os.path.join(SCRIPT_DIR, "SORTING_LINES_6_TO_8.csv"),
+    os.path.join(SCRIPT_DIR, "WAREHOUSE.csv")
 ]
+
 
 def parse_log(log_str):
     """
