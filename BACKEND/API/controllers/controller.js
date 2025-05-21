@@ -1371,7 +1371,6 @@ exports.fetchDeviceLastLocation = async (req, res) => {
  * Function to run the localization classifier(RF)
 */
 const runLocalizationClassifier = (deviceID, did, rssi_values) => {
-  console.log(rssi_values)
   return new Promise((resolve, reject) => {
     exec(`python3 "${LocalizationScriptPath}" "${deviceID}" "${did}" "${rssi_values}"`, (error, stdout, stderr) => {
       if (error) {
@@ -1390,7 +1389,8 @@ const runLocalizationClassifier = (deviceID, did, rssi_values) => {
 function getBssidOrderFromCsv(csvPath) {
   const firstLine = fs.readFileSync(csvPath, 'utf8').split('\n')[0];
   const parts = firstLine.trim().split(',');
-  return parts.slice(1).map(bssid => bssid.trim().toLowerCase()); // Normalize!
+// Skip AREA and ACCESS_STATUS (first two columns)
+  return parts.slice(2).map(bssid => bssid.trim().toLowerCase());
 }
 
 
