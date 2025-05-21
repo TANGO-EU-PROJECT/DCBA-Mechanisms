@@ -1371,6 +1371,7 @@ exports.fetchDeviceLastLocation = async (req, res) => {
  * Function to run the localization classifier(RF)
 */
 const runLocalizationClassifier = (deviceID, did, rssi_values) => {
+  console.log(rssi_values)
   return new Promise((resolve, reject) => {
     exec(`python3 "${LocalizationScriptPath}" "${deviceID}" "${did}" "${rssi_values}"`, (error, stdout, stderr) => {
       if (error) {
