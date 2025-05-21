@@ -432,11 +432,10 @@ const processRequest = async (req, res, did, deviceID) => {
           logEvent({
             event: 'PARSING LOCALIZATION OUTPUT',
             status: 'FAILED ❌',
-            cause: `AN ERROR OCCURRED DURING PARSING LOCALIZATION OUTPUT: ${localizationError.stack}`,
+            cause: `AN ERROR OCCURRED DURING PARSING LOCALIZATION OUTPUT: ${localizationError.stack}. Raw stdout: ${stdout}`,
             did: did,
             device_id: deviceID,
-            ip: req.ip,
-            cause:  `Parsing error: ${error.message}, raw stdout: ${stdout}`
+            ip: req.ip
           });
 
           return res.status(200).json({ status: "failed", message: "Failed to perform localization." });
