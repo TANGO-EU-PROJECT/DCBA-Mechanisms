@@ -412,7 +412,7 @@ const processRequest = async (req, res, did, deviceID) => {
                 did: did,
                 device_id: deviceID,
                 ip: req.ip,
-                cause: 'Failed to update device last location.'
+                cause: `Failed to update device last location.`
               });
             } else {
               logEvent({
@@ -432,7 +432,7 @@ const processRequest = async (req, res, did, deviceID) => {
           logEvent({
             event: 'PARSING LOCALIZATION OUTPUT',
             status: 'FAILED ❌',
-            cause: `AN ERROR OCCURRED DURING PARSING LOCALIZATION OUTPUT: ${localizationError.stack}`,
+            cause: `AN ERROR OCCURRED DURING PARSING LOCALIZATION OUTPUT: ${localizationError.stack}. Raw stdout: ${stdout}`,
             did: did,
             device_id: deviceID,
             ip: req.ip
