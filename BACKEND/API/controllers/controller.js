@@ -1411,7 +1411,7 @@ function parseLogLineToRssiDict(line) {
 
 // Build final RSSI vector using header order
 function buildRssiVector(bssidOrder, bssidToRssi) {
-  return bssidOrder.map(bssid => bssidToRssi[bssid.toLowerCase()] ?? -100);
+  return bssidOrder.map(bssid => bssidToRssi[bssid.toLowerCase()] ?? -120);
 }
 
 
