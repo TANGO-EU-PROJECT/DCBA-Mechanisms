@@ -1,7 +1,7 @@
 /* 
  * Utility module that provides various helper functions such as 
  * reading/writing files, password encryption, cryptographic operations, 
- * database interactions, and heatmap file processing. 
+ * database interactions. 
  */
     
 require("dotenv").config();         // Load environment variables from the .env file
@@ -75,15 +75,14 @@ const getDeviceURI = async (did) => {
 /** [2]
  * Creates a new device record and stores the device's details in the MongoDB database.
  * Each device is uniquely identified by their DID (Decentralized Identifier) and is associated 
- * with a sub claim, a device ID for authentication, a heatmap for their device's usage, and other relevant details.
+ * with a sub claim, a device ID for authentication, and other relevant details.
  *
  * @param {string} did - The Decentralized Identifier (DID) uniquely identifying the device.
  * @param {string} sub - The sub claim associated with the device, used for authentication.
  * @param {string} device_id - The device ID associated with the device.
- * @param {Array} heatmap - The WiFi heatmap data related to the device.
  * @returns {Promise<void>} - A promise that resolves once the device has been successfully stored to the database.
  */
-const createDeviceDocument = async (did, sub, device_id, log_file_uri, heatmap) => {
+const createDeviceDocument = async (did, sub, device_id, log_file_uri) => {
   try {
     // Define the default coordinates
     const LAT0 = process.env.LAT0;
@@ -96,7 +95,6 @@ const createDeviceDocument = async (did, sub, device_id, log_file_uri, heatmap) 
       sub,                // Sub claim used for authentication
       device_id,          // Device ID associated with the device
       log_file_uri,
-      heatmap,            // device's WiFi heatmap data (array)
       status: 'online',   // Set the status as 'online' by default, since the accounts are registered dynamically during their first active session
       last_coordinates: { lat: LAT0, lon: LON0 }, // Add default coordinates to the device
       last_location: DEFAULT_LOCATION
@@ -298,126 +296,6 @@ function malformedLogsExaminator(log) {
 }
 
 
-/** [7]
- * Reads a predefined heatmap CSV file for least squares optimization (LSO) localization.
- * This function parses the CSV data and structures it for further processing in LSO localization.
- * 
- * @param {string} filePath - Path to the heatmap CSV file.
- * @returns {Promise<Object[]>} - A promise that resolves to an array of structured heatmap data.
- */
-function readLSOHeatmapCSV(filePath) {
-  return new Promise((resolve, reject) => {
-    const heatmapData = [];
-
-    // Create a readable stream from the specified CSV file and pipe it into the CSV parser
-    fs.createReadStream(filePath)
-      .pipe(csv())
-      .on('data', (row) => {
-        // Parse and structure the data for localization, ensuring numeric values are correctly parsed
-        heatmapData.push({
-          AP_SSID: row.AP_SSID,                // Access Point SSID
-          AP_BSSID: row.AP_BSSID,              // Access Point BSSID
-          latitude: parseFloat(row.latitude),  // Convert latitude to float
-          longitude: parseFloat(row.longitude),// Convert longitude to float
-          A: parseFloat(row.A)                 // Convert column 'A' to a numeric value
-        });
-      })
-      .on('end', () => {
-        // Resolve the promise with the parsed and structured heatmap data once reading is complete
-        resolve(heatmapData);
-      })
-      .on('error', (error) => {
-        // Reject the promise and pass the error if any issue occurs during file reading or parsing
-        reject(error);
-      });
-  });
-}
-
-
-
-
-/** [8]
- * Reads a predefined heatmap CSV file and dynamically captures room signal strengths.
- * The function supports multiple rooms, identified by dynamic column names.
- * 
- * @param {string} filePath - Path to the heatmap CSV file.
- * @returns {Promise<Object[]>} - A promise that resolves to an array of heatmap data with dynamic rooms.
- */
-function readEDHeatmapCSV(filePath) {
-  return new Promise((resolve, reject) => {
-    const heatmapData = [];
-    const rooms = [];  // Array to store dynamic room names
-
-    fs.createReadStream(filePath)
-      .pipe(csv())
-      .on('data', (row) => {
-        // Capture room names dynamically from the first row, excluding AP_SSID and AP_BSSID
-        if (heatmapData.length === 0) {
-          for (const key in row) {
-            if (key !== 'AP_SSID' && key !== 'AP_BSSID') {
-              rooms.push(key);  // Add dynamic room names to the rooms array
-            }
-          }
-        }
-
-        // Create a data object with AP_SSID, AP_BSSID and dynamic room signal strengths
-        const data = {
-          AP_SSID: row.AP_SSID,
-          AP_BSSID: row.AP_BSSID,
-        };
-
-        // Add signal strengths dynamically for each room
-        rooms.forEach(room => {
-          data[room] = parseFloat(row[room]) || null; // Convert to number, or use null for invalid data
-        });
-
-        heatmapData.push(data);  // Add the processed row to the heatmap data
-      })
-      .on('end', () => {
-        resolve(heatmapData);  // Resolve the promise with the parsed data
-      })
-      .on('error', (error) => {
-        reject(error);  // Reject the promise if an error occurs
-      });
-  });
-}
-
-
-/** [9]
- * Retrieves the device's localization heatmap from the database using its did.
- * This function queries the database to fetch the device's heatmap data based on the provided did.
- *
- * @param {string} device_id - The unique identifier id of the device whose heatmap data is being retrieved.
- * @returns {Promise<Object|null>} - A promise that resolves to the device's heatmap data if found, otherwise resolves to `null`.
- */
-const getDeviceHeatmap = async (device_id) => {
-  try {
-    // Attempt to fetch the device's document from the database using the provided did
-    const device = await findDeviceByDeviceID(device_id);
-
-    // If no device is found, throw an error with a descriptive message
-    if (!device) {
-      throw new Error(`Device associated with id "${device_id}" not found.`);
-    }
-
-    // Return the device's heatmap data if the device is found
-    return device.heatmap;
-  } catch (error) {
-    // Log any errors that occur during the process of fetching the device's heatmap
-    logEvent({
-      event: 'FETCHING DEVICE HEATMAP',
-      status: 'FAILED ❌',
-      device_id: device_id,
-      cause: `AN ERROR OCCURRED WHILE FETCHING THE DEVICE HEATMAP: ${error.stack}`
-    });
-    
-    // Return null if an error occurs or if no device is found
-    return null;
-  }
-};
-
-
-
 
 
 /** [10]
@@ -428,10 +306,9 @@ const getDeviceHeatmap = async (device_id) => {
  * @param {string} qr_scanner_state_request - The qr_scanner_state_request
  * @param {string} did - The DID (unique identifier) associated with the device.
  * @param {string} sub - The subject identifier associated with the device.
- * @param {string} heatmap - The device heatmap data.
  * @returns {Promise<void>} - Resolves once the session request is processed and necessary actions are taken.
  */
-async function processSessionRequest(authToken, qr_scanner_state_request, did, sub, heatmap, req) {
+async function processSessionRequest(authToken, qr_scanner_state_request, did, sub, req) {
 
   try {
     // Search for the session request in MongoDB based on the state
@@ -462,7 +339,7 @@ async function processSessionRequest(authToken, qr_scanner_state_request, did, s
         const deviceWithSameDID = await findDeviceByDID(did);
         if (!deviceWithSameDID) {
           // If no device found associated with this DID, create it
-          await createDeviceDocument(did, sub, device_id, log_file_uri, heatmap);
+          await createDeviceDocument(did, sub, device_id, log_file_uri);
           notifyDevice(authToken, qr_scanner_state_request, device_id, did, sub, log_file_uri, "session-request-valid");
           logEvent({
             event: 'DEVICE STATUS UPDATED',
@@ -789,53 +666,6 @@ const findDeviceByDeviceID = async (device_id) => {
 };
 
 
-/** [17]
- * Reads heatmap CSV with multiple measurements per area.
- *
- * @param {string} filePath - Path to the heatmap CSV file.
- * @returns {Promise<Object>} - Resolves to an object:
- *   {
- *     AREA_NAME: [
- *       { BSSID1: rssi, BSSID2: rssi, ... },
- *       { BSSID1: rssi, BSSID2: rssi, ... },
- *       ...
- *     ],
- *     ...
- *   }
- */
-function readRIASTONEHeatmapCSV(filePath) {
-  return new Promise((resolve, reject) => {
-    const heatmapData = {};  // { areaName: [ {bssid: rssi}, {...}, ... ] }
-    let bssids = [];
-
-    fs.createReadStream(filePath)
-      .pipe(csv())
-      .on('headers', (headers) => {
-        bssids = headers.slice(1);  // Skip 'AREA' header
-      })
-      .on('data', (row) => {
-        const area = row['AREA'];
-        if (!heatmapData[area]) {
-          heatmapData[area] = [];
-        }
-
-        const measurement = {};
-        bssids.forEach(bssid => {
-          const val = row[bssid];
-          measurement[bssid] = val !== undefined && val !== '' ? parseFloat(val) : null;
-        });
-
-        heatmapData[area].push(measurement);
-      })
-      .on('end', () => {
-        resolve(heatmapData);
-      })
-      .on('error', (err) => {
-        reject(err);
-      });
-  });
-}
-
 
 
 
@@ -897,10 +727,6 @@ module.exports = {
   storeLogsToInfluxDB,            // Stores device logs in InfluxDB
   extractTimestamp,               // Extracts timestamp from logs
   malformedLogsExaminator,        // Examines if logs are malformed
-  getDeviceHeatmap,               // Retrieves the device's heatmap from the database
-  readEDHeatmapCSV,               // Reads Euclidean Distance Data Heatmap CSV
-  readLSOHeatmapCSV,              // Reads Least Squares Optimization Heatmap CSV
-  readRIASTONEHeatmapCSV,         // Reads Euclidean Distance Data Heatmap CSV, prompted for RIASTONE 
   processSessionRequest,          // Process and notifies the devices begin session requests
   notifyDevice,                   // Notify the devices using the web socket connection
   initializeWebSocketServer,      // Initialize the web socket server connection

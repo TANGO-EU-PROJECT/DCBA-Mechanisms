@@ -28,10 +28,6 @@ const {
   storeLogsToInfluxDB,
   extractTimestamp,
   malformedLogsExaminator,
-  getDeviceHeatmap,
-  readEDHeatmapCSV,
-  readLSOHeatmapCSV,
-  readRIASTONEHeatmapCSV,
   processSessionRequest,
   findDeviceByDeviceID,
   findDeviceByDID
@@ -49,32 +45,8 @@ const mutexes = {};                                // Stores mutexes for handlin
 
 // Import and configure localization algorithm mode
 const LOCALIZATION_ALGORITHM_APPLIED = process.env.LOCALIZATION_ALGORITHM_APPLIED;
-let LocalizationHeatmapPath;
-let LocalizationScriptPath;
-let readHeatmapCSVFunction;
+const LOCALIZATION_ALGORITHM_SCRIPT_PATH=process.env.LOCALIZATION_ALGORITHM_SCRIPT_PATH;
 
-// Set up localization paths based on the algorithm type
-if (LOCALIZATION_ALGORITHM_APPLIED === "LSO") {
-  // Least Squares Optimization Localization
-  LocalizationHeatmapPath = process.env.LSO_HEATMAP_PATH;
-  LocalizationScriptPath = process.env.LSO_LOCALIZATION_PATH;
-  readHeatmapCSVFunction = readLSOHeatmapCSV; 
-} else if (LOCALIZATION_ALGORITHM_APPLIED === "ED") {
-  // Euclidean Distance Localization
-  LocalizationHeatmapPath = process.env.ED_HEATMAP_PATH;
-  LocalizationScriptPath = process.env.ED_LOCALIZATION_PATH;
-  readHeatmapCSVFunction = readEDHeatmapCSV; 
-} else if (LOCALIZATION_ALGORITHM_APPLIED === "RIA_ED") {
-  //LOCALIZATION AGLGORITHM FOR "RIA_ED"
-  LocalizationHeatmapPath = process.env.RIA_HEATMAP_PATH;
-  LocalizationScriptPath = process.env.RIA_LOCALIZATION_PATH;
-  readHeatmapCSVFunction = readRIASTONEHeatmapCSV; 
-} else {
-  //LOCALIZATION AGLGORITHM FOR "RIA_CLASSIFIER"
-  LocalizationHeatmapPath = process.env.RIA_HEATMAP_PATH;
-  LocalizationScriptPath = process.env.RIA_CLASSIFIER_LOCALIZATION_PATH;
-  readHeatmapCSVFunction = readRIASTONEHeatmapCSV; 
-}
 
 // Retrieve the paths to MongoDB schema models from the environment variables
 const deviceModelPath = process.env.MONGO_DB_DEVICE_SCHEME_PATH;
@@ -400,25 +372,12 @@ const processRequest = async (req, res, did, deviceID) => {
     if (line.trim() !== '') {
       
       if (line.includes("WifiNetworkScannerN")) {
-        // Retrieve the device heatmap from the database
-        const heatmap = await getDeviceHeatmap(deviceID); // Ensure it resolves before continuing
-        const heatmapJSON = JSON.stringify(heatmap);
-        const escapedHeatmapJSON = heatmapJSON.replace(/"/g, '\\"'); // Escape quotes to ensure they are passed correctly to Python
          
         try {
           // Run the Localizator Script to estimate the current device location
           console.log(line);
           let stdout;
-          if (LOCALIZATION_ALGORITHM_APPLIED === 'RIA_CLASSIFIER') {
-            const bssidOrder = getBssidOrderFromCsv(LocalizationHeatmapPath); //CSV FILE
-            const bssidToRssi = parseLogLineToRssiDict(line);
-            const rssiVector = buildRssiVector(bssidOrder, bssidToRssi);
-            const rssiVectorStr = rssiVector.join(',');
-
-            stdout = await runLocalizationClassifier(deviceID, did, rssiVectorStr);
-          } else {
-            stdout = await runLocalizationScript(line, deviceID, did, escapedHeatmapJSON);
-          }
+          stdout = await runLocalizationEuclideanDistance(deviceID, did, line);
           // Extract JSON part from stdout
           const result = JSON.parse(stdout);
           
@@ -433,73 +392,7 @@ const processRequest = async (req, res, did, deviceID) => {
           console.log(`\n${yellow}*** LOCALIZATION APPLIED ***${reset}`);
           console.log(JSON.stringify(result, null, 2)); // Pretty print the JSON
 
-          if (LOCALIZATION_ALGORITHM_APPLIED === 'LSO') {
-            // Extract the location fields from the result object
-            const latitude = result['Estimated Location (Latitude)'];
-            const longitude = result['Estimated Location (Longitude)'];
-
-            // Find the device by `did` and `device_id` and update their `last_coordinates`
-            const updatedDeviceDocument = await DEVICE.findOneAndUpdate(
-              { did: did, device_id: deviceID },  // Search using both `did` and `device_id`
-              { 
-                $set: { last_coordinates: { lat: latitude, lon: longitude } }  // Update the last device coordinates
-              },
-              { new: true }  // Return the updated document
-            );
-            
-            if (!updatedDeviceDocument) {
-              logEvent({
-                event: 'PERFORMING LOCALIZATION (LSO)',
-                status: 'FAILED ❌',
-                did: did,
-                device_id: deviceID,
-                ip: req.ip,
-                cause: 'Failed to update device last coordinates.'
-              });
-            } else {
-              logEvent({
-                event: 'UPDATING DEVICE LOCATION (LSO)',
-                status: 'SUCCESS ✅',
-                did: did,
-                device_id: deviceID,
-                ip: req.ip,
-                cause: `Device coordinates updated: ${JSON.stringify(updatedDeviceDocument.last_coordinates)}`
-              });
-            }
-          } else if (LOCALIZATION_ALGORITHM_APPLIED === 'ED'){
-            // Else, the localization algorithm applies is the ED
-            // Extract the necessary fields from the result object
-            const estimatedLocation = result['Estimated Location'];
-
-            // Find the device by `did` and `device_id` and update their `last_coordinates`
-            const updatedDeviceDocument = await DEVICE.findOneAndUpdate(
-              { did: did, device_id: deviceID },  // Search using both `did` and `device_id`
-              { 
-                $set: { last_location: estimatedLocation }  // Update the last device coordinates
-              },
-              { new: true }  // Return the updated document
-            );
-
-            if (!updatedDeviceDocument) {
-              logEvent({
-                event: 'PERFORMING LOCALIZATION (ED)',
-                status: 'FAILED ❌',
-                did: did,
-                device_id: deviceID,
-                ip: req.ip,
-                cause: 'Failed to update device last location.'
-              });
-            } else {
-              logEvent({
-                event: 'UPDATING DEVICE LOCATION (ED)',
-                status: 'SUCCESS ✅',
-                did: did,
-                device_id: deviceID,
-                ip: req.ip,
-                cause: `Device last location updated: ${JSON.stringify(updatedDeviceDocument.last_location)}`
-              });
-            }
-          } else if (LOCALIZATION_ALGORITHM_APPLIED === 'RIA_ED') {
+          if (LOCALIZATION_ALGORITHM_APPLIED === 'RIA-ED') {
             // RIA
             const estimatedLocation = result['Estimated Location'];
 
@@ -507,7 +400,7 @@ const processRequest = async (req, res, did, deviceID) => {
             const updatedDeviceDocument = await DEVICE.findOneAndUpdate(
               { did: did, device_id: deviceID },  // Search using both `did` and `device_id`
               { 
-                $set: { last_location: estimatedLocation }  // Update the last device coordinates
+                $set: { last_location: Array.isArray(estimatedLocation) ? estimatedLocation.join(' | ') : estimatedLocation  }  // Update the last device coordinates
               },
               { new: true }  // Return the updated document
             );
@@ -557,11 +450,11 @@ const processRequest = async (req, res, did, deviceID) => {
 
 
 /* [9]
- * Function to handle the localization algorithm
+ * Function to run the localization ED(ED)
 */
-const runLocalizationScript = (line, deviceID, did, escapedHeatmapJSON) => {
+const runLocalizationEuclideanDistance= (deviceID, did, log) => {
   return new Promise((resolve, reject) => {
-    exec(`python3 "${LocalizationScriptPath}" "${line}" "${deviceID}" "${did}" "${escapedHeatmapJSON}"`, (error, stdout, stderr) => {
+    exec(`python3 "${LOCALIZATION_ALGORITHM_SCRIPT_PATH}" "${deviceID}" "${did}" "${log}"`, (error, stdout, stderr) => {
       if (error) {
         reject(`Error executing localization script: ${error.stack}`);
       }
@@ -1066,9 +959,6 @@ exports.handleAuthCallback = async (req, res) => {
       
     }
 
-    // Read the corresponding heatmap file
-    const heatmap = await readHeatmapCSVFunction(LocalizationHeatmapPath);
-
     logEvent({
       event: 'AUTHENTICATION CALLBACK',
       status: 'SUCCESS ✅',
@@ -1077,7 +967,7 @@ exports.handleAuthCallback = async (req, res) => {
     });
 
     // Respond to the AUTHENTICATOR via the web socket
-    const result = await processSessionRequest(authToken, state, did, sub, heatmap, req);
+    const result = await processSessionRequest(authToken, state, did, sub, req);
 
     // Response with success only if the response is 200(auth-success)
     const ApiResponse = {
@@ -1367,53 +1257,6 @@ exports.fetchDeviceLastLocation = async (req, res) => {
   }
 };
 
-/* [19]
- * Function to run the localization classifier(RF)
-*/
-const runLocalizationClassifier = (deviceID, did, rssi_values) => {
-  return new Promise((resolve, reject) => {
-    exec(`python3 "${LocalizationScriptPath}" "${deviceID}" "${did}" "${rssi_values}"`, (error, stdout, stderr) => {
-      if (error) {
-        reject(`Error executing localization script: ${error.stack}`);
-      }
-      if (stderr) {
-        reject(`Script stderr: ${stderr}`);
-      }
-      resolve(stdout); // Resolve with stdout
-    });
-  });
-};
-
-
-// Load the CSV header and get the list of BSSIDs
-function getBssidOrderFromCsv(csvPath) {
-  const firstLine = fs.readFileSync(csvPath, 'utf8').split('\n')[0];
-  const parts = firstLine.trim().split(',');
-// Skip AREA and ACCESS_STATUS (first two columns)
-  return parts.slice(2).map(bssid => bssid.trim().toLowerCase());
-}
-
-
-// Parse one log line to extract BSSID -> RSSI
-function parseLogLineToRssiDict(line) {
-  const regex = /BSSID:\s*([0-9a-f:]{17}),\s*Level:\s*(-?\d+)/gi;
-  const bssidToRssi = {};
-
-  let match;
-  while ((match = regex.exec(line)) !== null) {
-    const bssid = match[1].toLowerCase().trim(); // <-- added `.trim()`
-    const rssi = parseInt(match[2]);
-    bssidToRssi[bssid] = rssi;
-  }
-
-  return bssidToRssi;
-}
-
-
-// Build final RSSI vector using header order
-function buildRssiVector(bssidOrder, bssidToRssi) {
-  return bssidOrder.map(bssid => bssidToRssi[bssid.toLowerCase()] ?? -120);
-}
 
 
 
