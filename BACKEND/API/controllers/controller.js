@@ -712,7 +712,6 @@ exports.handleLogout = async (req, res) => {
   }
 };
 
-
 /* [12]
  * Function to handle requests , made to check whether the server is up or not
  * Endpoint: GET /server/status
