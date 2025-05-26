@@ -42,10 +42,32 @@ router.post('/behavioural-score', controller.fetchDeviceBehaviouralScore);
 
 /** [6] DONE
  * @route   POST /devices/last-location
- * @desc    Returns the devices's last known geographic coordinates based on provided DIDs and authorization.
+ * @desc    Returns the devices's last location based on provided DIDs and authorization.
  * @access  Restricted – Requires jwtAuth for access
  */
 router.post('/last-location', controller.fetchDeviceLastLocation);
+
+
+/** [7] 
+ * @route   POST /devices/location-history
+ * @desc    Returns the device’s location history within a specified timeframe, based on provided DIDs and authorization.
+ * @access  Restricted – Requires jwtAuth for access
+ */
+router.post('/location-history', controller.fetchDeviceLocationHistory);
+
+/** [8] 
+ * @route   POST /devices/permitted-location-history
+ * @desc    Returns the devices's permitted location history within a specified timeframe, based on provided DIDs and authorization.
+ * @access  Restricted – Requires jwtAuth for access
+ */
+router.post('/permitted-location-history', controller.fetchDevicePermittedLocationHistory);
+
+/** [9] 
+ * @route   POST /devices/restricted-location-history
+ * @desc    Returns the devices's restricted location history within a specified timeframe, based on provided DIDs and authorization.
+ * @access  Restricted – Requires jwtAuth for access
+ */
+router.post('/restricted-location-history', controller.fetchDeviceRestrictedLocationHistory);
 
 module.exports = router;
 // -------------------------------- External Services API Routes -------------------------------- //
