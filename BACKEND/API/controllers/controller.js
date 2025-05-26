@@ -433,7 +433,7 @@ const processRequest = async (req, res, did, deviceID) => {
                 did: did,
                 device_id: deviceID,
                 ip: req.ip,
-                cause: `Device last location updated: ${
+                cause: `Device location history updated: ${
                   updatedDeviceDocument.location_history && updatedDeviceDocument.location_history.length > 0
                     ? updatedDeviceDocument.location_history[0].location
                     : 'UNKNOWN'}`             
@@ -1189,12 +1189,12 @@ exports.fetchDeviceBehaviouralScore = async (req, res) => {
 
 
 /** [18]
- * Retrieves the last known coordinates (latitude and longitude) of a specific device using its Decentralized Identifier (DID).
+ * Retrieves the last location of a specific device using its Decentralized Identifier (DID).
  * 
  * @route   POST /devices/last-location
  * @desc    This endpoint receives a request from an external service,
  *          validates the input fields (`didSP`, `didRequester`, and `jwtAuth`), verifies the JWT token,
- *          attempts to find the device by its DID, and returns the last known coordinates.
+ *          attempts to find the device by its DID, and returns the last location of the device.
  *          
  *          Handles the following cases:
  *          - Missing required fields → returns 400 Bad Request
@@ -1280,6 +1280,352 @@ exports.fetchDeviceLastLocation = async (req, res) => {
     });
   }
 };
+
+
+
+
+/** [19]
+ * Retrieves the location history of a specific device using its Decentralized Identifier (DID) within a specified timeframe.
+ * 
+ * @route   POST /devices/location-history
+ * @desc    This endpoint receives a request from an external service,
+ *          validates the input fields (`didSP`, `didRequester`, `jwtAuth`, and `timeframe`), verifies the JWT token,
+ *          attempts to find the device by its DID, and returns all location entries within the given timeframe.
+ *          
+ *          Handles the following cases:
+ *          - Missing required fields → returns 400 Bad Request
+ *          - Invalid or expired JWT token → returns 401 Unauthorized
+ *          - Device not found → returns 404 Not Found
+ *          - Database retrieval errors → returns 500 Internal Server Error
+ *          - Successful retrieval → returns 200 OK with location entries in the specified timeframe
+ * 
+ * @access  Restricted – Requires a valid `jwtAuth` token in the request body.
+ * @param   {Object} req.body - The request payload containing:
+ *          - {string} didSP - Service Provider's DID
+ *          - {string} didRequester - Device's DID to query
+ *          - {string} jwtAuth - JWT token for authentication
+ *          - {Object} timeframe - Time range to filter location history:
+ *              - {string} from - ISO timestamp for the start of the range
+ *              - {string} to - ISO timestamp for the end of the range
+ * @param   {Object} res - Express response object used to return the result or an error message.
+ */
+exports.fetchDeviceLocationHistory = async (req, res) => {
+  const { didSP, didRequester, jwtAuth, timeframe } = req.body;
+
+  if (!didSP || !didRequester || !jwtAuth || !timeframe || !timeframe.from || !timeframe.to) {
+    return res.status(400).json({
+      status: "failed",
+      message: 'Missing required fields: didSP, didRequester, jwtAuth, or timeframe (from/to).'
+    });
+  }
+
+  // Check for valid ISO timestamp format
+  const fromDate = new Date(timeframe.from);
+  const toDate = new Date(timeframe.to);
+
+  if (isNaN(fromDate.getTime()) || isNaN(toDate.getTime())) {
+    return res.status(400).json({
+      status: "failed",
+      message: 'Invalid timeframe format. `from` and `to` must be valid ISO timestamps.'
+    });
+  }
+
+  try {
+    const decoded = jwt.verify(jwtAuth, process.env.JWT_SECRET_KEY);
+
+    let device;
+    try {
+      device = await findDeviceByDID(didRequester);
+    } catch (dbErr) {
+      logEvent({
+        event: 'RETRIEVING LOCATION HISTORY',
+        status: 'FAILED ❌',
+        did: didRequester,
+        cause: `Error retrieving device location history requested from didSP '${didSP}': ${dbErr.stack}`
+      });
+
+      return res.status(500).json({
+        status: "failed",
+        message: "Error retrieving device location history."
+      });
+    }
+
+    if (!device) {
+      return res.status(404).json({
+        status: "failed",
+        message: 'Device not found.'
+      });
+    }
+
+    // Filter location history based on the timeframe
+    const fromDate = new Date(timeframe.from);
+    const toDate = new Date(timeframe.to);
+
+    const filteredHistory = device.location_history.filter(entry => {
+      const entryTime = new Date(entry.timestamp);
+      return entryTime >= fromDate && entryTime <= toDate;
+    });
+
+    return res.status(200).json({
+      status: "success",
+      message: "Device location history retrieved.",
+      location_history: filteredHistory
+    });
+
+  } catch (err) {
+    logEvent({
+      event: 'JWT VERIFICATION',
+      status: 'FAILED ❌',
+      did: didRequester,
+      cause: `Error while verifying JWT of didSP '${didSP}': ${err.stack}`
+    });
+
+    if (err.name === 'TokenExpiredError') {
+      return res.status(401).json({
+        status: "failed",
+        message: 'Authorization token has expired.'
+      });
+    }
+
+    return res.status(401).json({
+      status: "failed",
+      message: 'Invalid authorization token.'
+    });
+  }
+};
+
+
+/** [20]
+ * Retrieves the location history of a specific device, **filtered to only include entries** where the location is "PERMITTED_AREA", within a specified timeframe.
+ * 
+ * @route   POST /devices/permitted-location-history
+ * @desc    This endpoint receives a request from an external service,
+ *          validates the input fields (`didSP`, `didRequester`, `jwtAuth`, and `timeframe`), verifies the JWT token,
+ *          attempts to find the device by its DID, and returns only location entries with `location === "PERMITTED_AREA"` in the given timeframe.
+ *          
+ *          Handles the following cases:
+ *          - Missing required fields → returns 400 Bad Request
+ *          - Invalid or expired JWT token → returns 401 Unauthorized
+ *          - Device not found → returns 404 Not Found
+ *          - Database retrieval errors → returns 500 Internal Server Error
+ *          - Successful retrieval → returns 200 OK with filtered entries
+ * 
+ * @access  Restricted – Requires a valid `jwtAuth` token in the request body.
+ * @param   {Object} req.body - The request payload containing:
+ *          - {string} didSP - Service Provider's DID
+ *          - {string} didRequester - Device's DID to query
+ *          - {string} jwtAuth - JWT token for authentication
+ *          - {Object} timeframe - Time range to filter location history:
+ *              - {string} from - ISO timestamp for the start of the range
+ *              - {string} to - ISO timestamp for the end of the range
+ * @param   {Object} res - Express response object used to return the result or an error message.
+ */
+exports.fetchDevicePermittedLocationHistory = async (req, res) => {
+  const { didSP, didRequester, jwtAuth, timeframe } = req.body;
+
+  if (!didSP || !didRequester || !jwtAuth || !timeframe || !timeframe.from || !timeframe.to) {
+    return res.status(400).json({
+      status: "failed",
+      message: 'Missing required fields: didSP, didRequester, jwtAuth, or timeframe (from/to).'
+    });
+  }
+
+  // Check for valid ISO timestamp format
+  const fromDate = new Date(timeframe.from);
+  const toDate = new Date(timeframe.to);
+
+  if (isNaN(fromDate.getTime()) || isNaN(toDate.getTime())) {
+    return res.status(400).json({
+      status: "failed",
+      message: 'Invalid timeframe format. `from` and `to` must be valid ISO timestamps.'
+    });
+  }
+
+  try {
+    const decoded = jwt.verify(jwtAuth, process.env.JWT_SECRET_KEY);
+
+    let device;
+    try {
+      device = await findDeviceByDID(didRequester);
+    } catch (dbErr) {
+      logEvent({
+        event: 'RETRIEVING PERMITTED LOCATION HISTORY',
+        status: 'FAILED ❌',
+        did: didRequester,
+        cause: `Error retrieving permitted location history from didSP '${didSP}': ${dbErr.stack}`
+      });
+
+      return res.status(500).json({
+        status: "failed",
+        message: "Error retrieving permitted location history."
+      });
+    }
+
+    if (!device) {
+      return res.status(404).json({
+        status: "failed",
+        message: 'Device not found.'
+      });
+    }
+
+    const fromDate = new Date(timeframe.from);
+    const toDate = new Date(timeframe.to);
+
+    // Filter entries by timeframe and location === 'PERMITTED_AREA'
+    const permittedHistory = device.location_history.filter(entry => {
+      const entryTime = new Date(entry.timestamp);
+      return (
+        entryTime >= fromDate &&
+        entryTime <= toDate &&
+        (entry.location === 'PERMITTED_AREA' || entry.location === 'UNKNOWN')
+      );
+    });
+
+    return res.status(200).json({
+      status: "success",
+      message: "Permitted location history retrieved.",
+      permitted_location_history: permittedHistory
+    });
+
+  } catch (err) {
+    logEvent({
+      event: 'JWT VERIFICATION',
+      status: 'FAILED ❌',
+      did: didRequester,
+      cause: `JWT verification error from didSP '${didSP}': ${err.stack}`
+    });
+
+    if (err.name === 'TokenExpiredError') {
+      return res.status(401).json({
+        status: "failed",
+        message: 'Authorization token has expired.'
+      });
+    }
+
+    return res.status(401).json({
+      status: "failed",
+      message: 'Invalid authorization token.'
+    });
+  }
+};
+
+
+/** [21]
+ * Retrieves the location history of a specific device, **filtered to only include entries** where the location is NOT "PERMITTED_AREA", within a specified timeframe.
+ * 
+ * @route   POST /devices/restricted-location-history
+ * @desc    This endpoint receives a request from an external service,
+ *          validates the input fields (`didSP`, `didRequester`, `jwtAuth`, and `timeframe`), verifies the JWT token,
+ *          attempts to find the device by its DID, and returns only location entries with `location !== "PERMITTED_AREA"` in the given timeframe.
+ *          
+ *          Handles the following cases:
+ *          - Missing required fields → returns 400 Bad Request
+ *          - Invalid or expired JWT token → returns 401 Unauthorized
+ *          - Device not found → returns 404 Not Found
+ *          - Database retrieval errors → returns 500 Internal Server Error
+ *          - Successful retrieval → returns 200 OK with filtered entries
+ * 
+ * @access  Restricted – Requires a valid `jwtAuth` token in the request body.
+ * @param   {Object} req.body - The request payload containing:
+ *          - {string} didSP - Service Provider's DID
+ *          - {string} didRequester - Device's DID to query
+ *          - {string} jwtAuth - JWT token for authentication
+ *          - {Object} timeframe - Time range to filter location history:
+ *              - {string} from - ISO timestamp for the start of the range
+ *              - {string} to - ISO timestamp for the end of the range
+ * @param   {Object} res - Express response object used to return the result or an error message.
+ */
+exports.fetchDeviceRestrictedLocationHistory = async (req, res) => {
+  const { didSP, didRequester, jwtAuth, timeframe } = req.body;
+
+  if (!didSP || !didRequester || !jwtAuth || !timeframe || !timeframe.from || !timeframe.to) {
+    return res.status(400).json({
+      status: "failed",
+      message: 'Missing required fields: didSP, didRequester, jwtAuth, or timeframe (from/to).'
+    });
+  }
+
+  // Check for valid ISO timestamp format
+  const fromDate = new Date(timeframe.from);
+  const toDate = new Date(timeframe.to);
+
+  if (isNaN(fromDate.getTime()) || isNaN(toDate.getTime())) {
+    return res.status(400).json({
+      status: "failed",
+      message: 'Invalid timeframe format. `from` and `to` must be valid ISO timestamps.'
+    });
+  }
+
+  try {
+    const decoded = jwt.verify(jwtAuth, process.env.JWT_SECRET_KEY);
+
+    let device;
+    try {
+      device = await findDeviceByDID(didRequester);
+    } catch (dbErr) {
+      logEvent({
+        event: 'RETRIEVING RESTRICTED LOCATION HISTORY',
+        status: 'FAILED ❌',
+        did: didRequester,
+        cause: `Error retrieving restricted location history from didSP '${didSP}': ${dbErr.stack}`
+      });
+
+      return res.status(500).json({
+        status: "failed",
+        message: "Error retrieving restricted location history."
+      });
+    }
+
+    if (!device) {
+      return res.status(404).json({
+        status: "failed",
+        message: 'Device not found.'
+      });
+    }
+
+    const fromDate = new Date(timeframe.from);
+    const toDate = new Date(timeframe.to);
+
+    // Filter entries by timeframe and location !== 'PERMITTED_AREA'
+    const restrictedHistory = device.location_history.filter(entry => {
+      const entryTime = new Date(entry.timestamp);
+      return (
+        entryTime >= fromDate &&
+        entryTime <= toDate &&
+        entry.location !== 'PERMITTED_AREA'
+      );
+    });
+
+    return res.status(200).json({
+      status: "success",
+      message: "Restricted location history retrieved.",
+      location_history: restrictedHistory
+    });
+
+  } catch (err) {
+    logEvent({
+      event: 'JWT VERIFICATION',
+      status: 'FAILED ❌',
+      did: didRequester,
+      cause: `JWT verification error from didSP '${didSP}': ${err.stack}`
+    });
+
+    if (err.name === 'TokenExpiredError') {
+      return res.status(401).json({
+        status: "failed",
+        message: 'Authorization token has expired.'
+      });
+    }
+
+    return res.status(401).json({
+      status: "failed",
+      message: 'Invalid authorization token.'
+    });
+  }
+};
+
+
+
 
 
 
