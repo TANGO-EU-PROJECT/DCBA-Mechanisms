@@ -14,12 +14,21 @@ info:
 servers:
   - url: https://k8s-cluster.tango.rid-intrasoft.eu/development/dcba-backend/
 
+components:
+securitySchemes:
+  bearerAuth:
+    type: http
+    scheme: bearer
+    bearerFormat: JWT
+
 paths:
   # Service API Endpoints #
 
   # [1] GET /devices
   /devices:
     get:
+      security:
+        - bearerAuth: []
       tags:
         - Service API Endpoints  # Tag for service-facing endpoints
       parameters:
