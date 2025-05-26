@@ -396,14 +396,26 @@ const processRequest = async (req, res, did, deviceID) => {
             // RIA
             const estimatedLocation = result['Estimated Location'];
 
-            // Find the device by `did` and `device_id` and update their `last_coordinates`
+            // Find the device by `did` and `device_id` and update their location_history array
+            // Prepend new location entry to location_history
             const updatedDeviceDocument = await DEVICE.findOneAndUpdate(
-              { did: did, device_id: deviceID },  // Search using both `did` and `device_id`
-              { 
-                $set: { last_location: Array.isArray(estimatedLocation) ? estimatedLocation.join(' | ') : estimatedLocation  }  // Update the last device coordinates
+              { did: did, device_id: deviceID },
+              {
+                $push: {
+                  location_history: {
+                    $each: [{
+                      location: Array.isArray(estimatedLocation)
+                        ? estimatedLocation.join(' | ')
+                        : estimatedLocation,
+                      timestamp: new Date()
+                    }],
+                    $position: 0  // Insert at the beginning of the array
+                  }
+                }
               },
-              { new: true }  // Return the updated document
+              { new: true }
             );
+
 
             if (!updatedDeviceDocument) {
               logEvent({
@@ -421,11 +433,22 @@ const processRequest = async (req, res, did, deviceID) => {
                 did: did,
                 device_id: deviceID,
                 ip: req.ip,
-                cause: `Device last location updated: ${JSON.stringify(updatedDeviceDocument.last_location)}`
-              });
+                cause: `Device last location updated: ${
+                  updatedDeviceDocument.location_history && updatedDeviceDocument.location_history.length > 0
+                    ? updatedDeviceDocument.location_history[0].location
+                    : 'UNKNOWN'}`             
+               });
             }
           } else {
-            //RIA_CLASSIFIER 
+            logEvent({
+              event: 'PERFORMING LOCALIZATION (RIA)',
+              status: 'FAILED ❌',
+              did: did,
+              device_id: deviceID,
+              ip: req.ip,
+              cause: `Unknown algorithm encountered while updating last known device location. It should be 'RIA-ED.`
+            });
+            return res.status(200).json({ status: "failed", message: "Failed to perform localization." });
           }
 
         } catch (localizationError) {
@@ -1208,11 +1231,9 @@ exports.fetchDeviceLastLocation = async (req, res) => {
         event: 'RETRIEVING LAST LOCATION',
         status: 'FAILED ❌',
         did: didRequester,
-        device_id: device.device_id,
-        cause: `Error retrieving device last location requested from didSP '${didSP}': ${err.stack}`
+        cause: `Error retrieving device last location requested from didSP '${didSP}': ${dbErr.stack}`
       });
-      
-      //console.error('Error retrieving last coordinates:', dbErr);
+
       return res.status(500).json({
         status: "failed",
         message: "Error retrieving device last location."
@@ -1226,15 +1247,19 @@ exports.fetchDeviceLastLocation = async (req, res) => {
       });
     }
 
+    // Get the most recent location entry from location_history
+    const history = device.location_history;
+    const lastEntry = history.length > 0 ? history[0] : null;
+
     return res.status(200).json({
       status: "success",
       message: "Device found.",
-      //lastCoordinates: device.last_coordinates
-      lastLocation: device.last_location
+      lastLocation: lastEntry ? lastEntry.location : 'UNKNOWN',
+      lastLocationTimestamp: lastEntry ? lastEntry.timestamp : null
     });
 
+
   } catch (err) {
-    //console.error('JWT verification failed:', err);
     logEvent({
       event: 'JWT VERIFICATION',
       status: 'FAILED ❌',

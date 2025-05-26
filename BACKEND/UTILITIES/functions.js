@@ -84,11 +84,13 @@ const getDeviceURI = async (did) => {
  */
 const createDeviceDocument = async (did, sub, device_id, log_file_uri) => {
   try {
-    // Define the default coordinates
-    const LAT0 = process.env.LAT0;
-    const LON0 = process.env.LON0;
-    const DEFAULT_LOCATION = process.env.DEFAULT_LOCATION;
 
+    // Create initial location entry
+    const initialLocation = {
+      location: 'PERMITTED_AREA',
+      timestamp: new Date()
+    };
+  
     // Create a new device document with the provided attributes
     const newDevice = new DEVICE({
       did,                // device's unique DID
@@ -96,8 +98,7 @@ const createDeviceDocument = async (did, sub, device_id, log_file_uri) => {
       device_id,          // Device ID associated with the device
       log_file_uri,
       status: 'online',   // Set the status as 'online' by default, since the accounts are registered dynamically during their first active session
-      last_coordinates: { lat: LAT0, lon: LON0 }, // Add default coordinates to the device
-      last_location: DEFAULT_LOCATION
+      location_history: [initialLocation],
     });
 
     // Save the new device record to the MongoDB database
