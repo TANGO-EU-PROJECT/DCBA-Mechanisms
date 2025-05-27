@@ -334,10 +334,12 @@ paths:
     post:
       tags:
         - Service API Endpoints
+      security:
+        - bearerAuth: []
       summary: Retrieve device behavioural score
       description: >
         Returns the behavioural score of a device based on provided DIDs.
-        Requires a valid JWT authorization token passed in the request body.
+        This route requires a valid JWT Bearer token in the Authorization header to access.
       requestBody:
         required: true
         content:
