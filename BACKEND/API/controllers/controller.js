@@ -1446,7 +1446,7 @@ exports.fetchDevicePermittedLocationHistory = async (req, res) => {
  * 
  * @route   POST /devices/restricted-location-history
  * @desc    This endpoint receives a request from an external service,
- *          validates the input fields (`didSP`, `didRequester`, `jwtAuth`, and `timeframe`), verifies the JWT token,
+ *          validates the input fields (`didSP`, `didRequester` and `timeframe`), verifies the JWT token,
  *          attempts to find the device by its DID, and returns only location entries with `location !== "PERMITTED_AREA"` in the given timeframe.
  *          
  *          Handles the following cases:
@@ -1460,19 +1460,18 @@ exports.fetchDevicePermittedLocationHistory = async (req, res) => {
  * @param   {Object} req.body - The request payload containing:
  *          - {string} didSP - Service Provider's DID
  *          - {string} didRequester - Device's DID to query
- *          - {string} jwtAuth - JWT token for authentication
  *          - {Object} timeframe - Time range to filter location history:
  *              - {string} from - ISO timestamp for the start of the range
  *              - {string} to - ISO timestamp for the end of the range
  * @param   {Object} res - Express response object used to return the result or an error message.
  */
 exports.fetchDeviceRestrictedLocationHistory = async (req, res) => {
-  const { didSP, didRequester, jwtAuth, timeframe } = req.body;
+  const { didSP, didRequester, timeframe } = req.body;
 
-  if (!didSP || !didRequester || !jwtAuth || !timeframe || !timeframe.from || !timeframe.to) {
+  if (!didSP || !didRequester || !timeframe || !timeframe.from || !timeframe.to) {
     return res.status(400).json({
       status: "failed",
-      message: 'Missing required fields: didSP, didRequester, jwtAuth, or timeframe (from/to).'
+      message: 'Missing required fields: didSP, didRequester, or timeframe (from/to).'
     });
   }
 
@@ -1480,16 +1479,16 @@ exports.fetchDeviceRestrictedLocationHistory = async (req, res) => {
   const fromDate = new Date(timeframe.from);
   const toDate = new Date(timeframe.to);
 
-  if (isNaN(fromDate.getTime()) || isNaN(toDate.getTime())) {
+  const iso8601Regex = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d{1,3})?Z$/;
+
+  if (!iso8601Regex.test(from) || !iso8601Regex.test(to)) {
     return res.status(400).json({
       status: "failed",
-      message: 'Invalid timeframe format. `from` and `to` must be valid ISO timestamps.'
+      message: 'Invalid from/to format. Both must be valid ISO8601 timestamps.'
     });
   }
 
   try {
-    const decoded = jwt.verify(jwtAuth, process.env.JWT_SECRET_KEY);
-
     let device;
     try {
       device = await findDeviceByDID(didRequester);
@@ -1514,9 +1513,6 @@ exports.fetchDeviceRestrictedLocationHistory = async (req, res) => {
       });
     }
 
-    const fromDate = new Date(timeframe.from);
-    const toDate = new Date(timeframe.to);
-
     // Filter entries by timeframe and location !== 'PERMITTED_AREA'
     const restrictedHistory = device.location_history.filter(entry => {
       const entryTime = new Date(entry.timestamp);
@@ -1529,28 +1525,21 @@ exports.fetchDeviceRestrictedLocationHistory = async (req, res) => {
 
     return res.status(200).json({
       status: "success",
-      message: "Restricted location history retrieved.",
+      message: "Device restricted location history retrieved.",
       location_history: restrictedHistory
     });
 
   } catch (err) {
     logEvent({
-      event: 'JWT VERIFICATION',
+      event: 'RETRIEVING RESTRICTED LOCATION HISTORY',
       status: 'FAILED ❌',
       did: didRequester,
-      cause: `JWT verification error from didSP '${didSP}': ${err.stack}`
+      cause: `Unhandled error from didSP '${didSP}': ${err.stack}`
     });
 
-    if (err.name === 'TokenExpiredError') {
-      return res.status(401).json({
-        status: "failed",
-        message: 'Authorization token has expired.'
-      });
-    }
-
-    return res.status(401).json({
+    return res.status(500).json({
       status: "failed",
-      message: 'Invalid authorization token.'
+      message: 'Error retrieving device restricted location history.'
     });
   }
 };
