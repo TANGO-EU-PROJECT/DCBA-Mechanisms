@@ -1340,7 +1340,7 @@ exports.fetchDeviceLocationHistory = async (req, res) => {
  * 
  * @route   POST /devices/permitted-location-history
  * @desc    This endpoint receives a request from an external service,
- *          validates the input fields (`didSP`, `didRequester`, `jwtAuth`, and `timeframe`), verifies the JWT token,
+ *          validates the input fields (`didSP`, `didRequester` and `timeframe`), verifies the JWT token,
  *          attempts to find the device by its DID, and returns only location entries with `location === "PERMITTED_AREA"` in the given timeframe.
  *          
  *          Handles the following cases:
@@ -1354,7 +1354,6 @@ exports.fetchDeviceLocationHistory = async (req, res) => {
  * @param   {Object} req.body - The request payload containing:
  *          - {string} didSP - Service Provider's DID
  *          - {string} didRequester - Device's DID to query
- *          - {string} jwtAuth - JWT token for authentication
  *          - {Object} timeframe - Time range to filter location history:
  *              - {string} from - ISO timestamp for the start of the range
  *              - {string} to - ISO timestamp for the end of the range
