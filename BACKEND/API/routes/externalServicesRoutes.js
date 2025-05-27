@@ -32,7 +32,7 @@ router.get('/online-shifts', verifyToken, controller.fetchOnlineDevices);
 router.get('/offline-shifts', verifyToken, controller.fetchOfflineDevices);
 
 
-/** [5] DONE
+/** [4] DONE
  * @route   POST /devices/behavioural-score
  * @desc    Returns the devices's behavioural score based on provided DIDs and authorization.
  * @access  Restricted – Requires jwtAuth for access in the req.body
@@ -40,7 +40,7 @@ router.get('/offline-shifts', verifyToken, controller.fetchOfflineDevices);
 router.post('/behavioural-score', verifyToken, controller.fetchDeviceBehaviouralScore);
 
 
-/** [6] DONE
+/** [5] DONE
  * @route   POST /devices/last-location
  * @desc    Returns the devices's last location based on provided DIDs and authorization.
  * @access  Restricted – Requires jwtAuth for access
@@ -48,21 +48,21 @@ router.post('/behavioural-score', verifyToken, controller.fetchDeviceBehavioural
 router.post('/last-location', verifyToken, controller.fetchDeviceLastLocation);
 
 
-/** [7] 
+/** [6] 
  * @route   POST /devices/location-history
  * @desc    Returns the device’s location history within a specified timeframe, based on provided DIDs and authorization.
  * @access  Restricted – Requires jwtAuth for access
  */
-router.post('/location-history', controller.fetchDeviceLocationHistory);
+router.post('/location-history', verifyToken, controller.fetchDeviceLocationHistory);
 
-/** [8] 
+/** [7] 
  * @route   POST /devices/permitted-location-history
  * @desc    Returns the devices's permitted location history within a specified timeframe, based on provided DIDs and authorization.
  * @access  Restricted – Requires jwtAuth for access
  */
 router.post('/permitted-location-history', controller.fetchDevicePermittedLocationHistory);
 
-/** [9] 
+/** [8] 
  * @route   POST /devices/restricted-location-history
  * @desc    Returns the devices's restricted location history within a specified timeframe, based on provided DIDs and authorization.
  * @access  Restricted – Requires jwtAuth for access
