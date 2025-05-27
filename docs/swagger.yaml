@@ -347,7 +347,6 @@ paths:
               required:
                 - didSP
                 - didRequester
-                - jwtAuth
               properties:
                 didSP:
                   type: string
@@ -357,10 +356,6 @@ paths:
                   type: string
                   description: The Decentralized Identifier (DID) of the requesting employee.
                   example: "did:example:device456"
-                jwtAuth:
-                  type: string
-                  description: The JSON Web Token (JWT) used for authenticating the request.
-                  example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
 
             examples:
               validRequest:
@@ -368,7 +363,6 @@ paths:
                 value:
                   didSP: "did:example:serviceprovider123"
                   didRequester: "did:example:device456"
-                  jwtAuth: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
       responses:
         '200':
           description: Behavioural score retrieved successfully
@@ -399,7 +393,7 @@ paths:
                     example: "failed"
                   message:
                     type: string
-                    example: "Missing required fields: didSP, didRequester, or jwtAuth."
+                    example: "Missing required fields: didSP or didRequester."
         '401':
           description: Unauthorized - Authorization token is invalid or expired
           content:
