@@ -9,7 +9,7 @@ info:
 
     To interact with the **GET** endpoints of the **Service API Endpoints**, you must authorize by providing a JWT Authorization token.
 
-    For testing purposes, you can use the following JWT token: **eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpYXQiOjE3NDgzNTU1OTcsImV4cCI6MTc0ODM1OTE5N30.-lYhqebZ6_z8waY8C3E_0ZfRKGslp4jB39qirYbw0mM**
+    For testing purposes, you can use the following JWT token: **eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoiZXhhbXBsZV91c2VyIiwicm9sZSI6InNlcnZpY2VfcHJvdmlkZXIifQ.ppLwt2OKzPSfgl1NwzJKhzU_rRykEv3ojm0VmLRoLwk**
 
 
     **Steps to authorize:**
@@ -599,22 +599,16 @@ paths:
                   type: string
                   description: The Decentralized Identifier (DID) of the requesting employee.
                   example: "did:example:device456"
-                timeframe:
-                  type: object
-                  required:
-                    - from
-                    - to
-                  properties:
-                    from:
-                      type: string
-                      format: date-time
-                      description: ISO8601 start date-time for filtering the location history.
-                      example: "2024-05-20T00:00:00Z"
-                    to:
-                      type: string
-                      format: date-time
-                      description: ISO8601 end date-time for filtering the location history.
-                      example: "2024-05-27T23:59:59Z"
+                from:
+                  type: string
+                  format: date-time
+                  description: ISO8601 start date-time for filtering the location history.
+                  example: "2024-05-20T00:00:00Z"
+                to:
+                  type: string
+                  format: date-time
+                  description: ISO8601 end date-time for filtering the location history.
+                  example: "2024-05-27T23:59:59Z"
             examples:
               validRequest:
                 summary: Valid request example
