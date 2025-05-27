@@ -9,7 +9,17 @@ info:
 
     To interact with the **GET** endpoints of the **Service API Endpoints**, you must authorize by providing a JWT Authorization token.
 
-    **Note**: Currently, the server is not deployed but will be available in the future at the URL specified in the servers section. Therefore, the **Try it out** option is not available right now.
+    For testing purposes, you can use the following JWT token: **eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpYXQiOjE3NDgzNTU1OTcsImV4cCI6MTc0ODM1OTE5N30.-lYhqebZ6_z8waY8C3E_0ZfRKGslp4jB39qirYbw0mM**
+
+
+    **Steps to authorize:**
+
+    1. Click the **Authorize** button, at the top-right corner.
+    2. Enter the token specified in the description.
+    3. Click **Authorize** and close the dialog.
+    4. You can now use the **Try it out** button on the Service API Endpoints.
+
+
 
 servers:
   - url: https://k8s-cluster.tango.rid-intrasoft.eu/development/dcba-backend/
