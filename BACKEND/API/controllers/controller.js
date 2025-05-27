@@ -1279,12 +1279,15 @@ exports.fetchDeviceLocationHistory = async (req, res) => {
   const toDate = new Date(to);
 
 
-  if (isNaN(fromDate.getTime()) || isNaN(toDate.getTime())) {
+  const iso8601Regex = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d{1,3})?Z$/;
+
+  if (!iso8601Regex.test(from) || !iso8601Regex.test(to)) {
     return res.status(400).json({
       status: "failed",
-      message: 'Invalid timeframe format. `from` and `to` must be valid ISO timestamps.'
+      message: 'Invalid from/to format. Both must be valid ISO8601 timestamps.'
     });
   }
+
 
   try {
     const device = await findDeviceByDID(didRequester);
@@ -1371,12 +1374,15 @@ exports.fetchDevicePermittedLocationHistory = async (req, res) => {
   const fromDate = new Date(from);
   const toDate = new Date(to);
 
-  if (isNaN(fromDate.getTime()) || isNaN(toDate.getTime())) {
+  const iso8601Regex = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d{1,3})?Z$/;
+
+  if (!iso8601Regex.test(from) || !iso8601Regex.test(to)) {
     return res.status(400).json({
       status: "failed",
-      message: 'Invalid from/to format. Both must be valid ISO timestamps.'
+      message: 'Invalid from/to format. Both must be valid ISO8601 timestamps.'
     });
   }
+
 
   try {
     let device;
