@@ -1466,18 +1466,18 @@ exports.fetchDevicePermittedLocationHistory = async (req, res) => {
  * @param   {Object} res - Express response object used to return the result or an error message.
  */
 exports.fetchDeviceRestrictedLocationHistory = async (req, res) => {
-  const { didSP, didRequester, timeframe } = req.body;
+  const { didSP, didRequester, from, to } = req.body;
 
-  if (!didSP || !didRequester || !timeframe || !timeframe.from || !timeframe.to) {
+  if (!didSP || !didRequester || !from || !to) {
     return res.status(400).json({
       status: "failed",
-      message: 'Missing required fields: didSP, didRequester, or timeframe (from/to).'
+      message: 'Missing required fields: didSP, didRequester, or from/to timestamps.'
     });
   }
 
-  // Check for valid ISO timestamp format
-  const fromDate = new Date(timeframe.from);
-  const toDate = new Date(timeframe.to);
+  // Validate ISO timestamps
+  const fromDate = new Date(from);
+  const toDate = new Date(to);
 
   const iso8601Regex = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d{1,3})?Z$/;
 

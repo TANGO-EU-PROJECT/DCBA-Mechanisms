@@ -62,7 +62,7 @@ router.post('/location-history', verifyToken, controller.fetchDeviceLocationHist
  */
 router.post('/permitted-location-history', verifyToken, controller.fetchDevicePermittedLocationHistory);
 
-/** [8] 
+/** [8] DONE
  * @route   POST /devices/restricted-location-history
  * @desc    Returns the devices's restricted location history within a specified timeframe, based on provided DIDs and authorization.
  * @access  Restricted – Requires jwtAuth for access
