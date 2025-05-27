@@ -666,7 +666,17 @@ paths:
                     example: "failed"
                   message:
                     type: string
-                    example: "Missing required fields: didSP, didRequester, or timeframe (from/to)."
+              examples:
+                MissingFields:
+                  summary: Missing required fields
+                  value:
+                    status: "failed"
+                    message: "Missing required fields: didSP, didRequester, or from/to timestamps."
+                InvalidTimestamps:
+                  summary: Invalid timestamp format
+                  value:
+                    status: "failed"
+                    message: "Invalid from/to format. Both must be valid ISO timestamps."
         '401':
           description: Unauthorized - Authorization token is missing, invalid, or expired
           content:
@@ -717,6 +727,168 @@ paths:
                   message:
                     type: string
                     example: "Error retrieving device location history."
+
+
+
+  # [7] POST /devices/permitted-location-history
+  /devices/permitted-location-history:
+    post:
+      tags:
+        - Service API Endpoints
+      security:
+        - bearerAuth: []
+      summary: Retrieve device permitted location history within a specified timeframe
+      description: >
+        Returns the permitted location history of a device based on provided employee DIDs.
+        This route requires a valid JWT Bearer token in the Authorization header to access.
+      requestBody:
+        required: true
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              required:
+                - didSP
+                - didRequester
+                - from
+                - to
+              properties:
+                didSP:
+                  type: string
+                  description: The Decentralized Identifier (DID) of the service provider initiating the request.
+                  example: "did:example:serviceprovider123"
+                didRequester:
+                  type: string
+                  description: The Decentralized Identifier (DID) of the requesting employee.
+                  example: "did:example:device456"
+                from:
+                  type: string
+                  format: date-time
+                  description: ISO8601 start date-time for filtering the location history.
+                  example: "2024-05-20T00:00:00Z"
+                to:
+                  type: string
+                  format: date-time
+                  description: ISO8601 end date-time for filtering the location history.
+                  example: "2024-05-27T23:59:59Z"
+            examples:
+              validRequest:
+                summary: Valid request example
+                value:
+                  didSP: "did:example:serviceprovider123"
+                  didRequester: "did:example:device456"
+                  from: "2024-05-20T00:00:00Z"
+                  to: "2024-05-27T23:59:59Z"
+      responses:
+        '200':
+          description: Device permitted location history retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: "success"
+                  message:
+                    type: string
+                    example: "Device permitted location history retrieved."
+              examples:
+                multipleLocations:
+                  summary: Example response with multiple location entries
+                  value:
+                    status: "success"
+                    message: "Device permitted location history retrieved."
+                    permitted_location_history:
+                      - location: "PERMITTED_AREA"
+                        timestamp: "2024-05-20T10:00:00.000Z"
+                      - location: "UNKNOWN"
+                        timestamp: "2024-05-23T15:30:00.000Z"
+                      - location: "PERMITTED_AREA"
+                        timestamp: "2024-05-26T08:45:00.000Z"
+                singleLocation:
+                  summary: Example response with single location entry
+                  value:
+                    status: "success"
+                    message: "Device permitted location history retrieved."
+                    permitted_location_history:
+                      - location: "PERMITTED_AREA"
+                        timestamp: "2024-05-20T10:00:00.000Z"
+
+        '400':
+          description: Bad Request - Missing required fields or invalid timeframe
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: "failed"
+                  message:
+                    type: string
+              examples:
+                MissingFields:
+                  summary: Missing required fields
+                  value:
+                    status: "failed"
+                    message: "Missing required fields: didSP, didRequester, or from/to timestamps."
+                InvalidTimestamps:
+                  summary: Invalid timestamp format
+                  value:
+                    status: "failed"
+                    message: "Invalid from/to format. Both must be valid ISO timestamps."
+
+        '401':
+          description: Unauthorized - Authorization token is missing, invalid, or expired
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: "failed"
+                  message:
+                    type: string
+                    example: "Authorization token is missing or invalid."
+              examples:
+                TokenExpired:
+                  summary: Authorization token has expired
+                  value:
+                    status: "failed"
+                    message: "Authorization token has expired."
+                InvalidToken:
+                  summary: Authorization token is invalid
+                  value:
+                    status: "failed"
+                    message: "Invalid Authorization token."
+        '404':
+          description: Device not found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: "failed"
+                  message:
+                    type: string
+                    example: "Device not found."
+        '500':
+          description: Internal server error while retrieving device permitted location history
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: "failed"
+                  message:
+                    type: string
+                    example: "Error retrieving device permitted location history."
 
   # Service API Endpoints # 
 
