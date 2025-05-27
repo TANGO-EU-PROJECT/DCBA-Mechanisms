@@ -1797,11 +1797,16 @@ paths:
                     type: string
                     example: Internal server error while handling logout.
               examples:
-                InternalServerError:
+                GeneralInternalServerError:
                   summary: Internal Server Error
                   value:
                     status: failed
                     message: Internal server error while handling logout.
+                InternalServerErrorDuringAuthTokenValidation:
+                  summary: Internal Server Error
+                  value:
+                    status: failed
+                    message: Internal server error while validating authentication token.
   # Authenticator Endpoints #
 
 
