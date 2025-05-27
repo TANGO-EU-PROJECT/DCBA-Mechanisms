@@ -1096,7 +1096,7 @@ exports.fetchOfflineDevices = async (req, res) => {
  * 
  * @route   POST /devices/behavioural-score
  * @desc    This endpoint receives a request from an external service (e.g., PEP),
- *          validates the input fields (`didSP`, `didRequester`, and `jwtAuth`), verifies the JWT token,
+ *          validates the input fields (`didSP`, `didRequester`), verifies the JWT token,
  *          attempts to find the device by its DID, and returns the behavioural score (a float between 0 and 1).
  *          
  *          Handles the following cases:
@@ -1110,7 +1110,6 @@ exports.fetchOfflineDevices = async (req, res) => {
  * @param   {Object} req.body - The request payload containing:
  *          - {string} didSP - Service Provider's DID
  *          - {string} didRequester - Device's DID to query
- *          - {string} jwtAuth - JWT token for authentication
  * @param   {Object} res - Express response object used to return the result or an error message.
  */
 exports.fetchDeviceBehaviouralScore = async (req, res) => {
@@ -1169,7 +1168,7 @@ exports.fetchDeviceBehaviouralScore = async (req, res) => {
  * 
  * @route   POST /devices/last-location
  * @desc    This endpoint receives a request from an external service,
- *          validates the input fields (`didSP`, `didRequester`, and `jwtAuth`), verifies the JWT token,
+ *          validates the input fields (`didSP`, `didRequester`), verifies the JWT token,
  *          attempts to find the device by its DID, and returns the last location of the device.
  *          
  *          Handles the following cases:
@@ -1183,38 +1182,20 @@ exports.fetchDeviceBehaviouralScore = async (req, res) => {
  * @param   {Object} req.body - The request payload containing:
  *          - {string} didSP - Service Provider's DID
  *          - {string} didRequester - Device's DID to query
- *          - {string} jwtAuth - JWT token for authentication
  * @param   {Object} res - Express response object used to return the result or an error message.
  */
 exports.fetchDeviceLastLocation = async (req, res) => {
-  const { didSP, didRequester, jwtAuth } = req.body;
+  const { didSP, didRequester } = req.body;
 
-  if (!didSP || !didRequester || !jwtAuth) {
+  if (!didSP || !didRequester) {
     return res.status(400).json({
       status: "failed",
-      message: 'Missing required fields: didSP, didRequester, or jwtAuth.'
+      message: 'Missing required fields: didSP or didRequester.'
     });
   }
 
   try {
-    const decoded = jwt.verify(jwtAuth, process.env.JWT_SECRET_KEY);
-
-    let device;
-    try {
-      device = await findDeviceByDID(didRequester);
-    } catch (dbErr) {
-      logEvent({
-        event: 'RETRIEVING LAST LOCATION',
-        status: 'FAILED ❌',
-        did: didRequester,
-        cause: `Error retrieving device last location requested from didSP '${didSP}': ${dbErr.stack}`
-      });
-
-      return res.status(500).json({
-        status: "failed",
-        message: "Error retrieving device last location."
-      });
-    }
+    const device = await findDeviceByDID(didRequester);
 
     if (!device) {
       return res.status(404).json({
@@ -1227,6 +1208,14 @@ exports.fetchDeviceLastLocation = async (req, res) => {
     const history = device.location_history;
     const lastEntry = history.length > 0 ? history[0] : null;
 
+    logEvent({
+      event: 'RETRIEVING LAST LOCATION',
+      status: 'SUCCESS ✅',
+      did: didRequester,
+      device_id: device.device_id,
+      cause: 'Successfully retrieved last known location.'
+    });
+
     return res.status(200).json({
       status: "success",
       message: "Device found.",
@@ -1234,25 +1223,17 @@ exports.fetchDeviceLastLocation = async (req, res) => {
       lastLocationTimestamp: lastEntry ? lastEntry.timestamp : null
     });
 
-
-  } catch (err) {
+  } catch (dbErr) {
     logEvent({
-      event: 'JWT VERIFICATION',
+      event: 'RETRIEVING LAST LOCATION',
       status: 'FAILED ❌',
       did: didRequester,
-      cause: `Error while verifying JWT of didSP '${didSP}': ${err.stack}`
+      cause: `Error retrieving device last location requested from didSP '${didSP}': ${dbErr.stack}`
     });
 
-    if (err.name === 'TokenExpiredError') {
-      return res.status(401).json({
-        status: "failed",
-        message: 'Authorization token has expired.'
-      });
-    }
-
-    return res.status(401).json({
+    return res.status(500).json({
       status: "failed",
-      message: 'Invalid authorization token.'
+      message: "Error retrieving device last location."
     });
   }
 };
