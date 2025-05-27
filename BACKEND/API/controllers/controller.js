@@ -1358,29 +1358,27 @@ exports.fetchDeviceLocationHistory = async (req, res) => {
  * @param   {Object} res - Express response object used to return the result or an error message.
  */
 exports.fetchDevicePermittedLocationHistory = async (req, res) => {
-  const { didSP, didRequester, jwtAuth, timeframe } = req.body;
+  const { didSP, didRequester, from, to } = req.body;
 
-  if (!didSP || !didRequester || !jwtAuth || !timeframe || !timeframe.from || !timeframe.to) {
+  if (!didSP || !didRequester || !from || !to) {
     return res.status(400).json({
       status: "failed",
-      message: 'Missing required fields: didSP, didRequester, jwtAuth, or timeframe (from/to).'
+      message: 'Missing required fields: didSP, didRequester, or from/to timestamps.'
     });
   }
 
-  // Check for valid ISO timestamp format
-  const fromDate = new Date(timeframe.from);
-  const toDate = new Date(timeframe.to);
+  // Validate ISO timestamps
+  const fromDate = new Date(from);
+  const toDate = new Date(to);
 
   if (isNaN(fromDate.getTime()) || isNaN(toDate.getTime())) {
     return res.status(400).json({
       status: "failed",
-      message: 'Invalid timeframe format. `from` and `to` must be valid ISO timestamps.'
+      message: 'Invalid from/to format. Both must be valid ISO timestamps.'
     });
   }
 
   try {
-    const decoded = jwt.verify(jwtAuth, process.env.JWT_SECRET_KEY);
-
     let device;
     try {
       device = await findDeviceByDID(didRequester);
@@ -1405,10 +1403,7 @@ exports.fetchDevicePermittedLocationHistory = async (req, res) => {
       });
     }
 
-    const fromDate = new Date(timeframe.from);
-    const toDate = new Date(timeframe.to);
-
-    // Filter entries by timeframe and location === 'PERMITTED_AREA'
+    // Filter entries by timeframe and location === 'PERMITTED_AREA' or 'UNKNOWN'
     const permittedHistory = device.location_history.filter(entry => {
       const entryTime = new Date(entry.timestamp);
       return (
@@ -1420,31 +1415,25 @@ exports.fetchDevicePermittedLocationHistory = async (req, res) => {
 
     return res.status(200).json({
       status: "success",
-      message: "Permitted location history retrieved.",
+      message: "Device permitted location history retrieved.",
       permitted_location_history: permittedHistory
     });
 
   } catch (err) {
     logEvent({
-      event: 'JWT VERIFICATION',
+      event: 'RETRIEVING PERMITTED LOCATION HISTORY',
       status: 'FAILED ❌',
       did: didRequester,
-      cause: `JWT verification error from didSP '${didSP}': ${err.stack}`
+      cause: `Unexpected error: ${err.stack}`
     });
 
-    if (err.name === 'TokenExpiredError') {
-      return res.status(401).json({
-        status: "failed",
-        message: 'Authorization token has expired.'
-      });
-    }
-
-    return res.status(401).json({
+    return res.status(500).json({
       status: "failed",
-      message: 'Invalid authorization token.'
+      message: "Error retrieving device permitted location history."
     });
   }
 };
+
 
 
 /** [21]
