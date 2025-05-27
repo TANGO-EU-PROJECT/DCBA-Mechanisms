@@ -671,6 +671,35 @@ exports.handleLogout = async (req, res) => {
       });
     }
 
+    try {
+    const decoded = jwt.decode(authToken, { complete: true });
+
+      // Invalid Token Format
+      if (!decoded) {
+        logEvent({
+          event: 'RE-AUTHENTICATION ATTEMPT WITH AUTH-TOKEN',
+          status: 'FAILED ❌',
+          cause: 'INVALID TOKEN FORMAT',
+          device_id: deviceID,
+          ip,
+        });
+        return res.status(400).json({ status: "failed", message: 'Invalid authentication token format.' });
+      }
+    } catch (err) {
+      logEvent({
+        event: 'LOGOUT ATTEMPT',
+        status: 'FAILED ❌',
+        cause: 'DEVICE ATTEMPTED TO LOG OUT',
+        did: clientDid, // Log the provided did
+        device_id: deviceID,
+        ip: req.ip
+      });
+      return res.status(500).json({
+          status: "failed",
+          message: 'Internal server error while validating authentication token.'
+      });
+    }
+
     // Log a message indicating that the device is logging out (with the provided 'did')
     logEvent({
       event: 'LOGOUT ATTEMPT',
