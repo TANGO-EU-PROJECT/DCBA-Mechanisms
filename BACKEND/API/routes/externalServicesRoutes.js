@@ -55,7 +55,7 @@ router.post('/last-location', verifyToken, controller.fetchDeviceLastLocation);
  */
 router.post('/location-history', verifyToken, controller.fetchDeviceLocationHistory);
 
-/** [7] 
+/** [7] DONE
  * @route   POST /devices/permitted-location-history
  * @desc    Returns the devices's permitted location history within a specified timeframe, based on provided DIDs and authorization.
  * @access  Restricted – Requires jwtAuth for access
@@ -67,7 +67,7 @@ router.post('/permitted-location-history', verifyToken, controller.fetchDevicePe
  * @desc    Returns the devices's restricted location history within a specified timeframe, based on provided DIDs and authorization.
  * @access  Restricted – Requires jwtAuth for access
  */
-router.post('/restricted-location-history', controller.fetchDeviceRestrictedLocationHistory);
+router.post('/restricted-location-history', verifyToken, controller.fetchDeviceRestrictedLocationHistory);
 
 module.exports = router;
 // -------------------------------- External Services API Routes -------------------------------- //
