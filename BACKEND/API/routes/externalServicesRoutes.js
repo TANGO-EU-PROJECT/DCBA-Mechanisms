@@ -45,7 +45,7 @@ router.post('/behavioural-score', verifyToken, controller.fetchDeviceBehavioural
  * @desc    Returns the devices's last location based on provided DIDs and authorization.
  * @access  Restricted – Requires jwtAuth for access
  */
-router.post('/last-location', controller.fetchDeviceLastLocation);
+router.post('/last-location', verifyToken, controller.fetchDeviceLastLocation);
 
 
 /** [7] 

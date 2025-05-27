@@ -451,11 +451,13 @@ paths:
     post:
       tags:
         - Service API Endpoints
-      summary: Retrieve device last known location
+      security:
+        - bearerAuth: []
+      summary: Retrieve device last location
       description: >
-        Returns the last known location of a device
+        Returns the last location of a device
         based on provided employee DIDs.
-        Requires a valid JWT authorization token passed in the request body.
+        This route requires a valid JWT Bearer token in the Authorization header to access.
       requestBody:
         required: true
         content:
@@ -465,7 +467,6 @@ paths:
               required:
                 - didSP
                 - didRequester
-                - jwtAuth
               properties:
                 didSP:
                   type: string
@@ -475,17 +476,12 @@ paths:
                   type: string
                   description: The Decentralized Identifier (DID) of the requesting employee.
                   example: "did:example:device456"
-                jwtAuth:
-                  type: string
-                  description: The JSON Web Token (JWT) used for authenticating the request.
-                  example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
             examples:
               validRequest:
                 summary: Valid request example
                 value:
                   didSP: "did:example:serviceprovider123"
                   didRequester: "did:example:device456"
-                  jwtAuth: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
       responses:
         '200':
           description: Last known device location retrieved successfully
@@ -502,7 +498,12 @@ paths:
                     example: "Device found."
                   lastLocation:
                     type: string
-                    example: "Facility Entrance"
+                    example: "WAREHOUSE"
+                  lastLocationTimestamp:
+                    type: string
+                    format: date-time
+                    example: "2024-05-27T14:35:00.000Z"
+
         '400':
           description: Bad Request - Missing required fields
           content:
@@ -515,7 +516,7 @@ paths:
                     example: "failed"
                   message:
                     type: string
-                    example: "Missing required fields: didSP, didRequester, or jwtAuth."
+                    example: "Missing required fields: didSP or didRequester."
         '401':
           description: Unauthorized - Authorization token is invalid or expired
           content:
@@ -555,7 +556,7 @@ paths:
                     type: string
                     example: "Device not found."
         '500':
-          description: Internal server error while retrieving last coordinates
+          description: Internal server error while retrieving last location
           content:
             application/json:
               schema:
@@ -566,7 +567,7 @@ paths:
                     example: "failed"
                   message:
                     type: string
-                    example: "Error retrieving last coordinates."
+                    example: "Error retrieving device last location."
 
   # Service API Endpoints # 
 
