@@ -1542,11 +1542,11 @@ paths:
               properties:
                 authToken:
                   type: string
-                  description: Bearer token to authenticate.
-                  example: Bearer <your-jwt-token>
+                  description: The authentication token associated with the device session.
+                  example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
                 deviceID:
                   type: string
-                  description: Optional device ID associated with the token.
+                  description: Device ID associated with the token.
                   example: 5c487cb4a62cb29d
 
       responses:
@@ -1706,15 +1706,15 @@ paths:
               properties:
                 authToken:
                   type: string
-                  description: The authentication token for verifying the session.
+                  description: The authentication token associated with the device session.
                   example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
                 did:
                   type: string
-                  description: The Decentralized Identifier (DID) of the device.
+                  description: The Decentralized Identifier (DID) of the Android device.
                   example: "did:example:12345"
                 deviceID:
                   type: string
-                  description: The unique device identifier.
+                  description: Device ID associated with the Auth Token.
                   example: "5c487cb4a62cb29d"
       responses:
         '200':
