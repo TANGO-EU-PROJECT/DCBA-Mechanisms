@@ -37,7 +37,7 @@ router.get('/offline-shifts', verifyToken, controller.fetchOfflineDevices);
  * @desc    Returns the devices's behavioural score based on provided DIDs and authorization.
  * @access  Restricted – Requires jwtAuth for access in the req.body
  */
-router.post('/behavioural-score', controller.fetchDeviceBehaviouralScore);
+router.post('/behavioural-score', verifyToken, controller.fetchDeviceBehaviouralScore);
 
 
 /** [6] DONE

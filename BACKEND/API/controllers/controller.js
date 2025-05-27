@@ -1114,35 +1114,17 @@ exports.fetchOfflineDevices = async (req, res) => {
  * @param   {Object} res - Express response object used to return the result or an error message.
  */
 exports.fetchDeviceBehaviouralScore = async (req, res) => {
-  const { didSP, didRequester, jwtAuth } = req.body;
+  const { didSP, didRequester } = req.body;
 
-  if (!didSP || !didRequester || !jwtAuth) {
+  if (!didSP || !didRequester) {
     return res.status(400).json({
       status: "failed",
-      message: 'Missing required fields: didSP, didRequester, or jwtAuth.'
+      message: 'Missing required fields: didSP or didRequester.'
     });
   }
 
   try {
-    const decoded = jwt.verify(jwtAuth, process.env.JWT_SECRET_KEY);
-
-    let device;
-    try {
-      device = await findDeviceByDID(didRequester);
-    } catch (dbErr) {
-      logEvent({
-        event: 'RETRIEVING BEHAVIOURAL SCORE',
-        status: 'FAILED ❌',
-        did: didRequester,
-        device_id: device.device_id,
-        cause: `Error retrieving behavioural score: ${dbErr}`
-      });
-      //console.error('Error retrieving behavioural score:', dbErr);
-      return res.status(500).json({
-        status: "failed",
-        message: "Error retrieving behavioural score."
-      });
-    }
+    const device = await findDeviceByDID(didRequester);
 
     if (!device) {
       return res.status(404).json({
@@ -1158,34 +1140,28 @@ exports.fetchDeviceBehaviouralScore = async (req, res) => {
       device_id: device.device_id,
       cause: 'Successfully retrieved behavioural score.'
     });
-    
+
     return res.status(200).json({
       status: "success",
       message: "Device found.",
       behaviouralScore: device.behavioural_score
     });
 
-  } catch (err) {
+  } catch (dbErr) {
     logEvent({
-      event: 'JWT VERIFICATION',
+      event: 'RETRIEVING BEHAVIOURAL SCORE',
       status: 'FAILED ❌',
       did: didRequester,
-      cause: `Error while verifying JWT of didSP '${didSP}': ${err.stack}`
+      cause: `Error retrieving behavioural score: ${dbErr}`
     });
-    
-    if (err.name === 'TokenExpiredError') {
-      return res.status(401).json({
-        status: "failed",
-        message: 'Authorization token has expired.'
-      });
-    }
 
-    return res.status(401).json({
+    return res.status(500).json({
       status: "failed",
-      message: 'Invalid authorization token.'
+      message: "Error retrieving behavioural score."
     });
   }
 };
+
 
 
 /** [18]
