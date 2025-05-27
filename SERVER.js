@@ -31,6 +31,7 @@ const server = http.createServer(DCBA_SERVER);
 
 /* Middleware to parse JSON request bodies */
 DCBA_SERVER.use(express.json());
+DCBA_SERVER.use(express.urlencoded({ extended: true }));
 DCBA_SERVER.use(cors({exposedHeaders: ['set-cookie'], credentials: true, origin : true}));
 DCBA_SERVER.use(cookieParser());
 /* Middleware for logging HTTP requests using Morgan (set to 'tiny' log format) */
