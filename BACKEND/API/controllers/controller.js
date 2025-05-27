@@ -1246,7 +1246,7 @@ exports.fetchDeviceLastLocation = async (req, res) => {
  * 
  * @route   POST /devices/location-history
  * @desc    This endpoint receives a request from an external service,
- *          validates the input fields (`didSP`, `didRequester`, `jwtAuth`, and `timeframe`), verifies the JWT token,
+ *          validates the input fields (`didSP`, `didRequester`, and `timeframe`), verifies the JWT token,
  *          attempts to find the device by its DID, and returns all location entries within the given timeframe.
  *          
  *          Handles the following cases:
@@ -1260,19 +1260,18 @@ exports.fetchDeviceLastLocation = async (req, res) => {
  * @param   {Object} req.body - The request payload containing:
  *          - {string} didSP - Service Provider's DID
  *          - {string} didRequester - Device's DID to query
- *          - {string} jwtAuth - JWT token for authentication
  *          - {Object} timeframe - Time range to filter location history:
  *              - {string} from - ISO timestamp for the start of the range
  *              - {string} to - ISO timestamp for the end of the range
  * @param   {Object} res - Express response object used to return the result or an error message.
  */
 exports.fetchDeviceLocationHistory = async (req, res) => {
-  const { didSP, didRequester, jwtAuth, timeframe } = req.body;
+  const { didSP, didRequester, timeframe } = req.body;
 
-  if (!didSP || !didRequester || !jwtAuth || !timeframe || !timeframe.from || !timeframe.to) {
+  if (!didSP || !didRequester || !timeframe || !timeframe.from || !timeframe.to) {
     return res.status(400).json({
       status: "failed",
-      message: 'Missing required fields: didSP, didRequester, jwtAuth, or timeframe (from/to).'
+      message: 'Missing required fields: didSP, didRequester, or timeframe (from/to).'
     });
   }
 
@@ -1288,24 +1287,7 @@ exports.fetchDeviceLocationHistory = async (req, res) => {
   }
 
   try {
-    const decoded = jwt.verify(jwtAuth, process.env.JWT_SECRET_KEY);
-
-    let device;
-    try {
-      device = await findDeviceByDID(didRequester);
-    } catch (dbErr) {
-      logEvent({
-        event: 'RETRIEVING LOCATION HISTORY',
-        status: 'FAILED ❌',
-        did: didRequester,
-        cause: `Error retrieving device location history requested from didSP '${didSP}': ${dbErr.stack}`
-      });
-
-      return res.status(500).json({
-        status: "failed",
-        message: "Error retrieving device location history."
-      });
-    }
+    const device = await findDeviceByDID(didRequester);
 
     if (!device) {
       return res.status(404).json({
@@ -1315,12 +1297,17 @@ exports.fetchDeviceLocationHistory = async (req, res) => {
     }
 
     // Filter location history based on the timeframe
-    const fromDate = new Date(timeframe.from);
-    const toDate = new Date(timeframe.to);
-
     const filteredHistory = device.location_history.filter(entry => {
       const entryTime = new Date(entry.timestamp);
       return entryTime >= fromDate && entryTime <= toDate;
+    });
+
+    logEvent({
+      event: 'RETRIEVING LOCATION HISTORY',
+      status: 'SUCCESS ✅',
+      did: didRequester,
+      device_id: device.device_id,
+      cause: `Location history filtered from ${timeframe.from} to ${timeframe.to}`
     });
 
     return res.status(200).json({
@@ -1331,22 +1318,15 @@ exports.fetchDeviceLocationHistory = async (req, res) => {
 
   } catch (err) {
     logEvent({
-      event: 'JWT VERIFICATION',
+      event: 'RETRIEVING LOCATION HISTORY',
       status: 'FAILED ❌',
       did: didRequester,
-      cause: `Error while verifying JWT of didSP '${didSP}': ${err.stack}`
+      cause: `Unexpected error retrieving history from didSP '${didSP}': ${err.stack}`
     });
 
-    if (err.name === 'TokenExpiredError') {
-      return res.status(401).json({
-        status: "failed",
-        message: 'Authorization token has expired.'
-      });
-    }
-
-    return res.status(401).json({
+    return res.status(500).json({
       status: "failed",
-      message: 'Invalid authorization token.'
+      message: "Error retrieving device location history."
     });
   }
 };
