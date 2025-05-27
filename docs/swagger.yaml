@@ -139,14 +139,8 @@ paths:
     get:
       tags:
         - Service API Endpoints  # Tag for service-facing endpoints
-      parameters:
-        - in: header
-          name: Authorization
-          required: true
-          description: Bearer token to get access.
-          schema:
-            type: string
-            example: Bearer <your-jwt-token>
+      security:
+        - bearerAuth: []
       summary: Fetch online devices
       description: Retrieves devices that are currently online. This route requires a valid JWT Bearer token in the Authorization header to access.
       responses:
@@ -244,14 +238,8 @@ paths:
     get:
       tags:
         - Service API Endpoints
-      parameters:
-        - in: header
-          name: Authorization
-          required: true
-          description: Bearer token to get access.
-          schema:
-            type: string
-            example: Bearer <your-jwt-token>
+      security:
+        - bearerAuth: []
       summary: Fetch offline devices
       description: Retrieves devices that are currently offline. This route requires a valid JWT Bearer token in the Authorization header to access.
       responses:
