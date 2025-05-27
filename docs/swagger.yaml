@@ -589,7 +589,8 @@ paths:
               required:
                 - didSP
                 - didRequester
-                - timeframe
+                - from
+                - to
               properties:
                 didSP:
                   type: string
@@ -615,9 +616,8 @@ paths:
                 value:
                   didSP: "did:example:serviceprovider123"
                   didRequester: "did:example:device456"
-                  timeframe:
-                    from: "2024-05-20T00:00:00Z"
-                    to: "2024-05-27T23:59:59Z"
+                  from: "2024-05-20T00:00:00Z"
+                  to: "2024-05-27T23:59:59Z"
       responses:
         '200':
           description: Device location history retrieved successfully
