@@ -1238,6 +1238,11 @@ exports.fetchDeviceLastLocation = async (req, res) => {
     const history = device.location_history;
     const lastEntry = history.length > 0 ? history[0] : null;
 
+    // Convert timestamp to Europe/Athens time string if exists
+    const lastTimestampLocal = lastEntry 
+      ? moment(lastEntry.timestamp).tz('Europe/Athens').format('YYYY-MM-DD HH:mm:ss') 
+      : null;
+
     logEvent({
       event: 'RETRIEVING LAST LOCATION',
       status: 'SUCCESS ✅',
@@ -1250,7 +1255,7 @@ exports.fetchDeviceLastLocation = async (req, res) => {
       status: "success",
       message: "Device found.",
       lastLocation: lastEntry ? lastEntry.location : 'UNKNOWN',
-      lastLocationTimestamp: lastEntry ? lastEntry.timestamp : null
+      lastLocationTimestamp: lastTimestampLocal
     });
 
   } catch (dbErr) {
@@ -1335,6 +1340,12 @@ exports.fetchDeviceLocationHistory = async (req, res) => {
       return entryTime >= fromDate && entryTime <= toDate;
     });
 
+    // Convert timestamps to Europe/Athens time
+    const convertedHistory = filteredHistory.map(entry => ({
+      ...entry.toObject ? entry.toObject() : entry,
+      timestamp: moment(entry.timestamp).tz('Europe/Athens').format('YYYY-MM-DD HH:mm:ss')
+    }));
+
     logEvent({
       event: 'RETRIEVING LOCATION HISTORY',
       status: 'SUCCESS ✅',
@@ -1346,7 +1357,7 @@ exports.fetchDeviceLocationHistory = async (req, res) => {
     return res.status(200).json({
       status: "success",
       message: "Device location history retrieved.",
-      location_history: filteredHistory
+      location_history: convertedHistory
     });
 
   } catch (err) {
@@ -1448,10 +1459,15 @@ exports.fetchDevicePermittedLocationHistory = async (req, res) => {
       );
     });
 
+    const convertedPermittedHistory = permittedHistory.map(entry => ({
+      ...entry.toObject ? entry.toObject() : entry,
+      timestamp: moment(entry.timestamp).tz('Europe/Athens').format('YYYY-MM-DD HH:mm:ss')
+    }));
+
     return res.status(200).json({
       status: "success",
       message: "Device permitted location history retrieved.",
-      permitted_location_history: permittedHistory
+      permitted_location_history: convertedPermittedHistory
     });
 
   } catch (err) {
@@ -1553,10 +1569,15 @@ exports.fetchDeviceRestrictedLocationHistory = async (req, res) => {
       );
     });
 
+    const convertedRestrictedHistory = restrictedHistory.map(entry => ({
+      ...entry.toObject ? entry.toObject() : entry,
+      timestamp: moment(entry.timestamp).tz('Europe/Athens').format('YYYY-MM-DD HH:mm:ss')
+    }));
+
     return res.status(200).json({
       status: "success",
       message: "Device restricted location history retrieved.",
-      location_history: restrictedHistory
+      location_history: convertedRestrictedHistory
     });
   } catch (err) {
     logEvent({
