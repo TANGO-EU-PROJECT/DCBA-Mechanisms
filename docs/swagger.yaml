@@ -330,8 +330,8 @@ paths:
                     status: "success"
                     message: "Fetched offline devices successfully."
                     data: []
-                SingleOnlineDeviceFetched:
-                  summary: Example list of an online device
+                SingleOfflineDeviceFetched:
+                  summary: Example list of an offline device
                   value:
                     status: "success"
                     message: "Fetched offline devices successfully."
@@ -339,8 +339,8 @@ paths:
                       - device_id: "5c487cb4a62cb29d"
                         did: "urn:uuid:06e3f05a-51ce-46e9-a9b9-e2cf27fd10e7"
                         sub: "did:my:wallet"
-                MultipleOnlineDevicesFetched:
-                  summary: Example list of online devices
+                MultipleOfflineDevicesFetched:
+                  summary: Example list of offline devices
                   value:
                     status: "success"
                     message: "Fetched offline devices successfully."
