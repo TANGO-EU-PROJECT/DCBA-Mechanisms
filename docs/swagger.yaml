@@ -20,7 +20,7 @@ info:
     4. You can now use the **Try it out** button on the Service API Endpoints.
 
     **Note:**  
-    All POST service API endpoints require a valid `didRequester` parameter. To obtain a valid `didRequester`, first call the `GET /devices` endpoint to retrieve the list of available devices. Then, use one of the returned `did` identifiers as the `didRequester` value in your POST Service API Endpoints requests.
+    All **POST Service API Endpoints** require a valid `didRequester` parameter. To obtain a valid `didRequester`, first call the `GET /devices` endpoint to retrieve the list of available devices. Then, use one of the returned `did` identifiers as the `didRequester` value in your **POST Service API Endpoints** requests.
 
 
 
