@@ -92,6 +92,9 @@ paths:
                       - device_id: "fc9a978d5223b680"
                         did: "urn:uuid:a886e2e6-63d8-4e5b-836a-345427eec5ff"
                         sub: "did:my:wallet"
+                      - device_id: "gi9b459o5333c612"
+                        did: "urn:uuid:b115d2e6-03c9-3t7h-000a-125374ffp9ll"
+                        sub: "did:my:wallet"
         '401':
           description: Authorization token is missing or malformed
           content:
