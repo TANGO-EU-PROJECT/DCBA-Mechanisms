@@ -1557,7 +1557,6 @@ exports.fetchDeviceRestrictedLocationHistory = async (req, res) => {
       message: "Device restricted location history retrieved.",
       location_history: restrictedHistory
     });
-
   } catch (err) {
     logEvent({
       event: 'RETRIEVING RESTRICTED LOCATION HISTORY',
