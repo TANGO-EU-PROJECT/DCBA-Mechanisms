@@ -56,7 +56,7 @@ const deviceSchema = new mongoose.Schema({
     type: [locationEntrySchema],
     default: () => [{
       location: 'PERMITTED_AREA',
-      timestamp: new Date()
+      timestamp: moment().tz("Europe/Athens").toDate()
     }]
   },
   behavioural_score: {

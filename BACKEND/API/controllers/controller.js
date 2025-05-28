@@ -408,7 +408,7 @@ const processRequest = async (req, res, did, deviceID) => {
                       location: Array.isArray(estimatedLocation)
                         ? estimatedLocation.join(' | ')
                         : estimatedLocation,
-                      timestamp: new Date()
+                      timestamp: moment().tz("Europe/Athens").toDate()
                     }],
                     $position: 0  // Insert at the beginning of the array
                   }
@@ -825,7 +825,7 @@ exports.beginSession = async (req, res) => {
           device_id,
           qr_scanner_state_request,
           log_file_uri,
-          timestamp: new Date(),
+          timestamp: moment().tz("Europe/Athens").toDate()
           // any other required/default fields
         },
         { upsert: true }

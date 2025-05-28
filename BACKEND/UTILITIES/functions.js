@@ -89,7 +89,7 @@ const createDeviceDocument = async (did, sub, device_id, log_file_uri) => {
     // Create initial location entry
     const initialLocation = {
       location: 'PERMITTED_AREA',
-      timestamp: new Date()
+      timestamp: moment().tz("Europe/Athens").toDate()
     };
   
     // Create a new device document with the provided attributes
