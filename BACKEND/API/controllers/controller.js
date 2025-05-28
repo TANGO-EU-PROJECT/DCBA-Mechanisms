@@ -23,7 +23,8 @@ const reset = '\x1b[0m';      /* Reset color to default              */
 
 // Import necessary libraries
 const path = require('path');                      // Import Path module for file path operations
-const moment = require('moment');                  // For handling timestamps
+//const moment = require('moment');                  // For handling timestamps
+const moment = require('moment-timezone');
 const {
   storeLogsToInfluxDB,
   extractTimestamp,
@@ -1612,7 +1613,7 @@ const logEvent = (eventDetails) => {
     `  ${green}IP DEVICE ADDRESS:${reset} ${yellow}${eventDetails.ip || 'UNKNOWN'}${reset},\n` + 
     
     // TIMESTAMP
-    `  ${green}TIMESTAMP:${reset} ${yellow}${moment().format('YYYY-MM-DD HH:mm:ss')}${reset}\n` + 
+    `  ${green}TIMESTAMP:${reset} ${yellow}${moment().tz("Europe/Athens").format('YYYY-MM-DD HH:mm:ss')}${reset}\n` +
     
     // Closing curly brace
     `${green}}${reset}` +

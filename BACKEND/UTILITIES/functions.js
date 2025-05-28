@@ -13,7 +13,8 @@ const { InfluxDB, Point } = require('@influxdata/influxdb-client');  // InfluxDB
 const csv = require('csv-parser');  // CSV parser module for reading and processing .csv files
 const path = require('path');       // Path module for handling and resolving file paths
 const WebSocket = require('ws');
-const moment = require('moment');
+//const moment = require('moment');
+const moment = require('moment-timezone');
 
 // ──────────────────────────────────────────────────────────────────────────────
 // Import the MongoDB schema models dynamically using paths from environment variables
@@ -488,14 +489,14 @@ function initializeWebSocketServer(wss) {
     });
 
     logEvent({
-      event: `WEBSOCKET SERVER INITIALIZED SUCCESSFULLY AT ${moment().format('YYYY-MM-DD HH:mm:ss')}`,
+      event: `WEBSOCKET SERVER INITIALIZED SUCCESSFULLY AT ${moment().tz("Europe/Athens").format('YYYY-MM-DD HH:mm:ss')}`,
       status: 'SUCCESS ✅',
     });
 
   } catch (error) {
     // If an error occurs during initialization, log the error message
     logEvent({
-      event: `WEBSOCKET SERVER FAILED TO INITIALIZED AT ${moment().format('YYYY-MM-DD HH:mm:ss')}`,
+      event: `WEBSOCKET SERVER FAILED TO INITIALIZE AT ${moment().tz("Europe/Athens").format('YYYY-MM-DD HH:mm:ss')}`,
       status: 'FAILED ❌',
     });
   }
@@ -705,7 +706,7 @@ const logEvent = (eventDetails) => {
     `  ${green}IP DEVICE ADDRESS:${reset} ${yellow}${eventDetails.ip || 'UNKNOWN'}${reset},\n` + 
     
     // TIMESTAMP
-    `  ${green}TIMESTAMP:${reset} ${yellow}${moment().format('YYYY-MM-DD HH:mm:ss')}${reset}\n` + 
+    `  ${green}TIMESTAMP:${reset} ${yellow}${moment().tz("Europe/Athens").format('YYYY-MM-DD HH:mm:ss')}${reset}\n` +
     
     // Closing curly brace
     `${green}}${reset}` +

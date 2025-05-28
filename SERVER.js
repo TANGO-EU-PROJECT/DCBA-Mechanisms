@@ -8,7 +8,8 @@ const { InfluxDBClient } = require('@influxdata/influxdb3-client');
 const http = require('http');                                                    /* Import http for creating a HTTP server              */
 const WebSocket = require('ws');                                                 /* Import WebSocket library                            */
 const { initializeWebSocketServer } = require('./BACKEND/UTILITIES/functions');  /* Import WebSocket functions from utilities           */
-const moment = require('moment');
+//const moment = require('moment');
+const moment = require('moment-timezone');
 const cors = require('cors');
 const authenticatorRoutes = require('./BACKEND/API/routes/authenticatorRoutes'); /* Import AUTHENTICATOR routes */
 const externalServicesRoutes = require('./BACKEND/API/routes/externalServicesRoutes'); /* Import EXTERNAL SERVICES routes */
@@ -44,7 +45,7 @@ DCBA_SERVER.use(morgan('tiny'));
 async function connectToMongo() {
   try {
     await mongoose.connect(process.env.MONGO_DB_URI, { useNewUrlParser: true, useUnifiedTopology: true });
-    console.log(`${green}✅ [INFO]${reset} ${lightBlue}SUCCESSFULLY CONNECTED TO MONGODB DATABASE${reset} ${yellow}:${reset} ${green}${moment().format('YYYY-MM-DD HH:mm:ss')}${reset}.`);
+    console.log(`${green}✅ [INFO]${reset} ${lightBlue}SUCCESSFULLY CONNECTED TO MONGODB DATABASE${reset} ${yellow}:${reset} ${green}${moment().tz("Europe/Athens").format('YYYY-MM-DD HH:mm:ss')}${reset}.`);
     return true;
   } catch (err) {
     console.log(`${red}❌ [ERROR]${reset} ${lightBlue}ERROR CONNECTING TO MONGODB:${reset} ${err}, URI ${process.env.MONGO_DB_URI}`);
@@ -66,7 +67,7 @@ async function connectToInflux() {
 
     console.log(`${green}✅ [INFO]${reset} ${lightBlue}TESTING INFLUX CONNECTION WITH A SMALL QUERY...${reset}`);
     await influxDB_Client.query('SELECT 1', process.env.INFLUX_INITDB_DATABASE);
-    console.log(`${green}✅ [INFO]${reset} ${lightBlue}CONNECTED TO INFLUXDB DATABASE${reset} ${yellow}:${reset} ${green}${moment().format('YYYY-MM-DD HH:mm:ss')}${reset}.`);
+    console.log(`${green}✅ [INFO]${reset} ${lightBlue}CONNECTED TO INFLUXDB DATABASE${reset} ${yellow}:${reset} ${green}${moment().tz("Europe/Athens").format('YYYY-MM-DD HH:mm:ss')}${reset}.`);
     return true;
   } catch (err) {
     console.error(`${red}❌ [ERROR]${reset} ${lightBlue}INFLUXDB TEST QUERY FAILED:${reset} ${err.message}`);

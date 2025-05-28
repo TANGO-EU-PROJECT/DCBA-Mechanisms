@@ -717,6 +717,20 @@ paths:
                     type: string
                     example: "Device location history retrieved."
               examples:
+                NoLocationHistoryFound:
+                  summary: Example response with no location history
+                  value:
+                    status: "success"
+                    message: "Device location history retrieved."
+                    location_history: []
+                singleLocation:
+                  summary: Example response with single location entry
+                  value:
+                    status: "success"
+                    message: "Device location history retrieved."
+                    location_history:
+                      - location: "WAREHOUSE"
+                        timestamp: "2024-05-20T10:00:00.000Z"
                 multipleLocations:
                   summary: Example response with multiple location entries
                   value:
@@ -728,16 +742,7 @@ paths:
                       - location: "PACKAGING_LINES"
                         timestamp: "2024-05-23T15:30:00.000Z"
                       - location: "SORTING_LINES_4_AND_5"
-                        timestamp: "2024-05-26T08:45:00.000Z"
-                singleLocation:
-                  summary: Example response with single location entry
-                  value:
-                    status: "success"
-                    message: "Device location history retrieved."
-                    location_history:
-                      - location: "WAREHOUSE"
-                        timestamp: "2024-05-20T10:00:00.000Z"
-
+                        timestamp: "2024-05-26T08:45:00.000Z"   
         '400':
           description: Bad Request - Missing required fields or invalid timeframe
           content:
