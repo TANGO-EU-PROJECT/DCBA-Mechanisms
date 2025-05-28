@@ -71,15 +71,24 @@ paths:
                         sub:
                           type: string
               examples:
-                Example 1:
+                SingleDeviceFetched:
+                  summary: Example list of a device
                   value:
+                    status: "success"
+                    message: "Devices fetched successfully."
                     data:
                       - device_id: "5c487cb4a62cb29d"
                         did: "urn:uuid:06e3f05a-51ce-46e9-a9b9-e2cf27fd10e7"
                         sub: "did:my:wallet"
-                Example 2:
+                MultipleDevicesFetched:
+                  summary: Example list of devices
                   value:
+                    status: "success"
+                    message: "Devices fetched successfully."
                     data:
+                      - device_id: "5c487cb4a62cb29d"
+                        did: "urn:uuid:06e3f05a-51ce-46e9-a9b9-e2cf27fd10e7"
+                        sub: "did:my:wallet"
                       - device_id: "fc9a978d5223b680"
                         did: "urn:uuid:a886e2e6-63d8-4e5b-836a-345427eec5ff"
                         sub: "did:my:wallet"

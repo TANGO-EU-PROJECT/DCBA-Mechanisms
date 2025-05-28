@@ -32,9 +32,6 @@ exports.verifyToken = (req, res, next) => {
     // Verify the JWT token using the secret key
     const decoded = jwt.verify(authorizationToken, process.env.JWT_SECRET_KEY);
 
-    // Attach the decoded information to the request object for later use (if needed)
-    req.user = decoded;
-
     // Pass control to the next middleware/route handler
     next();
   } catch (err) {
