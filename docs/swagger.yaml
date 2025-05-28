@@ -71,6 +71,12 @@ paths:
                         sub:
                           type: string
               examples:
+                NoDeviceFetched:
+                  summary: Example with no devices fetched
+                  value:
+                    status: "success"
+                    message: "Devices fetched successfully."
+                    data: []
                 SingleDeviceFetched:
                   summary: Example list of a device
                   value:
