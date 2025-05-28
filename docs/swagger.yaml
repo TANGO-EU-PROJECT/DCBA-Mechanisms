@@ -192,13 +192,41 @@ paths:
                       properties:
                         device_id:
                           type: string
-                          example: "5c487cb4a62cb29d"
                         did:
                           type: string
-                          example: "did:example:123456789abcdefghi"
                         sub:
                           type: string
-                          example: "user@example.com"
+              examples:
+                NoOnlineDeviceFetched:
+                  summary: Example with no online devices fetched
+                  value:
+                    status: "success"
+                    message: "Fetched online devices successfully."
+                    data: []
+                SingleOnlineDeviceFetched:
+                  summary: Example list of an online device
+                  value:
+                    status: "success"
+                    message: "Fetched online devices successfully."
+                    data:
+                      - device_id: "5c487cb4a62cb29d"
+                        did: "urn:uuid:06e3f05a-51ce-46e9-a9b9-e2cf27fd10e7"
+                        sub: "did:my:wallet"
+                MultipleOnlineDevicesFetched:
+                  summary: Example list of online devices
+                  value:
+                    status: "success"
+                    message: "Fetched online devices successfully."
+                    data:
+                      - device_id: "5c487cb4a62cb29d"
+                        did: "urn:uuid:06e3f05a-51ce-46e9-a9b9-e2cf27fd10e7"
+                        sub: "did:my:wallet"
+                      - device_id: "fc9a978d5223b680"
+                        did: "urn:uuid:a886e2e6-63d8-4e5b-836a-345427eec5ff"
+                        sub: "did:my:wallet"
+                      - device_id: "gi9b459o5333c612"
+                        did: "urn:uuid:b115d2e6-03c9-3t7h-000a-125374ffp9ll"
+                        sub: "did:my:wallet"
         '401':
           description: Authorization token is missing or malformed
           content:
@@ -291,13 +319,41 @@ paths:
                       properties:
                         device_id:
                           type: string
-                          example: "5c487cb4a62cb29d"
                         did:
                           type: string
-                          example: "did:example:987654321zyxwvu"
                         sub:
                           type: string
-                          example: "anotheruser@example.com"
+              examples:
+                NoOfflineDeviceFetched:
+                  summary: Example with no offline devices fetched
+                  value:
+                    status: "success"
+                    message: "Fetched offline devices successfully."
+                    data: []
+                SingleOnlineDeviceFetched:
+                  summary: Example list of an online device
+                  value:
+                    status: "success"
+                    message: "Fetched offline devices successfully."
+                    data:
+                      - device_id: "5c487cb4a62cb29d"
+                        did: "urn:uuid:06e3f05a-51ce-46e9-a9b9-e2cf27fd10e7"
+                        sub: "did:my:wallet"
+                MultipleOnlineDevicesFetched:
+                  summary: Example list of online devices
+                  value:
+                    status: "success"
+                    message: "Fetched offline devices successfully."
+                    data:
+                      - device_id: "5c487cb4a62cb29d"
+                        did: "urn:uuid:06e3f05a-51ce-46e9-a9b9-e2cf27fd10e7"
+                        sub: "did:my:wallet"
+                      - device_id: "fc9a978d5223b680"
+                        did: "urn:uuid:a886e2e6-63d8-4e5b-836a-345427eec5ff"
+                        sub: "did:my:wallet"
+                      - device_id: "gi9b459o5333c612"
+                        did: "urn:uuid:b115d2e6-03c9-3t7h-000a-125374ffp9ll"
+                        sub: "did:my:wallet"
         '401':
           description: Authorization token is missing or malformed
           content:
