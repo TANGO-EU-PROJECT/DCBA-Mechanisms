@@ -66,13 +66,23 @@ paths:
                       properties:
                         device_id:
                           type: string
-                          example: "5c487cb4a62cb29d"
                         did:
                           type: string
-                          example: "did:example:123456789abcdefghi"
                         sub:
                           type: string
-                          example: "user@example.com"
+              examples:
+                Example 1:
+                  value:
+                    data:
+                      - device_id: "5c487cb4a62cb29d"
+                        did: "urn:uuid:06e3f05a-51ce-46e9-a9b9-e2cf27fd10e7"
+                        sub: "did:my:wallet"
+                Example 2:
+                  value:
+                    data:
+                      - device_id: "fc9a978d5223b680"
+                        did: "urn:uuid:a886e2e6-63d8-4e5b-836a-345427eec5ff"
+                        sub: "did:my:wallet"
         '401':
           description: Authorization token is missing or malformed
           content:
