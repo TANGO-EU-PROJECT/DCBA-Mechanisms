@@ -586,7 +586,7 @@ paths:
                   lastLocationTimestamp:
                     type: string
                     format: date-time
-                    example: "2025-05-27T14:35:00.000Z"
+                    example: "2025-05-28 15:45:42"
 
         '400':
           description: Bad Request - Missing required fields
@@ -699,7 +699,7 @@ paths:
                 summary: Valid request example
                 value:
                   didSP: "did:example:serviceprovider123"
-                  didRequester: "did:example:device456"
+                  didRequester: "urn:uuid:2dcd4cb0-acb1-433f-b9a5-0d210f760618"
                   from: "2025-05-28T12:00:00.003Z"
                   to: "2025-05-28T12:15:00.083Z"
       responses:
@@ -730,7 +730,7 @@ paths:
                     message: "Device location history retrieved."
                     location_history:
                       - location: "WAREHOUSE"
-                        timestamp: "2025-05-28T16:00:00.083Z"
+                        timestamp: "2025-05-28 15:45:18"
                 multipleLocations:
                   summary: Example response with multiple location entries
                   value:
@@ -738,11 +738,11 @@ paths:
                     message: "Device location history retrieved."
                     location_history:
                       - location: "WAREHOUSE"
-                        timestamp: "2025-05-28T16:15:00.083Z"
+                        timestamp: "2025-05-28 15:48:18"
                       - location: "PACKAGING_LINES"
-                        timestamp: "2025-05-28T16:18:00.083Z"
+                        timestamp: "2025-05-28 15:47:18"
                       - location: "SORTING_LINES_4_AND_5"
-                        timestamp: "2025-05-28T16:21:00.083Z"   
+                        timestamp: "2025-05-28 15:46:18"   
         '400':
           description: Bad Request - Missing required fields or invalid timeframe
           content:
@@ -849,25 +849,27 @@ paths:
                 didRequester:
                   type: string
                   description: The Decentralized Identifier (DID) of the requesting employee.
-                  example: "did:example:device456"
+                  example: "urn:uuid:2dcd4cb0-acb1-433f-b9a5-0d210f760618"
                 from:
                   type: string
                   format: date-time
                   description: ISO8601 start date-time for filtering the location history.
-                  example: "2024-05-20T00:00:00Z"
+                  example: "2025-05-28T12:00:00.003Z"
                 to:
                   type: string
                   format: date-time
                   description: ISO8601 end date-time for filtering the location history.
-                  example: "2024-05-27T23:59:59Z"
+                  example: "2025-05-28T12:15:00.083Z"
             examples:
               validRequest:
                 summary: Valid request example
                 value:
                   didSP: "did:example:serviceprovider123"
-                  didRequester: "did:example:device456"
-                  from: "2024-05-20T00:00:00Z"
-                  to: "2024-05-27T23:59:59Z"
+                  didRequester: "urn:uuid:2dcd4cb0-acb1-433f-b9a5-0d210f760618"
+                  from: "2025-05-28T12:00:00.003Z"
+                  to: "2025-05-28T12:15:00.083Z"
+
+                  
       responses:
         '200':
           description: Device permitted location history retrieved successfully
@@ -883,26 +885,33 @@ paths:
                     type: string
                     example: "Device permitted location history retrieved."
               examples:
-                multipleLocations:
-                  summary: Example response with multiple location entries
+                NoLocationHistoryFound:
+                  summary: Example response with no permitted location entry
                   value:
                     status: "success"
                     message: "Device permitted location history retrieved."
-                    permitted_location_history:
-                      - location: "PERMITTED_AREA"
-                        timestamp: "2024-05-20T10:00:00.000Z"
-                      - location: "UNKNOWN"
-                        timestamp: "2024-05-23T15:30:00.000Z"
-                      - location: "PERMITTED_AREA"
-                        timestamp: "2024-05-26T08:45:00.000Z"
+                    location_history: []
                 singleLocation:
-                  summary: Example response with single location entry
+                  summary: Example response with single permitted location entry
                   value:
                     status: "success"
                     message: "Device permitted location history retrieved."
                     permitted_location_history:
                       - location: "PERMITTED_AREA"
-                        timestamp: "2024-05-20T10:00:00.000Z"
+                        timestamp: "2025-05-28 15:44:18"
+                multipleLocations:
+                  summary: Example response with multiple permitted location entries
+                  value:
+                    status: "success"
+                    message: "Device permitted location history retrieved."
+                    permitted_location_history:
+                      - location: "PERMITTED_AREA"
+                        timestamp: "2025-05-28 15:47:18"
+                      - location: "UNKNOWN"
+                        timestamp: "2025-05-28 15:46:18"
+                      - location: "PERMITTED_AREA"
+                        timestamp: "2025-05-28 15:45:18"
+                
 
         '400':
           description: Bad Request - Missing required fields or invalid timeframe
@@ -1010,25 +1019,25 @@ paths:
                 didRequester:
                   type: string
                   description: The Decentralized Identifier (DID) of the requesting employee.
-                  example: "did:example:device456"
+                  example: "urn:uuid:2dcd4cb0-acb1-433f-b9a5-0d210f760618"
                 from:
                   type: string
                   format: date-time
                   description: ISO8601 start date-time for filtering the location history.
-                  example: "2024-05-20T00:00:00Z"
+                  example: "2025-05-28T12:00:00.003Z"
                 to:
                   type: string
                   format: date-time
                   description: ISO8601 end date-time for filtering the location history.
-                  example: "2024-05-27T23:59:59Z"
+                  example: "2025-05-28T12:15:00.083Z"
             examples:
               validRequest:
                 summary: Valid request example
                 value:
                   didSP: "did:example:serviceprovider123"
-                  didRequester: "did:example:device456"
-                  from: "2024-05-20T00:00:00Z"
-                  to: "2024-05-27T23:59:59Z"
+                  didRequester: "urn:uuid:2dcd4cb0-acb1-433f-b9a5-0d210f760618"
+                  from: "2025-05-28T12:00:00.003Z"
+                  to: "2025-05-28T12:15:00.083Z"
       responses:
         '200':
           description: Device restricted location history retrieved successfully
@@ -1044,26 +1053,33 @@ paths:
                     type: string
                     example: "Device restricted location history retrieved."
               examples:
-                multipleLocations:
-                  summary: Example response with multiple location entries
+                NoLocationHistoryFound:
+                  summary: Example response with no restricted location entry
                   value:
                     status: "success"
                     message: "Device restricted location history retrieved."
-                    restricted_location_history:
-                      - location: "WAREHOUSE"
-                        timestamp: "2024-05-20T10:00:00.000Z"
-                      - location: "WAREHOUSE"
-                        timestamp: "2024-05-23T15:30:00.000Z"
-                      - location: "PACKAGING_LINES"
-                        timestamp: "2024-05-26T08:45:00.000Z"
+                    location_history: []
                 singleLocation:
-                  summary: Example response with single location entry
+                  summary: Example response with single restricted location entry
                   value:
                     status: "success"
                     message: "Device restricted location history retrieved."
                     restricted_location_history:
                       - location: "PACKAGING_LINES"
-                        timestamp: "2024-05-20T10:00:00.000Z"
+                        timestamp: "2025-05-28 15:44:18"
+                multipleLocations:
+                  summary: Example response with multiple restricted location entries
+                  value:
+                    status: "success"
+                    message: "Device restricted location history retrieved."
+                    restricted_location_history:
+                      - location: "WAREHOUSE"
+                        timestamp: "2025-05-28 15:47:18"
+                      - location: "WAREHOUSE"
+                        timestamp: "2025-05-28 15:46:18"
+                      - location: "PACKAGING_LINES"
+                        timestamp: "2025-05-28 15:45:18"
+                
 
         '400':
           description: Bad Request - Missing required fields or invalid timeframe
