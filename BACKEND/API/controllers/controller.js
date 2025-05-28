@@ -1339,7 +1339,7 @@ exports.fetchDeviceLocationHistory = async (req, res) => {
       status: 'SUCCESS ✅',
       did: didRequester,
       device_id: device.device_id,
-      cause: `Location history filtered from ${timeframe.from} to ${timeframe.to}`
+      cause: `Location history filtered from ${fromDate} to ${toDate}`
     });
 
     return res.status(200).json({
