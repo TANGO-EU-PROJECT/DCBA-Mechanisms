@@ -441,14 +441,14 @@ paths:
                 didRequester:
                   type: string
                   description: The Decentralized Identifier (DID) of the requesting employee.
-                  example: "did:example:device456"
+                  example: "urn:uuid:2dcd4cb0-acb1-433f-b9a5-0d210f760618"
 
             examples:
               validRequest:
                 summary: Valid request example
                 value:
                   didSP: "did:example:serviceprovider123"
-                  didRequester: "did:example:device456"
+                  didRequester: "urn:uuid:2dcd4cb0-acb1-433f-b9a5-0d210f760618"
       responses:
         '200':
           description: Behavioural score retrieved successfully
@@ -559,13 +559,13 @@ paths:
                 didRequester:
                   type: string
                   description: The Decentralized Identifier (DID) of the requesting employee.
-                  example: "did:example:device456"
+                  example: "urn:uuid:2dcd4cb0-acb1-433f-b9a5-0d210f760618"
             examples:
               validRequest:
                 summary: Valid request example
                 value:
                   didSP: "did:example:serviceprovider123"
-                  didRequester: "did:example:device456"
+                  didRequester: "urn:uuid:2dcd4cb0-acb1-433f-b9a5-0d210f760618"
       responses:
         '200':
           description: Last known device location retrieved successfully
@@ -586,7 +586,7 @@ paths:
                   lastLocationTimestamp:
                     type: string
                     format: date-time
-                    example: "2024-05-27T14:35:00.000Z"
+                    example: "2025-05-27T14:35:00.000Z"
 
         '400':
           description: Bad Request - Missing required fields
@@ -683,25 +683,25 @@ paths:
                 didRequester:
                   type: string
                   description: The Decentralized Identifier (DID) of the requesting employee.
-                  example: "did:example:device456"
+                  example: "urn:uuid:2dcd4cb0-acb1-433f-b9a5-0d210f760618"
                 from:
                   type: string
                   format: date-time
                   description: ISO8601 start date-time for filtering the location history.
-                  example: "2024-05-20T00:00:00Z"
+                  example: "2025-05-28T12:00:00.003Z"
                 to:
                   type: string
                   format: date-time
                   description: ISO8601 end date-time for filtering the location history.
-                  example: "2024-05-27T23:59:59Z"
+                  example: "2025-05-28T12:15:00.083Z"
             examples:
               validRequest:
                 summary: Valid request example
                 value:
                   didSP: "did:example:serviceprovider123"
                   didRequester: "did:example:device456"
-                  from: "2024-05-20T00:00:00Z"
-                  to: "2024-05-27T23:59:59Z"
+                  from: "2025-05-28T12:00:00.003Z"
+                  to: "2025-05-28T12:15:00.083Z"
       responses:
         '200':
           description: Device location history retrieved successfully
@@ -730,7 +730,7 @@ paths:
                     message: "Device location history retrieved."
                     location_history:
                       - location: "WAREHOUSE"
-                        timestamp: "2024-05-20T10:00:00.000Z"
+                        timestamp: "2025-05-28T16:00:00.083Z"
                 multipleLocations:
                   summary: Example response with multiple location entries
                   value:
@@ -738,11 +738,11 @@ paths:
                     message: "Device location history retrieved."
                     location_history:
                       - location: "WAREHOUSE"
-                        timestamp: "2024-05-20T10:00:00.000Z"
+                        timestamp: "2025-05-28T16:15:00.083Z"
                       - location: "PACKAGING_LINES"
-                        timestamp: "2024-05-23T15:30:00.000Z"
+                        timestamp: "2025-05-28T16:18:00.083Z"
                       - location: "SORTING_LINES_4_AND_5"
-                        timestamp: "2024-05-26T08:45:00.000Z"   
+                        timestamp: "2025-05-28T16:21:00.083Z"   
         '400':
           description: Bad Request - Missing required fields or invalid timeframe
           content:
