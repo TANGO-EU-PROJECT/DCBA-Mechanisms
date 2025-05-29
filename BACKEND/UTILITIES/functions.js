@@ -86,8 +86,7 @@ const getDeviceURI = async (did) => {
 const createDeviceDocument = async (did, sub, device_id, log_file_uri) => {
   try {
 
-    //const now = moment().tz("Europe/Athens").toDate();
-    const now = new Date(); // returns current time in UTC
+    const now = moment.tz("Europe/Athens").utc().toDate();
 
     // Create initial location entry
     const initialLocation = {
