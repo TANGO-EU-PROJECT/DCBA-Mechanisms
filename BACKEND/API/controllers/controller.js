@@ -1404,8 +1404,7 @@ exports.fetchDeviceLocationHistory = async (req, res) => {
 
     // Filter location history by first_seen_at using UTC timestamps
     const filteredHistory = device.location_history.filter(entry => {
-      const entryMoment = moment.tz(entry.first_seen_at, timezone);
-      const entryTime = entryMoment.utc().valueOf();
+      const entryTime = new Date(entry.first_seen_at).getTime();  // Keep UTC as is
       return entryTime >= fromTimestamp && entryTime <= toTimestamp;
     });
 

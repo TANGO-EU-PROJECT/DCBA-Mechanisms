@@ -86,7 +86,6 @@ const getDeviceURI = async (did) => {
 const createDeviceDocument = async (did, sub, device_id, log_file_uri) => {
   try {
     const now = moment().utc().toDate();
-
     const initialLocation = {
       estimated_location: 'PERMITTED_AREA',
       first_seen_at: now,
