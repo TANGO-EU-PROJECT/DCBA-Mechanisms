@@ -1365,6 +1365,7 @@ exports.fetchDeviceLastLocation = async (req, res) => {
 exports.fetchDeviceLocationHistory = async (req, res) => {
   const { didSP, didRequester, from, to } = req.body;
 
+  // Validate required fields
   if (!didSP || !didRequester || !from || !to) {
     return res.status(400).json({
       status: "failed",
@@ -1372,16 +1373,18 @@ exports.fetchDeviceLocationHistory = async (req, res) => {
     });
   }
 
-  const fromDate = new Date(from);
-  const toDate = new Date(to);
+  // Validate ISO8601 format
   const iso8601Regex = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d{1,3})?Z$/;
-
   if (!iso8601Regex.test(from) || !iso8601Regex.test(to)) {
     return res.status(400).json({
       status: "failed",
       message: 'Invalid from/to format. Both must be valid ISO8601 timestamps.'
     });
   }
+
+  // Parse UTC timestamps for safe comparison
+  const fromTimestamp = Date.parse(from);
+  const toTimestamp = Date.parse(to);
 
   try {
     const device = await findDeviceByDID(didRequester);
@@ -1393,21 +1396,20 @@ exports.fetchDeviceLocationHistory = async (req, res) => {
       });
     }
 
-    // Filter location history within the timeframe
+    // Filter location history by first_seen_at using UTC timestamps
     const filteredHistory = device.location_history.filter(entry => {
-      const entryTime = new Date(entry.first_seen_at).getTime();
-      return entryTime >= fromDate && entryTime <= toDate;
+      const entryTime = Date.parse(entry.first_seen_at);
+      return entryTime >= fromTimestamp && entryTime <= toTimestamp;
     });
-    
 
-    // Map entries to formatted response
+    // Convert entries to a user-friendly response
     const convertedHistory = filteredHistory.map(entry => {
       const entryObj = entry.toObject ? entry.toObject() : entry;
-    
+
       const firstSeen = new Date(entryObj.first_seen_at);
       const lastSeen = new Date(entryObj.last_seen_at);
       const duration = entryObj.duration_s ?? 0;
-    
+
       return {
         estimated_location: entryObj.estimated_location,
         firstSeenAt: moment(firstSeen).tz('Europe/Athens').format('YYYY-MM-DD HH:mm:ss'),
@@ -1415,14 +1417,13 @@ exports.fetchDeviceLocationHistory = async (req, res) => {
         durationSeconds: duration
       };
     });
-    
 
     logEvent({
       event: 'RETRIEVING LOCATION HISTORY',
       status: 'SUCCESS ✅',
       did: didRequester,
       device_id: device.device_id,
-      cause: `LOCATION HISTORY FILTERED FROM ${fromDate} TO ${toDate}`
+      cause: `LOCATION HISTORY FILTERED FROM ${new Date(fromTimestamp).toISOString()} TO ${new Date(toTimestamp).toISOString()}`
     });
 
     return res.status(200).json({
