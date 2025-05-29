@@ -402,7 +402,7 @@ const processRequest = async (req, res, did, deviceID) => {
           ];
           const estimatedLocation = possibleLocations[Math.floor(Math.random() * possibleLocations.length)];
           
-          
+
           const locationName = Array.isArray(estimatedLocation)
             ? estimatedLocation.join(' | ')
             : estimatedLocation;
@@ -443,7 +443,26 @@ const processRequest = async (req, res, did, deviceID) => {
               }
             );
           } else {
-            // Otherwise, append th location
+            // Otherwise, append the new location
+            const now = moment().tz("Europe/Athens").toDate();
+
+            // Step 1: Update the last-previous location's last_seen_at and duration_s (the current first element) (if exists)
+            if (device.location_history.length > 0) {
+              const lastLocationEntry = device.location_history[0];
+              const updatedDurationSeconds = Math.floor((now - new Date(lastLocationEntry.first_seen_at)) / 1000);
+
+              await DEVICE.updateOne(
+                { _id: device._id, "location_history.0.location": lastLocationEntry.location },
+                {
+                  $set: {
+                    "location_history.0.last_seen_at": now,
+                    "location_history.0.duration_s": updatedDurationSeconds
+                  }
+                }
+              );
+            }
+
+            // Step 2: Push the new location entry at the beginning of the array
             await DEVICE.updateOne(
               { _id: device._id },
               {
@@ -461,7 +480,6 @@ const processRequest = async (req, res, did, deviceID) => {
               }
             );
           }
-        
           logEvent({
             event: 'UPDATING DEVICE LOCATION (RIA)',
             status: 'SUCCESS ✅',
