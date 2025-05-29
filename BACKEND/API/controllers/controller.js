@@ -1383,8 +1383,8 @@ exports.fetchDeviceLocationHistory = async (req, res) => {
   }
 
   // Parse UTC timestamps for safe comparison
-  const fromTimestamp = Date.parse(from);
-  const toTimestamp = Date.parse(to);
+  const fromTimestamp = new Date(from).getTime();
+  const toTimestamp = new Date(to).getTime();
 
   try {
     const device = await findDeviceByDID(didRequester);
@@ -1398,7 +1398,7 @@ exports.fetchDeviceLocationHistory = async (req, res) => {
 
     // Filter location history by first_seen_at using UTC timestamps
     const filteredHistory = device.location_history.filter(entry => {
-      const entryTime = Date.parse(entry.first_seen_at);
+      const entryTime = new Date(entry.first_seen_at).getTime();
       return entryTime >= fromTimestamp && entryTime <= toTimestamp;
     });
 
