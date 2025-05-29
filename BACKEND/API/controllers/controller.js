@@ -403,7 +403,7 @@ const processRequest = async (req, res, did, deviceID) => {
           const estimatedLocation = possibleLocations[Math.floor(Math.random() * possibleLocations.length)];
           
 
-          const locationName = Array.isArray(estimatedLocation)
+          const currentLocation = Array.isArray(estimatedLocation)
             ? estimatedLocation.join(' | ')
             : estimatedLocation;
         
@@ -427,14 +427,14 @@ const processRequest = async (req, res, did, deviceID) => {
           const lastLocationEntry = device.location_history?.[0];
           const now = moment().tz("Europe/Athens").toDate();
         
-          if (lastLocationEntry && lastLocationEntry.location === locationName) {
+          if (lastLocationEntry && lastLocationEntry.estimated_location === currentLocation) {
             // If the last location is the estimated location, just update its duration and its last seen fields
             const updatedDurationSeconds = Math.floor(
               (now - new Date(lastLocationEntry.first_seen_at)) / 1000
             );
         
             await DEVICE.updateOne(
-              { _id: device._id, "location_history.0.estimated_location": locationName },
+              { _id: device._id, "location_history.0.estimated_location": currentLocation },
               {
                 $set: {
                   "location_history.0.last_seen_at": now,
@@ -452,7 +452,7 @@ const processRequest = async (req, res, did, deviceID) => {
               const updatedDurationSeconds = Math.floor((now - new Date(lastLocationEntry.first_seen_at)) / 1000);
 
               await DEVICE.updateOne(
-                { _id: device._id, "location_history.0.estimated_location": lastLocationEntry.location },
+                { _id: device._id, "location_history.0.estimated_location": lastLocationEntry.estimated_location },
                 {
                   $set: {
                     "location_history.0.last_seen_at": now,
@@ -469,7 +469,7 @@ const processRequest = async (req, res, did, deviceID) => {
                 $push: {
                   location_history: {
                     $each: [{
-                      estimated_location: locationName,
+                      estimated_location: currentLocation,
                       first_seen_at: now,
                       last_seen_at: now,
                       duration_s: 0
@@ -486,7 +486,7 @@ const processRequest = async (req, res, did, deviceID) => {
             did,
             device_id: deviceID,
             ip: req.ip,
-            cause: `DEVICE LAST LOCATION UPDATED TO: ${locationName}`
+            cause: `DEVICE LAST LOCATION UPDATED TO: ${currentLocation}`
           });
         }
          else {
