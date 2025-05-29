@@ -90,7 +90,7 @@ const createDeviceDocument = async (did, sub, device_id, log_file_uri) => {
 
     // Create initial location entry
     const initialLocation = {
-      location: 'PERMITTED_AREA',
+      estimated_location: 'PERMITTED_AREA',
       first_seen_at: now,
       last_seen_at: now,
       duration_s: 0
