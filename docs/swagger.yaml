@@ -709,8 +709,7 @@ paths:
                 timezone: 
                   type: string
                   description: >
-                    Preferred IANA timezone name for formatting the returned timestamps. 
-                    Example values: Europe/Athens, America/New_York, Asia/Tokyo
+                    "Preferred IANA timezone name for formatting the returned timestamps. Example values: Europe/Athens, America/New_York, Asia/Tokyo"
                   example: "Europe/Athens"
             examples:
               validRequest:
@@ -1111,8 +1110,7 @@ paths:
                 timezone: 
                   type: string
                   description: >
-                    Preferred IANA timezone name for formatting the returned timestamps. 
-                    Example values: Europe/Athens, America/New_York, Asia/Tokyo
+                    "Preferred IANA timezone name for formatting the returned timestamps. Example values: Europe/Athens, America/New_York, Asia/Tokyo"
                   example: "Europe/Athens"
             examples:
               validRequest:
