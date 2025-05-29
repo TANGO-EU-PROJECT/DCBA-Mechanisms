@@ -17,7 +17,7 @@ const possibleLocations = [
 
 // Subschema for a location entry
 const locationEntrySchema = new mongoose.Schema({
-  location: {
+  estimated_location: {
     type: String,
     enum: possibleLocations,
     required: true

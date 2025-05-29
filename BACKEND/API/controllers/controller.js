@@ -434,7 +434,7 @@ const processRequest = async (req, res, did, deviceID) => {
             );
         
             await DEVICE.updateOne(
-              { _id: device._id, "location_history.0.location": locationName },
+              { _id: device._id, "location_history.0.estimated_location": locationName },
               {
                 $set: {
                   "location_history.0.last_seen_at": now,
@@ -452,7 +452,7 @@ const processRequest = async (req, res, did, deviceID) => {
               const updatedDurationSeconds = Math.floor((now - new Date(lastLocationEntry.first_seen_at)) / 1000);
 
               await DEVICE.updateOne(
-                { _id: device._id, "location_history.0.location": lastLocationEntry.location },
+                { _id: device._id, "location_history.0.estimated_location": lastLocationEntry.location },
                 {
                   $set: {
                     "location_history.0.last_seen_at": now,
@@ -469,7 +469,7 @@ const processRequest = async (req, res, did, deviceID) => {
                 $push: {
                   location_history: {
                     $each: [{
-                      location: locationName,
+                      estimated_location: locationName,
                       first_seen_at: now,
                       last_seen_at: now,
                       duration_s: 0
@@ -1314,7 +1314,7 @@ exports.fetchDeviceLastLocation = async (req, res) => {
     return res.status(200).json({
       status: "success",
       message: "Device found.",
-      lastLocation: lastEntry ? lastEntry.location : 'UNKNOWN',
+      lastLocation: lastEntry ? lastEntry.estimated_location : 'UNKNOWN',
       firstSeenAt: firstSeenFormatted,
       lastSeenAt: lastSeenFormatted,
       durationSeconds: durationSeconds
@@ -1409,7 +1409,7 @@ exports.fetchDeviceLocationHistory = async (req, res) => {
       const duration = entryObj.duration_s ?? 0;
     
       return {
-        location: entryObj.location,
+        estimated_location: entryObj.estimated_location,
         firstSeenAt: moment(firstSeen).tz('Europe/Athens').format('YYYY-MM-DD HH:mm:ss'),
         lastSeenAt: moment(lastSeen).tz('Europe/Athens').format('YYYY-MM-DD HH:mm:ss'),
         durationSeconds: duration
@@ -1525,7 +1525,7 @@ exports.fetchDevicePermittedLocationHistory = async (req, res) => {
       return (
         entryTime >= fromDate &&
         entryTime <= toDate &&
-        (entry.location === 'PERMITTED_AREA' || entry.location === 'UNKNOWN')
+        (entry.estimated_location === 'PERMITTED_AREA' || entry.estimated_location === 'UNKNOWN')
       );
     });
 
@@ -1538,7 +1538,7 @@ exports.fetchDevicePermittedLocationHistory = async (req, res) => {
       const duration = entryObj.duration_s ?? 0;
 
       return {
-        location: entryObj.location,
+        estimated_location: entryObj.estimated_location,
         firstSeenAt: moment(firstSeen).tz('Europe/Athens').format('YYYY-MM-DD HH:mm:ss'),
         lastSeenAt: moment(lastSeen).tz('Europe/Athens').format('YYYY-MM-DD HH:mm:ss'),
         durationSeconds: duration
@@ -1647,7 +1647,7 @@ exports.fetchDeviceRestrictedLocationHistory = async (req, res) => {
       return (
         entryTime >= fromDate &&
         entryTime <= toDate &&
-        entry.location !== 'PERMITTED_AREA'
+        entry.estimated_location !== 'PERMITTED_AREA'
       );
     });
 
@@ -1660,7 +1660,7 @@ exports.fetchDeviceRestrictedLocationHistory = async (req, res) => {
       const duration = entryObj.duration_s ?? 0;
 
       return {
-        location: entryObj.location,
+        estimated_location: entryObj.estimated_location,
         firstSeenAt: moment(firstSeen).tz('Europe/Athens').format('YYYY-MM-DD HH:mm:ss'),
         lastSeenAt: moment(lastSeen).tz('Europe/Athens').format('YYYY-MM-DD HH:mm:ss'),
         durationSeconds: duration
