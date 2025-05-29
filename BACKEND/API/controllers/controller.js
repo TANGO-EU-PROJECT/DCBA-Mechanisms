@@ -1269,12 +1269,20 @@ exports.fetchDeviceBehaviouralScore = async (req, res) => {
  * @param   {Object} res - Express response object used to return the result or an error message.
  */
 exports.fetchDeviceLastLocation = async (req, res) => {
-  const { didSP, didRequester } = req.body;
+  const { didSP, didRequester, timezone } = req.body;
 
-  if (!didSP || !didRequester) {
+  if (!didSP || !didRequester || !timezone) {
     return res.status(400).json({
       status: "failed",
-      message: 'Missing required fields: didSP or didRequester.'
+      message: 'Missing required fields: didSP, didRequester, or timezone.'
+    });
+  }
+
+  // Validate timezone
+  if (!moment.tz.zone(timezone)) {
+    return res.status(400).json({
+      status: "failed",
+      message: "Invalid timezone. Please provide a valid IANA timezone name (e.g. 'Europe/Athens', 'America/New_York')."
     });
   }
 
@@ -1292,11 +1300,11 @@ exports.fetchDeviceLastLocation = async (req, res) => {
     const lastEntry = history.length > 0 ? history[0] : null;
 
     const firstSeenFormatted = lastEntry?.first_seen_at
-      ? moment(lastEntry.first_seen_at).tz('Europe/Athens').format('YYYY-MM-DD HH:mm:ss')
+      ? moment(lastEntry.first_seen_at).tz(timezone).format('YYYY-MM-DD HH:mm:ss')
       : "unknown";
 
     const lastSeenFormatted = lastEntry?.last_seen_at
-      ? moment(lastEntry.last_seen_at).tz('Europe/Athens').format('YYYY-MM-DD HH:mm:ss')
+      ? moment(lastEntry.last_seen_at).tz(timezone).format('YYYY-MM-DD HH:mm:ss')
       : "unknown";
 
     const durationSeconds = lastEntry?.duration_s ?? 0;
