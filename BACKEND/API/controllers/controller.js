@@ -425,7 +425,7 @@ const processRequest = async (req, res, did, deviceID) => {
           }
         
           const lastLocationEntry = device.location_history?.[0];
-          const now = moment().tz("Europe/Athens").toDate();
+          const now = new Date(); // always UTC
         
           if (lastLocationEntry && lastLocationEntry.estimated_location === currentLocation) {
             // If the last location is the estimated location, just update its duration and its last seen fields
@@ -444,7 +444,7 @@ const processRequest = async (req, res, did, deviceID) => {
             );
           } else {
             // Otherwise, append the new location
-            const now = moment().tz("Europe/Athens").toDate();
+            const now = new Date(); // always UTC
 
             // Step 1: Update the last-previous location's last_seen_at and duration_s (the current first element) (if exists)
             if (device.location_history.length > 0) {
@@ -1521,7 +1521,7 @@ exports.fetchDevicePermittedLocationHistory = async (req, res) => {
 
     // Filter permitted entries by timeframe and location
     const permittedHistory = device.location_history.filter(entry => {
-      const entryTime = new Date(entry.first_seen_at);  // use schema field
+      const entryTime = new Date(entry.first_seen_at).getTime();
       return (
         entryTime >= fromDate &&
         entryTime <= toDate &&
@@ -1643,7 +1643,7 @@ exports.fetchDeviceRestrictedLocationHistory = async (req, res) => {
 
     // Filter entries by timeframe and location !== 'PERMITTED_AREA'
     const restrictedHistory = device.location_history.filter(entry => {
-      const entryTime = new Date(entry.first_seen_at);
+      const entryTime = new Date(entry.first_seen_at).getTime();
       return (
         entryTime >= fromDate &&
         entryTime <= toDate &&
