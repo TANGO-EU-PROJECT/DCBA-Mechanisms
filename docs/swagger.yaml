@@ -698,17 +698,17 @@ paths:
                   example: "urn:uuid:2dcd4cb0-acb1-433f-b9a5-0d210f760618"
                 from:
                   type: string
-                  description: "Local start date-time in the specified timezone for filtering the location history. Format: 'YYYY-MM-DD HH:mm:ss' (no timezone suffix)."
+                  description: "Local start date-time in the specified timezone for filtering the location history: 'YYYY-MM-DD HH:mm:ss'."
                   example: "2025-05-28 12:00:00"
                 to:
                   type: string
-                  description: "Local end date-time in the specified timezone for filtering the location history. Format: 'YYYY-MM-DD HH:mm:ss' (no timezone suffix)."
-                  example: "2025-05-28 12:15:00"
+                  description: "Local start date-time in the specified timezone for filtering the location history: 'YYYY-MM-DD HH:mm:ss'."
+                  example: "2025-05-30 12:15:00"
                 timezone: 
                   type: string
                   description: >
-                    Preferred IANA timezone name for formatting returned timestamps.
-                    "Example values include: Europe/Athens, America/New_York, Asia/Tokyo."
+                    Preferred IANA timezone name to interpret the 'from' and 'to' parameters for filtering location history, and to format the returned timestamps accordingly.
+                    Example values include: Europe/Athens, Europe/Lisbon, Asia/Tokyo.
                   example: "Europe/Athens"
             examples:
               validRequest:
@@ -785,12 +785,17 @@ paths:
                   summary: Missing required fields
                   value:
                     status: "failed"
-                    message: "Missing required fields: didSP, didRequester, or from/to timestamps."
+                    message: "Missing required fields: didSP, didRequester, from, to, or timezone."
                 InvalidTimestamps:
                   summary: Invalid timestamp format
                   value:
                     status: "failed"
-                    message: "Invalid from/to format. Both must be valid ISO timestamps."
+                    message: "Invalid from/to format. Both must be local datetime strings like 'YYYY-MM-DD HH:mm:ss'."
+                InvalidTimezone:
+                  summary: Invalid timezone format
+                  value:
+                    status: "failed"
+                    message: "Invalid timezone. Please provide a valid IANA timezone name (e.g. 'Europe/Athens', 'America/New_York')."
         '401':
           description: Unauthorized - Authorization token is missing, invalid, or expired
           content:
@@ -866,6 +871,7 @@ paths:
                 - didRequester
                 - from
                 - to
+                - timezone
               properties:
                 didSP:
                   type: string
@@ -877,22 +883,27 @@ paths:
                   example: "urn:uuid:2dcd4cb0-acb1-433f-b9a5-0d210f760618"
                 from:
                   type: string
-                  format: date-time
-                  description: ISO8601 start date-time for filtering the location history.
-                  example: "2025-05-28T12:00:00.003Z"
+                  description: "Local start date-time in the specified timezone for filtering the location history: 'YYYY-MM-DD HH:mm:ss'."
+                  example: "2025-05-28 12:00:00"
                 to:
                   type: string
-                  format: date-time
-                  description: ISO8601 end date-time for filtering the location history.
-                  example: "2025-05-28T12:15:00.083Z"
+                  description: "Local start date-time in the specified timezone for filtering the location history: 'YYYY-MM-DD HH:mm:ss'."
+                  example: "2025-05-30 12:15:00"
+                timezone: 
+                  type: string
+                  description: >
+                    Preferred IANA timezone name to interpret the 'from' and 'to' parameters for filtering location history, and to format the returned timestamps accordingly.
+                    Example values include: Europe/Athens, Europe/Lisbon, Asia/Tokyo.
+                  example: "Europe/Athens"
             examples:
               validRequest:
                 summary: Valid request example
                 value:
                   didSP: "did:example:serviceprovider123"
                   didRequester: "urn:uuid:2dcd4cb0-acb1-433f-b9a5-0d210f760618"
-                  from: "2025-05-28T12:00:00.003Z"
-                  to: "2025-05-28T12:15:00.083Z"
+                  from: "2025-05-28 12:00:00"
+                  to: "2025-05-29 12:00:00"
+                  timezone: "Europe/Athens"
 
                   
       responses:
@@ -944,8 +955,6 @@ paths:
                         firstSeenAt: "2025-05-29 11:25:00"
                         lastSeenAt: "2025-05-29 11:27:05"
                         durationSeconds: 125
-                
-
         '400':
           description: Bad Request - Missing required fields or invalid timeframe
           content:
@@ -963,12 +972,17 @@ paths:
                   summary: Missing required fields
                   value:
                     status: "failed"
-                    message: "Missing required fields: didSP, didRequester, or from/to timestamps."
+                    message: "Missing required fields: didSP, didRequester, from, to, or timezone."
                 InvalidTimestamps:
                   summary: Invalid timestamp format
                   value:
                     status: "failed"
-                    message: "Invalid from/to format. Both must be valid ISO timestamps."
+                    message: "Invalid from/to format. Both must be local datetime strings like 'YYYY-MM-DD HH:mm:ss'."
+                InvalidTimezone:
+                  summary: Invalid timezone format
+                  value:
+                    status: "failed"
+                    message: "Invalid timezone. Please provide a valid IANA timezone name (e.g. 'Europe/Athens', 'America/New_York')."
 
         '401':
           description: Unauthorized - Authorization token is missing, invalid, or expired
@@ -1044,6 +1058,7 @@ paths:
                 - didRequester
                 - from
                 - to
+                - timezone
               properties:
                 didSP:
                   type: string
@@ -1069,8 +1084,9 @@ paths:
                 value:
                   didSP: "did:example:serviceprovider123"
                   didRequester: "urn:uuid:2dcd4cb0-acb1-433f-b9a5-0d210f760618"
-                  from: "2025-05-28T12:00:00.003Z"
-                  to: "2025-05-28T12:15:00.083Z"
+                  from: "2025-05-28 12:00:00"
+                  to: "2025-05-29 12:00:00"
+                  timezone: "Europe/Athens"
       responses:
         '200':
           description: Device restricted location history retrieved successfully
@@ -1137,12 +1153,17 @@ paths:
                   summary: Missing required fields
                   value:
                     status: "failed"
-                    message: "Missing required fields: didSP, didRequester, or from/to timestamps."
+                    message: "Missing required fields: didSP, didRequester, from, to, or timezone."
                 InvalidTimestamps:
                   summary: Invalid timestamp format
                   value:
                     status: "failed"
-                    message: "Invalid from/to format. Both must be valid ISO timestamps."
+                    message: "Invalid from/to format. Both must be local datetime strings like 'YYYY-MM-DD HH:mm:ss'."
+                InvalidTimezone:
+                  summary: Invalid timezone format
+                  value:
+                    status: "failed"
+                    message: "Invalid timezone. Please provide a valid IANA timezone name (e.g. 'Europe/Athens', 'America/New_York')."
 
         '401':
           description: Unauthorized - Authorization token is missing, invalid, or expired

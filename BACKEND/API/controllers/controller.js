@@ -1367,7 +1367,7 @@ exports.fetchDeviceLocationHistory = async (req, res) => {
   if (!didSP || !didRequester || !from || !to) {
     return res.status(400).json({
       status: "failed",
-      message: 'Missing required fields: didSP, didRequester, or timeframe (from/to).'
+      message: 'Missing required fields: didSP, didRequester, from, to, or timezone.'
     });
   }
 
@@ -1375,24 +1375,21 @@ exports.fetchDeviceLocationHistory = async (req, res) => {
   if (!localDateTimeRegex.test(from) || !localDateTimeRegex.test(to)) {
     return res.status(400).json({
       status: "failed",
-      message: 'Invalid from/to format. Both must be local datetime strings like "YYYY-MM-DD HH:mm:ss" (no Z).'
+      message: "Invalid from/to format. Both must be local datetime strings like 'YYYY-MM-DD HH:mm:ss'."
     });
   }
-
 
   // Validate timezone
   if (!moment.tz.zone(timezone)) {
     return res.status(400).json({
       status: "failed",
-      message: `Invalid timezone: '${timezone}'. Please provide a valid IANA timezone name (e.g. 'Europe/Athens', 'America/New_York').`
+      message: "Invalid timezone. Please provide a valid IANA timezone name (e.g. 'Europe/Athens', 'America/New_York')."
     });
   }
 
   // Covenrt local timestamps to UTC
   const fromTimestamp = moment.tz(from, timezone).utc().valueOf();
   const toTimestamp = moment.tz(to, timezone).utc().valueOf();
-
-
 
   try {
     const device = await findDeviceByDID(didRequester);
@@ -1484,44 +1481,39 @@ exports.fetchDeviceLocationHistory = async (req, res) => {
  * @param   {Object} res - Express response object used to return the result or an error message.
  */
 exports.fetchDevicePermittedLocationHistory = async (req, res) => {
-  const { didSP, didRequester, from, to } = req.body;
+  const { didSP, didRequester, from, to, timezone } = req.body;
 
-  if (!didSP || !didRequester || !from || !to) {
+  // Validate required fields
+  if (!didSP || !didRequester || !from || !to || !timezone) {
     return res.status(400).json({
       status: "failed",
-      message: 'Missing required fields: didSP, didRequester, or from/to timestamps.'
+      message: 'Missing required fields: didSP, didRequester, from, to, or timezone.'
     });
   }
 
-  // Validate ISO timestamps
-  const fromDate = new Date(from);
-  const toDate = new Date(to);
-  const iso8601Regex = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d{1,3})?Z$/;
-
-  if (!iso8601Regex.test(from) || !iso8601Regex.test(to)) {
+  // Validate local datetime format (e.g. 'YYYY-MM-DD HH:mm:ss')
+  const localDateTimeRegex = /^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}(?:\.\d{1,3})?$/;
+  if (!localDateTimeRegex.test(from) || !localDateTimeRegex.test(to)) {
     return res.status(400).json({
       status: "failed",
-      message: 'Invalid from/to format. Both must be valid ISO8601 timestamps.'
+      message: "Invalid from/to format. Both must be local datetime strings like 'YYYY-MM-DD HH:mm:ss'."
     });
   }
+
+  // Validate timezone
+  if (!moment.tz.zone(timezone)) {
+    return res.status(400).json({
+      status: "failed",
+      message: "Invalid timezone. Please provide a valid IANA timezone name (e.g. 'Europe/Athens', 'America/New_York')."
+    });
+  }
+
+  // Convert local timestamps to UTC timestamps
+  const fromTimestamp = moment.tz(from, timezone).utc().valueOf();
+  const toTimestamp = moment.tz(to, timezone).utc().valueOf();
 
   try {
-    let device;
-    try {
-      device = await findDeviceByDID(didRequester);
-    } catch (dbErr) {
-      logEvent({
-        event: 'RETRIEVING PERMITTED LOCATION HISTORY',
-        status: 'FAILED ❌',
-        did: didRequester,
-        cause: `ERROR RETRIEVING PERMITTED LOCATION HISTORY FROM didSP '${didSP}': ${dbErr.stack}`
-      });
-
-      return res.status(500).json({
-        status: "failed",
-        message: "Error retrieving permitted location history."
-      });
-    }
+    const device = await findDeviceByDID(didRequester);
 
     if (!device) {
       return res.status(404).json({
@@ -1530,17 +1522,17 @@ exports.fetchDevicePermittedLocationHistory = async (req, res) => {
       });
     }
 
-    // Filter permitted entries by timeframe and location
+    // Filter permitted entries by timeframe and location using UTC timestamps
     const permittedHistory = device.location_history.filter(entry => {
-      const entryTime = new Date(entry.first_seen_at).getTime();
+      const entryTime = new Date(entry.first_seen_at).getTime(); // UTC timestamp
       return (
-        entryTime >= fromDate &&
-        entryTime <= toDate &&
+        entryTime >= fromTimestamp &&
+        entryTime <= toTimestamp &&
         (entry.estimated_location === 'PERMITTED_AREA' || entry.estimated_location === 'UNKNOWN')
       );
     });
 
-    // Convert to Athens time and format
+    // Convert entries to user-friendly format using requested timezone (not fixed 'Europe/Athens')
     const convertedPermittedHistory = permittedHistory.map(entry => {
       const entryObj = entry.toObject ? entry.toObject() : entry;
 
@@ -1550,12 +1542,11 @@ exports.fetchDevicePermittedLocationHistory = async (req, res) => {
 
       return {
         estimated_location: entryObj.estimated_location,
-        firstSeenAt: moment(firstSeen).tz('Europe/Athens').format('YYYY-MM-DD HH:mm:ss'),
-        lastSeenAt: moment(lastSeen).tz('Europe/Athens').format('YYYY-MM-DD HH:mm:ss'),
+        firstSeenAt: moment(firstSeen).tz(timezone).format('YYYY-MM-DD HH:mm:ss'),
+        lastSeenAt: moment(lastSeen).tz(timezone).format('YYYY-MM-DD HH:mm:ss'),
         durationSeconds: duration
       };
     });
-
 
     return res.status(200).json({
       status: "success",
@@ -1605,45 +1596,39 @@ exports.fetchDevicePermittedLocationHistory = async (req, res) => {
  * @param   {Object} res - Express response object used to return the result or an error message.
  */
 exports.fetchDeviceRestrictedLocationHistory = async (req, res) => {
-  const { didSP, didRequester, from, to } = req.body;
+  const { didSP, didRequester, from, to, timezone } = req.body;
 
-  if (!didSP || !didRequester || !from || !to) {
+  // Validate required fields
+  if (!didSP || !didRequester || !from || !to || !timezone) {
     return res.status(400).json({
       status: "failed",
-      message: 'Missing required fields: didSP, didRequester, or from/to timestamps.'
+      message: 'Missing required fields: didSP, didRequester, from, to, or timezone.'
     });
   }
 
-  // Validate ISO timestamps
-  const fromDate = new Date(from);
-  const toDate = new Date(to);
-
-  const iso8601Regex = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d{1,3})?Z$/;
-
-  if (!iso8601Regex.test(from) || !iso8601Regex.test(to)) {
+  // Validate local datetime format: 'YYYY-MM-DD HH:mm:ss' (optional milliseconds)
+  const localDateTimeRegex = /^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}(?:\.\d{1,3})?$/;
+  if (!localDateTimeRegex.test(from) || !localDateTimeRegex.test(to)) {
     return res.status(400).json({
       status: "failed",
-      message: 'Invalid from/to format. Both must be valid ISO8601 timestamps.'
+      message: "Invalid from/to format. Both must be local datetime strings like 'YYYY-MM-DD HH:mm:ss'."
     });
   }
+
+  // Validate timezone
+  if (!moment.tz.zone(timezone)) {
+    return res.status(400).json({
+      status: "failed",
+      message: "Invalid timezone. Please provide a valid IANA timezone name (e.g. 'Europe/Athens', 'America/New_York')."
+    });
+  }
+
+  // Convert local times to UTC timestamps (milliseconds)
+  const fromTimestamp = moment.tz(from, timezone).utc().valueOf();
+  const toTimestamp = moment.tz(to, timezone).utc().valueOf();
 
   try {
-    let device;
-    try {
-      device = await findDeviceByDID(didRequester);
-    } catch (dbErr) {
-      logEvent({
-        event: 'RETRIEVING RESTRICTED LOCATION HISTORY',
-        status: 'FAILED ❌',
-        did: didRequester,
-        cause: `ERROR RETRIEVING RESTRICTED LOCATION HISTORY FROM didSP '${didSP}': ${dbErr.stack}`
-      });
-
-      return res.status(500).json({
-        status: "failed",
-        message: "Error retrieving restricted location history."
-      });
-    }
+    const device = await findDeviceByDID(didRequester);
 
     if (!device) {
       return res.status(404).json({
@@ -1652,17 +1637,17 @@ exports.fetchDeviceRestrictedLocationHistory = async (req, res) => {
       });
     }
 
-    // Filter entries by timeframe and location !== 'PERMITTED_AREA'
+    // Filter entries by UTC timestamp and estimated_location !== 'PERMITTED_AREA'
     const restrictedHistory = device.location_history.filter(entry => {
-      const entryTime = new Date(entry.first_seen_at).getTime();
+      const entryTime = new Date(entry.first_seen_at).getTime(); // UTC timestamp
       return (
-        entryTime >= fromDate &&
-        entryTime <= toDate &&
+        entryTime >= fromTimestamp &&
+        entryTime <= toTimestamp &&
         entry.estimated_location !== 'PERMITTED_AREA'
       );
     });
 
-    // Format dates and durations
+    // Convert filtered entries to requested timezone and format
     const convertedRestrictedHistory = restrictedHistory.map(entry => {
       const entryObj = entry.toObject ? entry.toObject() : entry;
 
@@ -1672,12 +1657,19 @@ exports.fetchDeviceRestrictedLocationHistory = async (req, res) => {
 
       return {
         estimated_location: entryObj.estimated_location,
-        firstSeenAt: moment(firstSeen).tz('Europe/Athens').format('YYYY-MM-DD HH:mm:ss'),
-        lastSeenAt: moment(lastSeen).tz('Europe/Athens').format('YYYY-MM-DD HH:mm:ss'),
+        firstSeenAt: moment(firstSeen).tz(timezone).format('YYYY-MM-DD HH:mm:ss'),
+        lastSeenAt: moment(lastSeen).tz(timezone).format('YYYY-MM-DD HH:mm:ss'),
         durationSeconds: duration
       };
     });
 
+    logEvent({
+      event: 'RETRIEVING RESTRICTED LOCATION HISTORY',
+      status: 'SUCCESS ✅',
+      did: didRequester,
+      device_id: device.device_id,
+      cause: `RESTRICTED LOCATION HISTORY FILTERED FROM ${new Date(fromTimestamp).toISOString()} TO ${new Date(toTimestamp).toISOString()}`
+    });
 
     return res.status(200).json({
       status: "success",
