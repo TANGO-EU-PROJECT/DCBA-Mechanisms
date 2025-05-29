@@ -1418,6 +1418,11 @@ exports.fetchDeviceLocationHistory = async (req, res) => {
       };
     });
 
+    console.log("fromTimestamp", fromTimestamp);
+    console.log("toTimestamp", toTimestamp);
+    console.log("entry.first_seen_at", entry.first_seen_at, new Date(entry.first_seen_at).getTime());
+
+
     logEvent({
       event: 'RETRIEVING LOCATION HISTORY',
       status: 'SUCCESS ✅',
