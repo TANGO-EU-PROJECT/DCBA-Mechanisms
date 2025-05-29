@@ -698,11 +698,11 @@ paths:
                   example: "urn:uuid:2dcd4cb0-acb1-433f-b9a5-0d210f760618"
                 from:
                   type: string
-                  description: Local start date-time in the specified timezone for filtering the location history. Format: "YYYY-MM-DD HH:mm:ss" (no timezone suffix).
+                  description: "Local start date-time in the specified timezone for filtering the location history. Format: 'YYYY-MM-DD HH:mm:ss' (no timezone suffix)."
                   example: "2025-05-28 12:00:00"
                 to:
                   type: string
-                  description: Local end date-time in the specified timezone for filtering the location history. Format: "YYYY-MM-DD HH:mm:ss" (no timezone suffix).
+                  description: "Local end date-time in the specified timezone for filtering the location history. Format: 'YYYY-MM-DD HH:mm:ss' (no timezone suffix)."
                   example: "2025-05-28 12:15:00"
                 timezone: 
                   type: string
