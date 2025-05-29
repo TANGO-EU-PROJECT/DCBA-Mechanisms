@@ -395,9 +395,9 @@ const processRequest = async (req, res, did, deviceID) => {
           const locationName = Array.isArray(estimatedLocation)
             ? estimatedLocation.join(' | ')
             : estimatedLocation;
-
+        
           const device = await DEVICE.findOne({ did, device_id: deviceID });
-
+        
           if (!device) {
             logEvent({
               event: 'PERFORMING LOCALIZATION (RIA)',
@@ -412,18 +412,27 @@ const processRequest = async (req, res, did, deviceID) => {
               message: "Failed to perform localization."
             });
           }
-
+        
           const lastLocationEntry = device.location_history?.[0];
-
+          const now = moment().tz("Europe/Athens").toDate();
+        
           if (lastLocationEntry && lastLocationEntry.location === locationName) {
-            const durationMs = currentTimestamp - new Date(lastLocationEntry.timestamp);
-            const durationSeconds = Math.floor(durationMs / 1000);
-
+            // If the last location is the estimated location, just update its duration and its last seen fields
+            const updatedDurationSeconds = Math.floor(
+              (now - new Date(lastLocationEntry.first_seen_at)) / 1000
+            );
+        
             await DEVICE.updateOne(
               { _id: device._id, "location_history.0.location": locationName },
-              { $inc: { "location_history.0.duration": durationSeconds } }
+              {
+                $set: {
+                  "location_history.0.last_seen_at": now,
+                  "location_history.0.duration_seconds": updatedDurationSeconds
+                }
+              }
             );
           } else {
+            // Otherwise, append th location
             await DEVICE.updateOne(
               { _id: device._id },
               {
@@ -431,8 +440,9 @@ const processRequest = async (req, res, did, deviceID) => {
                   location_history: {
                     $each: [{
                       location: locationName,
-                      timestamp: currentTimestamp,
-                      duration: 0
+                      first_seen_at: now,
+                      last_seen_at: now,
+                      duration_seconds: 0
                     }],
                     $position: 0
                   }
@@ -440,7 +450,7 @@ const processRequest = async (req, res, did, deviceID) => {
               }
             );
           }
-
+        
           logEvent({
             event: 'UPDATING DEVICE LOCATION (RIA)',
             status: 'SUCCESS ✅',
@@ -449,8 +459,8 @@ const processRequest = async (req, res, did, deviceID) => {
             ip: req.ip,
             cause: `DEVICE LAST LOCATION UPDATED TO: ${locationName}`
           });
-
-        } else {
+        }
+         else {
           logEvent({
             event: 'PERFORMING LOCALIZATION (RIA)',
             status: 'FAILED ❌',
@@ -1251,17 +1261,18 @@ exports.fetchDeviceLastLocation = async (req, res) => {
       });
     }
 
-    // Get the most recent location entry from location_history
     const history = device.location_history;
     const lastEntry = history.length > 0 ? history[0] : null;
 
-    // Convert timestamp to Europe/Athens time string if exists
-    const lastTimestampLocal = lastEntry 
-      ? moment(lastEntry.timestamp).tz('Europe/Athens').format('YYYY-MM-DD HH:mm:ss') 
+    const firstSeenFormatted = lastEntry?.first_seen_at
+      ? moment(lastEntry.first_seen_at).tz('Europe/Athens').format('YYYY-MM-DD HH:mm:ss')
       : null;
 
-    const durationSeconds = lastEntry?.duration ?? 0;
+    const lastSeenFormatted = lastEntry?.last_seen_at
+      ? moment(lastEntry.last_seen_at).tz('Europe/Athens').format('YYYY-MM-DD HH:mm:ss')
+      : null;
 
+    const durationSeconds = lastEntry?.duration_seconds ?? 0;
 
     logEvent({
       event: 'RETRIEVING LAST LOCATION',
@@ -1275,8 +1286,9 @@ exports.fetchDeviceLastLocation = async (req, res) => {
       status: "success",
       message: "Device found.",
       lastLocation: lastEntry ? lastEntry.location : 'UNKNOWN',
-      lastLocationTimestamp: lastTimestampLocal,
-      lastLocationDuration: durationSeconds
+      firstSeenAt: firstSeenFormatted,
+      lastSeenAt: lastSeenFormatted,
+      durationSeconds: durationSeconds
     });
 
   } catch (dbErr) {
@@ -1284,7 +1296,7 @@ exports.fetchDeviceLastLocation = async (req, res) => {
       event: 'RETRIEVING LAST LOCATION',
       status: 'FAILED ❌',
       did: didRequester,
-      cause: `Error retrieving device last location requested from didSP '${didSP}': ${dbErr.stack}`
+      cause: `ERROR RETRIEVING DEVICE LAST LOCATION REQUESTED FROM didSP '${didSP}': ${dbErr.stack}`
     });
 
     return res.status(500).json({
@@ -1333,8 +1345,6 @@ exports.fetchDeviceLocationHistory = async (req, res) => {
 
   const fromDate = new Date(from);
   const toDate = new Date(to);
-
-
   const iso8601Regex = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d{1,3})?Z$/;
 
   if (!iso8601Regex.test(from) || !iso8601Regex.test(to)) {
@@ -1343,7 +1353,6 @@ exports.fetchDeviceLocationHistory = async (req, res) => {
       message: 'Invalid from/to format. Both must be valid ISO8601 timestamps.'
     });
   }
-
 
   try {
     const device = await findDeviceByDID(didRequester);
@@ -1355,19 +1364,24 @@ exports.fetchDeviceLocationHistory = async (req, res) => {
       });
     }
 
-    // Filter location history based on the timeframe
+    // Filter location history within the timeframe
     const filteredHistory = device.location_history.filter(entry => {
-      const entryTime = new Date(entry.timestamp);
+      const entryTime = new Date(entry.firstSeenAt || entry.timestamp); // fallback for legacy
       return entryTime >= fromDate && entryTime <= toDate;
     });
 
-    // Convert timestamps to Europe/Athens time and include duration explicitly
+    // Map entries to formatted response
     const convertedHistory = filteredHistory.map(entry => {
       const entryObj = entry.toObject ? entry.toObject() : entry;
+      const firstSeen = new Date(entryObj.firstSeenAt || entryObj.timestamp);
+      const lastSeen = new Date(entryObj.lastSeenAt || entryObj.timestamp);
+      const duration = entryObj.duration ?? 0;
+
       return {
-        ...entryObj,
-        timestamp: moment(entry.timestamp).tz('Europe/Athens').format('YYYY-MM-DD HH:mm:ss'),
-        duration: entry.duration ?? 0
+        location: entryObj.location,
+        firstSeenAt: moment(firstSeen).tz('Europe/Athens').format('YYYY-MM-DD HH:mm:ss'),
+        lastSeenAt: moment(lastSeen).tz('Europe/Athens').format('YYYY-MM-DD HH:mm:ss'),
+        durationSeconds: duration
       };
     });
 
@@ -1399,6 +1413,7 @@ exports.fetchDeviceLocationHistory = async (req, res) => {
     });
   }
 };
+
 
 
 /** [20]
@@ -1438,7 +1453,6 @@ exports.fetchDevicePermittedLocationHistory = async (req, res) => {
   // Validate ISO timestamps
   const fromDate = new Date(from);
   const toDate = new Date(to);
-
   const iso8601Regex = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d{1,3})?Z$/;
 
   if (!iso8601Regex.test(from) || !iso8601Regex.test(to)) {
@@ -1447,7 +1461,6 @@ exports.fetchDevicePermittedLocationHistory = async (req, res) => {
       message: 'Invalid from/to format. Both must be valid ISO8601 timestamps.'
     });
   }
-
 
   try {
     let device;
@@ -1474,9 +1487,9 @@ exports.fetchDevicePermittedLocationHistory = async (req, res) => {
       });
     }
 
-    // Filter entries by timeframe and location === 'PERMITTED_AREA' or 'UNKNOWN'
+    // Filter permitted entries by timeframe and location
     const permittedHistory = device.location_history.filter(entry => {
-      const entryTime = new Date(entry.timestamp);
+      const entryTime = new Date(entry.firstSeenAt || entry.timestamp);
       return (
         entryTime >= fromDate &&
         entryTime <= toDate &&
@@ -1484,12 +1497,18 @@ exports.fetchDevicePermittedLocationHistory = async (req, res) => {
       );
     });
 
+    // Convert to Athens time and format
     const convertedPermittedHistory = permittedHistory.map(entry => {
       const entryObj = entry.toObject ? entry.toObject() : entry;
+      const firstSeen = new Date(entryObj.firstSeenAt || entryObj.timestamp);
+      const lastSeen = new Date(entryObj.lastSeenAt || entryObj.timestamp);
+      const duration = entryObj.duration ?? 0;
+
       return {
-        ...entryObj,
-        timestamp: moment(entry.timestamp).tz('Europe/Athens').format('YYYY-MM-DD HH:mm:ss'),
-        duration: entry.duration ?? 0
+        location: entryObj.location,
+        firstSeenAt: moment(firstSeen).tz('Europe/Athens').format('YYYY-MM-DD HH:mm:ss'),
+        lastSeenAt: moment(lastSeen).tz('Europe/Athens').format('YYYY-MM-DD HH:mm:ss'),
+        durationSeconds: duration
       };
     });
 
@@ -1590,7 +1609,7 @@ exports.fetchDeviceRestrictedLocationHistory = async (req, res) => {
 
     // Filter entries by timeframe and location !== 'PERMITTED_AREA'
     const restrictedHistory = device.location_history.filter(entry => {
-      const entryTime = new Date(entry.timestamp);
+      const entryTime = new Date(entry.firstSeenAt || entry.timestamp);
       return (
         entryTime >= fromDate &&
         entryTime <= toDate &&
@@ -1598,12 +1617,18 @@ exports.fetchDeviceRestrictedLocationHistory = async (req, res) => {
       );
     });
 
+    // Format dates and durations
     const convertedRestrictedHistory = restrictedHistory.map(entry => {
       const entryObj = entry.toObject ? entry.toObject() : entry;
+      const firstSeen = new Date(entryObj.firstSeenAt || entryObj.timestamp);
+      const lastSeen = new Date(entryObj.lastSeenAt || entryObj.timestamp);
+      const duration = entryObj.duration ?? 0;
+
       return {
-        ...entryObj,
-        timestamp: moment(entry.timestamp).tz('Europe/Athens').format('YYYY-MM-DD HH:mm:ss'),
-        duration: entry.duration ?? 0
+        location: entryObj.location,
+        firstSeenAt: moment(firstSeen).tz('Europe/Athens').format('YYYY-MM-DD HH:mm:ss'),
+        lastSeenAt: moment(lastSeen).tz('Europe/Athens').format('YYYY-MM-DD HH:mm:ss'),
+        durationSeconds: duration
       };
     });
 
@@ -1612,6 +1637,7 @@ exports.fetchDeviceRestrictedLocationHistory = async (req, res) => {
       message: "Device restricted location history retrieved.",
       location_history: convertedRestrictedHistory
     });
+
   } catch (err) {
     logEvent({
       event: 'RETRIEVING RESTRICTED LOCATION HISTORY',
@@ -1626,7 +1652,6 @@ exports.fetchDeviceRestrictedLocationHistory = async (req, res) => {
     });
   }
 };
-
 
 
 
