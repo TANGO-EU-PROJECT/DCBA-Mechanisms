@@ -1120,15 +1120,6 @@ paths:
                   didRequester: "urn:uuid:2dcd4cb0-acb1-433f-b9a5-0d210f760618"
                   from: "2025-05-28T12:00:00.003Z"
                   to: "2025-05-28T12:15:00.083Z"
-                  timezone: "Europe/Athens"
-            examples:
-              validRequest:
-                summary: Valid request example
-                value:
-                  didSP: "did:example:serviceprovider123"
-                  didRequester: "urn:uuid:2dcd4cb0-acb1-433f-b9a5-0d210f760618"
-                  from: "2025-05-28T12:00:00.003Z"
-                  to: "2025-05-28T12:15:00.083Z"
                   timezone: Europe/Athens
       responses:
         '200':
