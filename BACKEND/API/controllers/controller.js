@@ -425,7 +425,7 @@ const processRequest = async (req, res, did, deviceID) => {
           }
         
           const lastLocationEntry = device.location_history?.[0];
-          const now = new Date(); // always UTC
+          const now = moment.tz("Europe/Athens").utc().toDate();
         
           if (lastLocationEntry && lastLocationEntry.estimated_location === currentLocation) {
             // If the last location is the estimated location, just update its duration and its last seen fields
@@ -444,7 +444,7 @@ const processRequest = async (req, res, did, deviceID) => {
             );
           } else {
             // Otherwise, append the new location
-            const now = new Date(); // always UTC
+            const now = moment.tz("Europe/Athens").utc().toDate();
 
             // Step 1: Update the last-previous location's last_seen_at and duration_s (the current first element) (if exists)
             if (device.location_history.length > 0) {
