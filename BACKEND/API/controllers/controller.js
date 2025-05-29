@@ -427,7 +427,7 @@ const processRequest = async (req, res, did, deviceID) => {
               {
                 $set: {
                   "location_history.0.last_seen_at": now,
-                  "location_history.0.duration_seconds": updatedDurationSeconds
+                  "location_history.0.duration_s": updatedDurationSeconds
                 }
               }
             );
@@ -442,7 +442,7 @@ const processRequest = async (req, res, did, deviceID) => {
                       location: locationName,
                       first_seen_at: now,
                       last_seen_at: now,
-                      duration_seconds: 0
+                      duration_s: 0
                     }],
                     $position: 0
                   }
@@ -1272,7 +1272,7 @@ exports.fetchDeviceLastLocation = async (req, res) => {
       ? moment(lastEntry.last_seen_at).tz('Europe/Athens').format('YYYY-MM-DD HH:mm:ss')
       : null;
 
-    const durationSeconds = lastEntry?.duration_seconds ?? 0;
+    const durationSeconds = lastEntry?.duration_s ?? 0;
 
     logEvent({
       event: 'RETRIEVING LAST LOCATION',
