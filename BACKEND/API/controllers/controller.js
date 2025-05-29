@@ -391,7 +391,18 @@ const processRequest = async (req, res, did, deviceID) => {
         console.log(JSON.stringify(result, null, 2));
 
         if (LOCALIZATION_ALGORITHM_APPLIED === 'RIA-ED') {
-          const estimatedLocation = result['Estimated Location'];
+          //const estimatedLocation = result['Estimated Location'];
+          const possibleLocations = [
+            'PACKAGING_LINES',
+            'PERMITTED_AREA',
+            'SORTING_LINES_1_TO_3',
+            'SORTING_LINES_4_AND_5',
+            'SORTING_LINES_6_TO_8',
+            'WAREHOUSE'
+          ];
+          const estimatedLocation = possibleLocations[Math.floor(Math.random() * possibleLocations.length)];
+          
+          
           const locationName = Array.isArray(estimatedLocation)
             ? estimatedLocation.join(' | ')
             : estimatedLocation;
