@@ -1395,7 +1395,7 @@ exports.fetchDeviceLocationHistory = async (req, res) => {
 
     // Filter location history within the timeframe
     const filteredHistory = device.location_history.filter(entry => {
-      const entryTime = new Date(entry.first_seen_at); // Use schema field
+      const entryTime = new Date(entry.first_seen_at).getTime();
       return entryTime >= fromDate && entryTime <= toDate;
     });
     
