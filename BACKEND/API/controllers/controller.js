@@ -1266,11 +1266,11 @@ exports.fetchDeviceLastLocation = async (req, res) => {
 
     const firstSeenFormatted = lastEntry?.first_seen_at
       ? moment(lastEntry.first_seen_at).tz('Europe/Athens').format('YYYY-MM-DD HH:mm:ss')
-      : null;
+      : "unknown";
 
     const lastSeenFormatted = lastEntry?.last_seen_at
       ? moment(lastEntry.last_seen_at).tz('Europe/Athens').format('YYYY-MM-DD HH:mm:ss')
-      : null;
+      : "unknown";
 
     const durationSeconds = lastEntry?.duration_s ?? 0;
 
@@ -1366,17 +1366,19 @@ exports.fetchDeviceLocationHistory = async (req, res) => {
 
     // Filter location history within the timeframe
     const filteredHistory = device.location_history.filter(entry => {
-      const entryTime = new Date(entry.firstSeenAt || entry.timestamp); // fallback for legacy
+      const entryTime = new Date(entry.first_seen_at); // Use schema field
       return entryTime >= fromDate && entryTime <= toDate;
     });
+    
 
     // Map entries to formatted response
     const convertedHistory = filteredHistory.map(entry => {
       const entryObj = entry.toObject ? entry.toObject() : entry;
-      const firstSeen = new Date(entryObj.firstSeenAt || entryObj.timestamp);
-      const lastSeen = new Date(entryObj.lastSeenAt || entryObj.timestamp);
-      const duration = entryObj.duration ?? 0;
-
+    
+      const firstSeen = new Date(entryObj.first_seen_at);
+      const lastSeen = new Date(entryObj.last_seen_at);
+      const duration = entryObj.duration_s ?? 0;
+    
       return {
         location: entryObj.location,
         firstSeenAt: moment(firstSeen).tz('Europe/Athens').format('YYYY-MM-DD HH:mm:ss'),
@@ -1384,6 +1386,7 @@ exports.fetchDeviceLocationHistory = async (req, res) => {
         durationSeconds: duration
       };
     });
+    
 
     logEvent({
       event: 'RETRIEVING LOCATION HISTORY',
@@ -1489,7 +1492,7 @@ exports.fetchDevicePermittedLocationHistory = async (req, res) => {
 
     // Filter permitted entries by timeframe and location
     const permittedHistory = device.location_history.filter(entry => {
-      const entryTime = new Date(entry.firstSeenAt || entry.timestamp);
+      const entryTime = new Date(entry.first_seen_at);  // use schema field
       return (
         entryTime >= fromDate &&
         entryTime <= toDate &&
@@ -1500,9 +1503,10 @@ exports.fetchDevicePermittedLocationHistory = async (req, res) => {
     // Convert to Athens time and format
     const convertedPermittedHistory = permittedHistory.map(entry => {
       const entryObj = entry.toObject ? entry.toObject() : entry;
-      const firstSeen = new Date(entryObj.firstSeenAt || entryObj.timestamp);
-      const lastSeen = new Date(entryObj.lastSeenAt || entryObj.timestamp);
-      const duration = entryObj.duration ?? 0;
+
+      const firstSeen = new Date(entryObj.first_seen_at);
+      const lastSeen = new Date(entryObj.last_seen_at);
+      const duration = entryObj.duration_s ?? 0;
 
       return {
         location: entryObj.location,
@@ -1511,6 +1515,7 @@ exports.fetchDevicePermittedLocationHistory = async (req, res) => {
         durationSeconds: duration
       };
     });
+
 
     return res.status(200).json({
       status: "success",
@@ -1609,7 +1614,7 @@ exports.fetchDeviceRestrictedLocationHistory = async (req, res) => {
 
     // Filter entries by timeframe and location !== 'PERMITTED_AREA'
     const restrictedHistory = device.location_history.filter(entry => {
-      const entryTime = new Date(entry.firstSeenAt || entry.timestamp);
+      const entryTime = new Date(entry.first_seen_at);
       return (
         entryTime >= fromDate &&
         entryTime <= toDate &&
@@ -1620,9 +1625,10 @@ exports.fetchDeviceRestrictedLocationHistory = async (req, res) => {
     // Format dates and durations
     const convertedRestrictedHistory = restrictedHistory.map(entry => {
       const entryObj = entry.toObject ? entry.toObject() : entry;
-      const firstSeen = new Date(entryObj.firstSeenAt || entryObj.timestamp);
-      const lastSeen = new Date(entryObj.lastSeenAt || entryObj.timestamp);
-      const duration = entryObj.duration ?? 0;
+
+      const firstSeen = new Date(entryObj.first_seen_at);
+      const lastSeen = new Date(entryObj.last_seen_at);
+      const duration = entryObj.duration_s ?? 0;
 
       return {
         location: entryObj.location,
@@ -1631,6 +1637,7 @@ exports.fetchDeviceRestrictedLocationHistory = async (req, res) => {
         durationSeconds: duration
       };
     });
+
 
     return res.status(200).json({
       status: "success",
