@@ -740,7 +740,7 @@ paths:
                     status: "success"
                     message: "Device location history retrieved."
                     location_history:
-                      - location: "WAREHOUSE"
+                      - estimated_location: "WAREHOUSE"
                         firstSeenAt: "2025-05-29 11:19:26"
                         lastSeenAt: "2025-05-29 11:20:36"
                         durationSeconds: 70
@@ -750,15 +750,15 @@ paths:
                     status: "success"
                     message: "Device location history retrieved."
                     location_history:
-                      - location: "WAREHOUSE"
+                      - estimated_location: "WAREHOUSE"
                         firstSeenAt: "2025-05-29 11:19:26"
                         lastSeenAt: "2025-05-29 11:20:36"
                         durationSeconds: 70
-                      - location: "PACKAGING_LINES"
+                      - estimated_location: "PACKAGING_LINES"
                         firstSeenAt: "2025-05-29 11:20:36"
                         lastSeenAt: "2025-05-29 11:21:41"
                         durationSeconds: 65
-                      - location: "PERMITTED_AREA"
+                      - estimated_location: "PERMITTED_AREA"
                         firstSeenAt: "2025-05-29 11:21:41"
                         lastSeenAt: "2025-05-29 11:22:00"
                         durationSeconds: 19
@@ -916,7 +916,7 @@ paths:
                     status: "success"
                     message: "Device permitted location history retrieved."
                     permitted_location_history:
-                      - location: "PERMITTED_AREA"
+                      - estimated_location: "PERMITTED_AREA"
                         firstSeenAt: "2025-05-29 11:19:26"
                         lastSeenAt: "2025-05-29 11:20:36"
                         durationSeconds: 70
@@ -926,15 +926,15 @@ paths:
                     status: "success"
                     message: "Device permitted location history retrieved."
                     permitted_location_history:
-                      - location: "PERMITTED_AREA"
+                      - estimated_location: "PERMITTED_AREA"
                         firstSeenAt: "2025-05-29 11:19:26"
                         lastSeenAt: "2025-05-29 11:20:36"
                         durationSeconds: 70
-                      - location: "PERMITTED_AREA"
+                      - estimated_location: "PERMITTED_AREA"
                         firstSeenAt: "2025-05-29 11:22:56"
                         lastSeenAt: "2025-05-29 11:23:56"
                         durationSeconds: 60
-                      - location: "PERMITTED_AREA"
+                      - estimated_location: "PERMITTED_AREA"
                         firstSeenAt: "2025-05-29 11:25:00"
                         lastSeenAt: "2025-05-29 11:27:05"
                         durationSeconds: 125
@@ -1092,7 +1092,7 @@ paths:
                     status: "success"
                     message: "Device restricted location history retrieved."
                     restricted_location_history:
-                      - location: "PACKAGING_LINES"
+                      - estimated_location: "PACKAGING_LINES"
                         firstSeenAt: "2025-05-29 11:19:26"
                         lastSeenAt: "2025-05-29 11:20:36"
                         durationSeconds: 70
@@ -1102,20 +1102,18 @@ paths:
                     status: "success"
                     message: "Device restricted location history retrieved."
                     restricted_location_history:
-                      - location: "PACKAGING_LINES"
+                      - estimated_location: "PACKAGING_LINES"
                         firstSeenAt: "2025-05-29 11:19:26"
                         lastSeenAt: "2025-05-29 11:20:36"
                         durationSeconds: 70
-                      - location: "SORTING_LINES_4_AND_5"
+                      - estimated_location: "SORTING_LINES_4_AND_5"
                         firstSeenAt: "2025-05-29 11:20:36"
                         lastSeenAt: "2025-05-29 11:20:56"
                         durationSeconds: 20
-                      - location: "WAREHOUSE"
+                      - estimated_location: "WAREHOUSE"
                         firstSeenAt: "2025-05-29 11:22:00"
                         lastSeenAt: "2025-05-29 11:23:15"
                         durationSeconds: 75
-                
-
         '400':
           description: Bad Request - Missing required fields or invalid timeframe
           content:
