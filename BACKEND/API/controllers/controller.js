@@ -1371,14 +1371,14 @@ exports.fetchDeviceLocationHistory = async (req, res) => {
     });
   }
 
-  // Validate ISO8601 format
-  const iso8601Regex = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d{1,3})?Z$/;
-  if (!iso8601Regex.test(from) || !iso8601Regex.test(to)) {
+  const localDateTimeRegex = /^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}(?:\.\d{1,3})?$/;
+  if (!localDateTimeRegex.test(from) || !localDateTimeRegex.test(to)) {
     return res.status(400).json({
       status: "failed",
-      message: 'Invalid from/to format. Both must be valid ISO8601 timestamps (UTC).'
+      message: 'Invalid from/to format. Both must be local datetime strings like "YYYY-MM-DD HH:mm:ss" (no Z).'
     });
   }
+
 
   // Validate timezone
   if (!moment.tz.zone(timezone)) {
@@ -1388,9 +1388,11 @@ exports.fetchDeviceLocationHistory = async (req, res) => {
     });
   }
 
-  // Parse UTC timestamps for safe comparison
-  const fromTimestamp = new Date(from).getTime();
-  const toTimestamp = new Date(to).getTime();
+  // Covenrt local timestamps to UTC
+  const fromTimestamp = moment.tz(from, timezone).utc().valueOf();
+  const toTimestamp = moment.tz(to, timezone).utc().valueOf();
+
+
 
   try {
     const device = await findDeviceByDID(didRequester);
@@ -1404,9 +1406,10 @@ exports.fetchDeviceLocationHistory = async (req, res) => {
 
     // Filter location history by first_seen_at using UTC timestamps
     const filteredHistory = device.location_history.filter(entry => {
-      const entryTime = new Date(entry.first_seen_at).getTime();  // Keep UTC as is
+      const entryTime = new Date(entry.first_seen_at).getTime(); // UTC timestamp
       return entryTime >= fromTimestamp && entryTime <= toTimestamp;
     });
+    
 
     // Convert entries to user-friendly format using requested timezone
     const convertedHistory = filteredHistory.map(entry => {
