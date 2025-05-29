@@ -1,11 +1,10 @@
 const mongoose = require('mongoose');
 const moment = require('moment-timezone');
 
-// Get the current moment in specific Country timezone, then convert to UTC Date object
+// Get the current moment in UTC as a Date object
 const getUTCDate = () => {
-  return moment.tz('Europe/Athens').utc().toDate();
+  return moment().utc().toDate();
 };
-
 
 const schema_opts = {
   timestamps: true // Automatically adds `createdAt` and `updatedAt` fields
@@ -42,7 +41,6 @@ const locationEntrySchema = new mongoose.Schema({
     default: 0
   }
 }, { _id: false });
-
 
 // Define the schema for the Device collection
 const deviceSchema = new mongoose.Schema({
@@ -85,9 +83,9 @@ const deviceSchema = new mongoose.Schema({
   }
 }, schema_opts);
 
-// Prune location history to only keep entries from the last 2 days
+// Prune location history to only keep entries from the last 2 days (in UTC)
 deviceSchema.pre('save', function (next) {
-  const TWO_DAYS_AGO = moment.tz('Europe/Athens').subtract(2, 'days').utc().toDate();
+  const TWO_DAYS_AGO = moment().utc().subtract(2, 'days').toDate();
   this.location_history = this.location_history.filter(entry => entry.first_seen_at > TWO_DAYS_AGO);
   next();
 });
