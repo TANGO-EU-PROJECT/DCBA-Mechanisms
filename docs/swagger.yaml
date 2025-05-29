@@ -586,10 +586,18 @@ paths:
                   lastLocation:
                     type: string
                     example: "WAREHOUSE"
-                  lastLocationTimestamp:
+                  firstSeenAt:
                     type: string
                     format: date-time
-                    example: "2025-05-28 15:45:42"
+                    example: "2025-05-29 11:17:50"
+                  lastSeenAt:
+                    type: string
+                    format: date-time
+                    example: "2025-05-29 11:18:50"
+                  durationSeconds:
+                    type: integer
+                    example: 60
+
 
         '400':
           description: Bad Request - Missing required fields
@@ -733,7 +741,9 @@ paths:
                     message: "Device location history retrieved."
                     location_history:
                       - location: "WAREHOUSE"
-                        timestamp: "2025-05-28 15:45:18"
+                        firstSeenAt: "2025-05-29 11:19:26"
+                        lastSeenAt: "2025-05-29 11:20:36"
+                        durationSeconds: 70
                 multipleLocations:
                   summary: Example response with multiple location entries
                   value:
@@ -741,11 +751,17 @@ paths:
                     message: "Device location history retrieved."
                     location_history:
                       - location: "WAREHOUSE"
-                        timestamp: "2025-05-28 15:48:18"
+                        firstSeenAt: "2025-05-29 11:19:26"
+                        lastSeenAt: "2025-05-29 11:20:36"
+                        durationSeconds: 70
                       - location: "PACKAGING_LINES"
-                        timestamp: "2025-05-28 15:47:18"
-                      - location: "SORTING_LINES_4_AND_5"
-                        timestamp: "2025-05-28 15:46:18"   
+                        firstSeenAt: "2025-05-29 11:20:36"
+                        lastSeenAt: "2025-05-29 11:21:41"
+                        durationSeconds: 65
+                      - location: "PERMITTED_AREA"
+                        firstSeenAt: "2025-05-29 11:21:41"
+                        lastSeenAt: "2025-05-29 11:22:00"
+                        durationSeconds: 19
         '400':
           description: Bad Request - Missing required fields or invalid timeframe
           content:
@@ -901,7 +917,9 @@ paths:
                     message: "Device permitted location history retrieved."
                     permitted_location_history:
                       - location: "PERMITTED_AREA"
-                        timestamp: "2025-05-28 15:44:18"
+                        firstSeenAt: "2025-05-29 11:19:26"
+                        lastSeenAt: "2025-05-29 11:20:36"
+                        durationSeconds: 70
                 multipleLocations:
                   summary: Example response with multiple permitted location entries
                   value:
@@ -909,11 +927,17 @@ paths:
                     message: "Device permitted location history retrieved."
                     permitted_location_history:
                       - location: "PERMITTED_AREA"
-                        timestamp: "2025-05-28 15:47:18"
-                      - location: "UNKNOWN"
-                        timestamp: "2025-05-28 15:46:18"
+                        firstSeenAt: "2025-05-29 11:19:26"
+                        lastSeenAt: "2025-05-29 11:20:36"
+                        durationSeconds: 70
                       - location: "PERMITTED_AREA"
-                        timestamp: "2025-05-28 15:45:18"
+                        firstSeenAt: "2025-05-29 11:22:56"
+                        lastSeenAt: "2025-05-29 11:23:56"
+                        durationSeconds: 60
+                      - location: "PERMITTED_AREA"
+                        firstSeenAt: "2025-05-29 11:25:00"
+                        lastSeenAt: "2025-05-29 11:27:05"
+                        durationSeconds: 125
                 
 
         '400':
@@ -1069,19 +1093,27 @@ paths:
                     message: "Device restricted location history retrieved."
                     restricted_location_history:
                       - location: "PACKAGING_LINES"
-                        timestamp: "2025-05-28 15:44:18"
+                        firstSeenAt: "2025-05-29 11:19:26"
+                        lastSeenAt: "2025-05-29 11:20:36"
+                        durationSeconds: 70
                 multipleLocations:
                   summary: Example response with multiple restricted location entries
                   value:
                     status: "success"
                     message: "Device restricted location history retrieved."
                     restricted_location_history:
-                      - location: "WAREHOUSE"
-                        timestamp: "2025-05-28 15:47:18"
-                      - location: "WAREHOUSE"
-                        timestamp: "2025-05-28 15:46:18"
                       - location: "PACKAGING_LINES"
-                        timestamp: "2025-05-28 15:45:18"
+                        firstSeenAt: "2025-05-29 11:19:26"
+                        lastSeenAt: "2025-05-29 11:20:36"
+                        durationSeconds: 70
+                      - location: "SORTING_LINES_4_AND_5"
+                        firstSeenAt: "2025-05-29 11:20:36"
+                        lastSeenAt: "2025-05-29 11:20:56"
+                        durationSeconds: 20
+                      - location: "WAREHOUSE"
+                        firstSeenAt: "2025-05-29 11:22:00"
+                        lastSeenAt: "2025-05-29 11:23:15"
+                        durationSeconds: 75
                 
 
         '400':
