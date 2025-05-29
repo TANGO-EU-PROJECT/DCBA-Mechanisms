@@ -22,15 +22,20 @@ const locationEntrySchema = new mongoose.Schema({
     enum: possibleLocations,
     required: true
   },
-  timestamp: {
+  first_seen_at: {
     type: Date,
-    default: Date.now
+    required: true
   },
-  duration: {
-    type: Number, // duration in milliseconds or seconds
-    default: 0    // Default to 0 until calculated
+  last_seen_at: {
+    type: Date,
+    required: true
+  },
+  duration_s: {
+    type: Number,
+    default: 0
   }
-}, { _id: false }); // Disable _id for subdocuments
+}, { _id: false });
+
 
 // Define the schema for the Device collection
 const deviceSchema = new mongoose.Schema({
