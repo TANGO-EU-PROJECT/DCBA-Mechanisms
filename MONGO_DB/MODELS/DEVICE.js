@@ -79,7 +79,7 @@ const deviceSchema = new mongoose.Schema({
 // Prune location history to only keep entries from the last 2 days
 deviceSchema.pre('save', function (next) {
   const TWO_DAYS_AGO = new Date(Date.now() - 2 * 24 * 60 * 60 * 1000);
-  this.location_history = this.location_history.filter(entry => entry.timestamp > TWO_DAYS_AGO);
+  this.location_history = this.location_history.filter(entry => entry.first_seen_at > TWO_DAYS_AGO);
   next();
 });
 
