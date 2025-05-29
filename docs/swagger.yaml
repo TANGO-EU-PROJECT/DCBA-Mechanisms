@@ -711,6 +711,7 @@ paths:
                   description: >
                     "Preferred IANA timezone name for formatting the returned timestamps. Example values: Europe/Athens, America/New_York, Asia/Tokyo"
                   example: "Europe/Athens"
+
             examples:
               validRequest:
                 summary: Valid request example
@@ -720,7 +721,6 @@ paths:
                   from: "2025-05-28T12:00:00.003Z"
                   to: "2025-05-28T12:15:00.083Z"
                   timezone: "Europe/Athens"
-
       responses:
         '200':
           description: Device location history retrieved successfully
@@ -1046,7 +1046,6 @@ paths:
                 - didRequester
                 - from
                 - to
-                - timezone
               properties:
                 didSP:
                   type: string
@@ -1066,52 +1065,6 @@ paths:
                   format: date-time
                   description: ISO8601 end date-time for filtering the location history.
                   example: "2025-05-28T12:15:00.083Z"
-                /devices/restricted-location-history:
-    post:
-      tags:
-        - Service API Endpoints
-      security:
-        - bearerAuth: []
-      summary: Retrieve device restricted location history within a specified timeframe
-      description: >
-        Returns the restricted location history of a device based on provided employee DIDs.
-        This route requires a valid JWT Bearer token in the Authorization header to access.
-      requestBody:
-        required: true
-        content:
-          application/x-www-form-urlencoded:
-            schema:
-              type: object
-              required:
-                - didSP
-                - didRequester
-                - from
-                - to
-                - timezone
-              properties:
-                didSP:
-                  type: string
-                  description: The Decentralized Identifier (DID) of the service provider initiating the request.
-                  example: "did:example:serviceprovider123"
-                didRequester:
-                  type: string
-                  description: The Decentralized Identifier (DID) of the requesting employee.
-                  example: "urn:uuid:2dcd4cb0-acb1-433f-b9a5-0d210f760618"
-                from:
-                  type: string
-                  format: date-time
-                  description: ISO8601 start date-time for filtering the location history.
-                  example: "2025-05-28T12:00:00.003Z"
-                to:
-                  type: string
-                  format: date-time
-                  description: ISO8601 end date-time for filtering the location history.
-                  example: "2025-05-28T12:15:00.083Z"
-                timezone: 
-                  type: string
-                  description: >
-                    "Preferred IANA timezone name for formatting the returned timestamps. Example values: Europe/Athens, America/New_York, Asia/Tokyo"
-                  example: "Europe/Athens"
             examples:
               validRequest:
                 summary: Valid request example
@@ -1120,7 +1073,6 @@ paths:
                   didRequester: "urn:uuid:2dcd4cb0-acb1-433f-b9a5-0d210f760618"
                   from: "2025-05-28T12:00:00.003Z"
                   to: "2025-05-28T12:15:00.083Z"
-                  timezone: "Europe/Athens"
       responses:
         '200':
           description: Device restricted location history retrieved successfully
@@ -1141,7 +1093,7 @@ paths:
                   value:
                     status: "success"
                     message: "Device restricted location history retrieved."
-                    restricted_location_history: []
+                    restricted-location-history: []
                 singleLocation:
                   summary: Example response with single restricted location entry
                   value:
