@@ -1398,6 +1398,9 @@ exports.fetchDeviceLocationHistory = async (req, res) => {
 
     // Filter location history by first_seen_at using UTC timestamps
     const filteredHistory = device.location_history.filter(entry => {
+      console.log("fromTimestamp", fromTimestamp);
+      console.log("toTimestamp", toTimestamp);
+      console.log("entry.first_seen_at", entry.first_seen_at, new Date(entry.first_seen_at).getTime());
       const entryTime = new Date(entry.first_seen_at).getTime();
       return entryTime >= fromTimestamp && entryTime <= toTimestamp;
     });
@@ -1418,9 +1421,7 @@ exports.fetchDeviceLocationHistory = async (req, res) => {
       };
     });
 
-    console.log("fromTimestamp", fromTimestamp);
-    console.log("toTimestamp", toTimestamp);
-    console.log("entry.first_seen_at", entry.first_seen_at, new Date(entry.first_seen_at).getTime());
+    
 
 
     logEvent({
