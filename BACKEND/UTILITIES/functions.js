@@ -85,10 +85,8 @@ const getDeviceURI = async (did) => {
  */
 const createDeviceDocument = async (did, sub, device_id, log_file_uri) => {
   try {
+    const now = moment().utc().toDate();
 
-    const now = moment.tz("Europe/Athens").utc().toDate();
-
-    // Create initial location entry
     const initialLocation = {
       estimated_location: 'PERMITTED_AREA',
       first_seen_at: now,
@@ -96,20 +94,17 @@ const createDeviceDocument = async (did, sub, device_id, log_file_uri) => {
       duration_s: 0
     };
   
-    // Create a new device document with the provided attributes
     const newDevice = new DEVICE({
-      did,                // device's unique DID
-      sub,                // Sub claim used for authentication
-      device_id,          // Device ID associated with the device
+      did,
+      sub,
+      device_id,
       log_file_uri,
-      status: 'online',   // Set the status as 'online' by default, since the accounts are registered dynamically during their first active session
+      status: 'online',
       location_history: [initialLocation],
     });
 
-    // Save the new device record to the MongoDB database
     await newDevice.save();
 
-    // Log success message upon successful addition of the device
     logEvent({
       event: 'DEVICE REGISTERED TO THE DATABASE',
       status: 'SUCCESS ✅',
@@ -118,7 +113,6 @@ const createDeviceDocument = async (did, sub, device_id, log_file_uri) => {
     });
 
   } catch (error) {
-    // Log any errors encountered during the process
     logEvent({
       event: 'DEVICE REGISTERED TO THE DATABASE',
       status: 'FAILED ❌',
@@ -128,6 +122,7 @@ const createDeviceDocument = async (did, sub, device_id, log_file_uri) => {
     });
   }
 };
+
 
 
 

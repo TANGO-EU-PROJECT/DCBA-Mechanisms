@@ -389,6 +389,7 @@ const processRequest = async (req, res, did, deviceID) => {
 
         console.log(`\n${yellow}*** LOCALIZATION APPLIED ***${reset}`);
         console.log(JSON.stringify(result, null, 2));
+        const now = moment().utc().toDate();
 
         if (LOCALIZATION_ALGORITHM_APPLIED === 'RIA-ED') {
           //const estimatedLocation = result['Estimated Location'];
@@ -425,7 +426,6 @@ const processRequest = async (req, res, did, deviceID) => {
           }
         
           const lastLocationEntry = device.location_history?.[0];
-          const now = moment.tz("Europe/Athens").utc().toDate();
         
           if (lastLocationEntry && lastLocationEntry.estimated_location === currentLocation) {
             // If the last location is the estimated location, just update its duration and its last seen fields
@@ -444,8 +444,6 @@ const processRequest = async (req, res, did, deviceID) => {
             );
           } else {
             // Otherwise, append the new location
-            const now = moment.tz("Europe/Athens").utc().toDate();
-
             // Step 1: Update the last-previous location's last_seen_at and duration_s (the current first element) (if exists)
             if (device.location_history.length > 0) {
               const lastLocationEntry = device.location_history[0];
@@ -496,7 +494,7 @@ const processRequest = async (req, res, did, deviceID) => {
             did,
             device_id: deviceID,
             ip: req.ip,
-            cause: `Unknown algorithm: ${LOCALIZATION_ALGORITHM_APPLIED}`
+            cause: `UNKOWN ALGORITHM: ${LOCALIZATION_ALGORITHM_APPLIED}`
           });
           return res.status(200).json({
             status: "failed",
@@ -1363,7 +1361,7 @@ exports.fetchDeviceLastLocation = async (req, res) => {
  * @param   {Object} res - Express response object used to return the result or an error message.
  */
 exports.fetchDeviceLocationHistory = async (req, res) => {
-  const { didSP, didRequester, from, to } = req.body;
+  const { didSP, didRequester, from, to, timezone } = req.body;
 
   // Validate required fields
   if (!didSP || !didRequester || !from || !to) {
@@ -1378,7 +1376,15 @@ exports.fetchDeviceLocationHistory = async (req, res) => {
   if (!iso8601Regex.test(from) || !iso8601Regex.test(to)) {
     return res.status(400).json({
       status: "failed",
-      message: 'Invalid from/to format. Both must be valid ISO8601 timestamps.'
+      message: 'Invalid from/to format. Both must be valid ISO8601 timestamps (UTC).'
+    });
+  }
+
+  // Validate timezone
+  if (!moment.tz.zone(timezone)) {
+    return res.status(400).json({
+      status: "failed",
+      message: `Invalid timezone: '${timezone}'. Please provide a valid IANA timezone name (e.g. 'Europe/Athens', 'America/New_York').`
     });
   }
 
@@ -1398,14 +1404,12 @@ exports.fetchDeviceLocationHistory = async (req, res) => {
 
     // Filter location history by first_seen_at using UTC timestamps
     const filteredHistory = device.location_history.filter(entry => {
-      const entryMoment = moment.tz(entry.first_seen_at, 'Europe/Athens');
+      const entryMoment = moment.tz(entry.first_seen_at, timezone);
       const entryTime = entryMoment.utc().valueOf();
-    
       return entryTime >= fromTimestamp && entryTime <= toTimestamp;
     });
-    
 
-    // Convert entries to a user-friendly response
+    // Convert entries to user-friendly format using requested timezone
     const convertedHistory = filteredHistory.map(entry => {
       const entryObj = entry.toObject ? entry.toObject() : entry;
 
@@ -1415,14 +1419,11 @@ exports.fetchDeviceLocationHistory = async (req, res) => {
 
       return {
         estimated_location: entryObj.estimated_location,
-        firstSeenAt: moment(firstSeen).tz('Europe/Athens').format('YYYY-MM-DD HH:mm:ss'),
-        lastSeenAt: moment(lastSeen).tz('Europe/Athens').format('YYYY-MM-DD HH:mm:ss'),
+        firstSeenAt: moment(firstSeen).tz(timezone).format('YYYY-MM-DD HH:mm:ss'),
+        lastSeenAt: moment(lastSeen).tz(timezone).format('YYYY-MM-DD HH:mm:ss'),
         durationSeconds: duration
       };
     });
-
-    
-
 
     logEvent({
       event: 'RETRIEVING LOCATION HISTORY',
@@ -1452,6 +1453,7 @@ exports.fetchDeviceLocationHistory = async (req, res) => {
     });
   }
 };
+
 
 
 
