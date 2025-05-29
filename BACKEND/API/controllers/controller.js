@@ -354,122 +354,139 @@ const processDeviceQueue = async (deviceID) => {
  */
 const processRequest = async (req, res, did, deviceID) => {
   const logData = req.body.log;
-  
-
 
   try {
-    // Store the log data in the InfluxDB database asynchronously
     await storeLogsToInfluxDB(deviceID, did, logData, () => {});
   } catch (error) {
-    return res.status(200).json({ status: "failed", message: "Failed to store logs in the Influx Database." });
+    return res.status(200).json({
+      status: "failed",
+      message: "Failed to store logs in the Influx Database."
+    });
   }
 
-  // Split the log data into individual lines for processing
   const logLines = logData.split('\n');
+  const currentTimestamp = moment().tz("Europe/Athens").toDate();
 
   for (const line of logLines) {
-    if (line.trim() !== '') {
-      
-      if (line.includes("WifiNetworkScannerN")) {
-         
-        try {
-          // Run the Localizator Script to estimate the current device location
-          console.log("------------------------ NEARBY ACCESS POINTS ------------------------")
-          console.log(line);
-          console.log("------------------------ NEARBY ACCESS POINTS ------------------------")
-          let stdout;
-          stdout = await runLocalizationEuclideanDistance(deviceID, did, line);
-          // Extract JSON part from stdout
-          const result = JSON.parse(stdout);
-          
-          logEvent({
-            event: 'PERFORMING LOCALIZATION',
-            status: 'SUCCESS ✅',
-            did: did,
-            device_id: deviceID,
-            ip: req.ip
-          });
+    if (line.trim() === '') continue;
 
-          console.log(`\n${yellow}*** LOCALIZATION APPLIED ***${reset}`);
-          console.log(JSON.stringify(result, null, 2)); // Pretty print the JSON
+    if (line.includes("WifiNetworkScannerN")) {
+      try {
+        console.log("------------------------ NEARBY ACCESS POINTS ------------------------");
+        console.log(line);
+        console.log("------------------------ NEARBY ACCESS POINTS ------------------------");
 
-          if (LOCALIZATION_ALGORITHM_APPLIED === 'RIA-ED') {
-            // RIA
-            const estimatedLocation = result['Estimated Location'];
+        const stdout = await runLocalizationEuclideanDistance(deviceID, did, line);
+        const result = JSON.parse(stdout);
 
-            // Find the device by `did` and `device_id` and update their location_history array
-            // Prepend new location entry to location_history
-            const updatedDeviceDocument = await DEVICE.findOneAndUpdate(
-              { did: did, device_id: deviceID },
+        logEvent({
+          event: 'PERFORMING LOCALIZATION',
+          status: 'SUCCESS ✅',
+          did,
+          device_id: deviceID,
+          ip: req.ip
+        });
+
+        console.log(`\n${yellow}*** LOCALIZATION APPLIED ***${reset}`);
+        console.log(JSON.stringify(result, null, 2));
+
+        if (LOCALIZATION_ALGORITHM_APPLIED === 'RIA-ED') {
+          const estimatedLocation = result['Estimated Location'];
+          const locationName = Array.isArray(estimatedLocation)
+            ? estimatedLocation.join(' | ')
+            : estimatedLocation;
+
+          const device = await DEVICE.findOne({ did, device_id: deviceID });
+
+          if (!device) {
+            logEvent({
+              event: 'PERFORMING LOCALIZATION (RIA)',
+              status: 'FAILED ❌',
+              did,
+              device_id: deviceID,
+              ip: req.ip,
+              cause: `FAILED TO UPDATE DEVICE LOCATION. DEVICE NOT FOUND.`
+            });
+            return res.status(200).json({
+              status: "failed",
+              message: "Failed to perform localization."
+            });
+          }
+
+          const lastLocationEntry = device.location_history?.[0];
+
+          if (lastLocationEntry && lastLocationEntry.location === locationName) {
+            const durationMs = currentTimestamp - new Date(lastLocationEntry.timestamp);
+            const durationSeconds = Math.floor(durationMs / 1000);
+
+            await DEVICE.updateOne(
+              { _id: device._id, "location_history.0.location": locationName },
+              { $inc: { "location_history.0.duration": durationSeconds } }
+            );
+          } else {
+            await DEVICE.updateOne(
+              { _id: device._id },
               {
                 $push: {
                   location_history: {
                     $each: [{
-                      location: Array.isArray(estimatedLocation)
-                        ? estimatedLocation.join(' | ')
-                        : estimatedLocation,
-                      timestamp: moment().tz("Europe/Athens").toDate()
+                      location: locationName,
+                      timestamp: currentTimestamp,
+                      duration: 0
                     }],
-                    $position: 0  // Insert at the beginning of the array
+                    $position: 0
                   }
                 }
-              },
-              { new: true }
+              }
             );
-
-
-            if (!updatedDeviceDocument) {
-              logEvent({
-                event: 'PERFORMING LOCALIZATION (RIA)',
-                status: 'FAILED ❌',
-                did: did,
-                device_id: deviceID,
-                ip: req.ip,
-                cause: `Failed to update device last location.`
-              });
-            } else {
-              logEvent({
-                event: 'UPDATING DEVICE LOCATION (RIA)',
-                status: 'SUCCESS ✅',
-                did: did,
-                device_id: deviceID,
-                ip: req.ip,
-                cause: `Device location history updated: ${
-                  updatedDeviceDocument.location_history && updatedDeviceDocument.location_history.length > 0
-                    ? updatedDeviceDocument.location_history[0].location
-                    : 'UNKNOWN'}`             
-               });
-            }
-          } else {
-            logEvent({
-              event: 'PERFORMING LOCALIZATION (RIA)',
-              status: 'FAILED ❌',
-              did: did,
-              device_id: deviceID,
-              ip: req.ip,
-              cause: `Unknown algorithm encountered while updating last known device location. It should be 'RIA-ED.`
-            });
-            return res.status(200).json({ status: "failed", message: "Failed to perform localization." });
           }
 
-        } catch (localizationError) {
           logEvent({
-            event: 'PARSING LOCALIZATION OUTPUT',
-            status: 'FAILED ❌',
-            cause: `AN ERROR OCCURRED DURING PARSING LOCALIZATION OUTPUT: ${localizationError.stack}.`,
-            did: did,
+            event: 'UPDATING DEVICE LOCATION (RIA)',
+            status: 'SUCCESS ✅',
+            did,
             device_id: deviceID,
-            ip: req.ip
+            ip: req.ip,
+            cause: `DEVICE LAST LOCATION UPDATED TO: ${locationName}`
           });
 
-          return res.status(200).json({ status: "failed", message: "Failed to perform localization." });
+        } else {
+          logEvent({
+            event: 'PERFORMING LOCALIZATION (RIA)',
+            status: 'FAILED ❌',
+            did,
+            device_id: deviceID,
+            ip: req.ip,
+            cause: `Unknown algorithm: ${LOCALIZATION_ALGORITHM_APPLIED}`
+          });
+          return res.status(200).json({
+            status: "failed",
+            message: "Unknown localization algorithm."
+          });
         }
+
+      } catch (error) {
+        logEvent({
+          event: 'PARSING LOCALIZATION OUTPUT',
+          status: 'FAILED ❌',
+          cause: `Error during localization: ${error.stack}`,
+          did,
+          device_id: deviceID,
+          ip: req.ip
+        });
+
+        return res.status(200).json({
+          status: "failed",
+          message: "Failed to perform localization."
+        });
       }
     }
   }
 
-  // Send a success response once log processing is complete
-  return res.status(200).json({ status: "success", message: "Logs stored, analyzed and processed successfully." });
+  return res.status(200).json({
+    status: "success",
+    message: "Logs stored, analyzed and processed successfully."
+  });
 };
 
 
@@ -1243,19 +1260,23 @@ exports.fetchDeviceLastLocation = async (req, res) => {
       ? moment(lastEntry.timestamp).tz('Europe/Athens').format('YYYY-MM-DD HH:mm:ss') 
       : null;
 
+    const durationSeconds = lastEntry?.duration ?? 0;
+
+
     logEvent({
       event: 'RETRIEVING LAST LOCATION',
       status: 'SUCCESS ✅',
       did: didRequester,
       device_id: device.device_id,
-      cause: 'Successfully retrieved last known location.'
+      cause: 'SUCCESSFULLY RETRIEVED LAST LOCATION.'
     });
 
     return res.status(200).json({
       status: "success",
       message: "Device found.",
       lastLocation: lastEntry ? lastEntry.location : 'UNKNOWN',
-      lastLocationTimestamp: lastTimestampLocal
+      lastLocationTimestamp: lastTimestampLocal,
+      lastLocationDuration: durationSeconds
     });
 
   } catch (dbErr) {
@@ -1340,18 +1361,22 @@ exports.fetchDeviceLocationHistory = async (req, res) => {
       return entryTime >= fromDate && entryTime <= toDate;
     });
 
-    // Convert timestamps to Europe/Athens time
-    const convertedHistory = filteredHistory.map(entry => ({
-      ...entry.toObject ? entry.toObject() : entry,
-      timestamp: moment(entry.timestamp).tz('Europe/Athens').format('YYYY-MM-DD HH:mm:ss')
-    }));
+    // Convert timestamps to Europe/Athens time and include duration explicitly
+    const convertedHistory = filteredHistory.map(entry => {
+      const entryObj = entry.toObject ? entry.toObject() : entry;
+      return {
+        ...entryObj,
+        timestamp: moment(entry.timestamp).tz('Europe/Athens').format('YYYY-MM-DD HH:mm:ss'),
+        duration: entry.duration ?? 0
+      };
+    });
 
     logEvent({
       event: 'RETRIEVING LOCATION HISTORY',
       status: 'SUCCESS ✅',
       did: didRequester,
       device_id: device.device_id,
-      cause: `Location history filtered from ${fromDate} to ${toDate}`
+      cause: `LOCATION HISTORY FILTERED FROM ${fromDate} TO ${toDate}`
     });
 
     return res.status(200).json({
@@ -1365,7 +1390,7 @@ exports.fetchDeviceLocationHistory = async (req, res) => {
       event: 'RETRIEVING LOCATION HISTORY',
       status: 'FAILED ❌',
       did: didRequester,
-      cause: `Unexpected error retrieving history from didSP '${didSP}': ${err.stack}`
+      cause: `UNEXPECTED ERROR RETRIEVING HISTORY FROM didSP '${didSP}': ${err.stack}`
     });
 
     return res.status(500).json({
@@ -1433,7 +1458,7 @@ exports.fetchDevicePermittedLocationHistory = async (req, res) => {
         event: 'RETRIEVING PERMITTED LOCATION HISTORY',
         status: 'FAILED ❌',
         did: didRequester,
-        cause: `Error retrieving permitted location history from didSP '${didSP}': ${dbErr.stack}`
+        cause: `ERROR RETRIEVING PERMITTED LOCATION HISTORY FROM didSP '${didSP}': ${dbErr.stack}`
       });
 
       return res.status(500).json({
@@ -1459,10 +1484,14 @@ exports.fetchDevicePermittedLocationHistory = async (req, res) => {
       );
     });
 
-    const convertedPermittedHistory = permittedHistory.map(entry => ({
-      ...entry.toObject ? entry.toObject() : entry,
-      timestamp: moment(entry.timestamp).tz('Europe/Athens').format('YYYY-MM-DD HH:mm:ss')
-    }));
+    const convertedPermittedHistory = permittedHistory.map(entry => {
+      const entryObj = entry.toObject ? entry.toObject() : entry;
+      return {
+        ...entryObj,
+        timestamp: moment(entry.timestamp).tz('Europe/Athens').format('YYYY-MM-DD HH:mm:ss'),
+        duration: entry.duration ?? 0
+      };
+    });
 
     return res.status(200).json({
       status: "success",
@@ -1475,7 +1504,7 @@ exports.fetchDevicePermittedLocationHistory = async (req, res) => {
       event: 'RETRIEVING PERMITTED LOCATION HISTORY',
       status: 'FAILED ❌',
       did: didRequester,
-      cause: `Unexpected error: ${err.stack}`
+      cause: `UNEXPECTED ERROR: ${err.stack}`
     });
 
     return res.status(500).json({
@@ -1543,7 +1572,7 @@ exports.fetchDeviceRestrictedLocationHistory = async (req, res) => {
         event: 'RETRIEVING RESTRICTED LOCATION HISTORY',
         status: 'FAILED ❌',
         did: didRequester,
-        cause: `Error retrieving restricted location history from didSP '${didSP}': ${dbErr.stack}`
+        cause: `ERROR RETRIEVING RESTRICTED LOCATION HISTORY FROM didSP '${didSP}': ${dbErr.stack}`
       });
 
       return res.status(500).json({
@@ -1569,10 +1598,14 @@ exports.fetchDeviceRestrictedLocationHistory = async (req, res) => {
       );
     });
 
-    const convertedRestrictedHistory = restrictedHistory.map(entry => ({
-      ...entry.toObject ? entry.toObject() : entry,
-      timestamp: moment(entry.timestamp).tz('Europe/Athens').format('YYYY-MM-DD HH:mm:ss')
-    }));
+    const convertedRestrictedHistory = restrictedHistory.map(entry => {
+      const entryObj = entry.toObject ? entry.toObject() : entry;
+      return {
+        ...entryObj,
+        timestamp: moment(entry.timestamp).tz('Europe/Athens').format('YYYY-MM-DD HH:mm:ss'),
+        duration: entry.duration ?? 0
+      };
+    });
 
     return res.status(200).json({
       status: "success",
@@ -1584,7 +1617,7 @@ exports.fetchDeviceRestrictedLocationHistory = async (req, res) => {
       event: 'RETRIEVING RESTRICTED LOCATION HISTORY',
       status: 'FAILED ❌',
       did: didRequester,
-      cause: `Unhandled error from didSP '${didSP}': ${err.stack}`
+      cause: `UNEXPECTED ERROR FROM didSP '${didSP}': ${err.stack}`
     });
 
     return res.status(500).json({

@@ -25,6 +25,10 @@ const locationEntrySchema = new mongoose.Schema({
   timestamp: {
     type: Date,
     default: Date.now
+  },
+  duration: {
+    type: Number, // duration in milliseconds or seconds
+    default: 0    // Default to 0 until calculated
   }
 }, { _id: false }); // Disable _id for subdocuments
 
