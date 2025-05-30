@@ -877,15 +877,25 @@ exports.handleLogout = async (req, res) => {
       if (device.location_history && device.location_history.length > 0) {
         const lastLocationEntry = device.location_history[0];
         if (device.login_timestamp && device.login_timestamp <= lastLocationEntry.last_seen_at) {
+          // UPDATE HISTORY
           const nowUtc = moment().utc();
-      
           lastLocationEntry.last_seen_at = nowUtc.toDate();
-        
           // Calculate duration in seconds between first_seen_at and last_seen_at
           const firstSeen = moment(lastLocationEntry.first_seen_at);
           const durationSeconds = nowUtc.diff(firstSeen, 'seconds');
-        
           lastLocationEntry.duration_s = durationSeconds >= 0 ? durationSeconds : 0; // guard against negatives
+
+          // UPDATE THE LATEST ALERT RELATED TO THIS LOCATION AND DEVICE (IF EXISTS)
+          const latestAlert = await ALERT.findOne({
+            device_id: device.device_id,
+            did: device.did,
+            'alert_info.estimated_location': lastLocationEntry.estimated_location
+          }).sort({ 'alert_info.first_seen_at': -1 });
+          if (latestAlert) {
+            latestAlert.alert_info.last_seen_at = nowUtc.toDate();
+            latestAlert.alert_info.duration_s = durationSeconds >= 0 ? durationSeconds : 0;
+            await latestAlert.save();
+          }
         }
       }           
       await device.save();  // Save the updated device document to mark them as offline
