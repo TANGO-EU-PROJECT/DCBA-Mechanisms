@@ -200,16 +200,6 @@ pipeline {
         stage("Deploying the new deployment") {
             steps {
                 withKubeConfig([credentialsId: 'K8s-config-file', serverUrl: 'https://167.235.66.115:6443', namespace: 'tango-development']) {
-                    // Delete PVC and wait for full deletion before applying new one
-                    sh '''
-                        kubectl delete pvc dcba-mongo-pvc -n tango-development --ignore-not-found=true
-                        until ! kubectl get pvc dcba-mongo-pvc -n tango-development > /dev/null 2>&1; do
-                            echo "Waiting for pvc dcba-mongo-pvc to be deleted..."
-                            sleep 3
-                        done
-                        kubectl apply -f dcba-mongo-pvc.yml
-                    '''
-                    
                     // Apply deployment and ingress
                     sh 'kubectl apply -f dcba-deployment.yml'
                     sh 'kubectl apply -f dcba-ingress.yml'
