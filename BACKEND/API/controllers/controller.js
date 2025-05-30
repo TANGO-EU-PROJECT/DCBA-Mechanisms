@@ -444,12 +444,13 @@ const processRequest = async (req, res, did, deviceID) => {
         
           const lastLocationEntry = device.location_history?.[0];
           let accessStatus;
+          
           if ((lastLocationEntry && lastLocationEntry.estimated_location === currentLocation) && (device.login_timestamp && device.login_timestamp <= lastLocationEntry.last_seen_at)) {
+            
             // If the last location is the estimated location, just update its duration and its last seen fields
             const updatedDurationSeconds = Math.floor(
               (now - new Date(lastLocationEntry.first_seen_at)) / 1000
             );
-        
             await DEVICE.updateOne(
               { _id: device._id, "location_history.0.estimated_location": currentLocation },
               {
@@ -465,7 +466,7 @@ const processRequest = async (req, res, did, deviceID) => {
               accessStatus = 'ACCESS_RESTRICTED';
             
               // Find the latest alert for this device and did
-              const latestAlert = await ALERT.findOne({ device_id: deviceID, did }).sort({ 'location.first_seen_at': -1 });
+              const latestAlert = await ALERT.findOne({ device_id: deviceID, did }).sort({ 'alert_info.first_seen_at': -1 });
             
               if (latestAlert) {
                 await ALERT.updateOne(
@@ -561,7 +562,7 @@ const processRequest = async (req, res, did, deviceID) => {
                 // no need for alert, just update the latest alert duration and last seen for this device specifically
                 accessStatus = 'ACCESS_PERMITTED';
                 // Find the latest alert for this device and did
-                const latestAlert = await ALERT.findOne({ device_id: deviceID, did }).sort({ 'location.first_seen_at': -1 });
+                const latestAlert = await ALERT.findOne({ device_id: deviceID, did }).sort({ 'alert_info.first_seen_at': -1 });
               
                 if (latestAlert) {
                   await ALERT.updateOne(
