@@ -148,7 +148,7 @@ metadata:
   name: dcba-mongo-db
   namespace: tango-development
 spec:
-  replicas: 2
+  replicas: 1
   selector:
     matchLabels:
       app: dcba-mongo-db
