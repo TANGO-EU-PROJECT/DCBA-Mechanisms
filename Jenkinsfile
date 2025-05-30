@@ -185,8 +185,8 @@ pipeline {
             }
         }
 
-        /* Stage 7: Deleting the previous deployment and PVC */
-        stage("Deleting the previous deployment and PVC") {
+        /* Stage 7: Deleting the previous deployment */
+        stage("Deleting the previous deployment") {
             steps {
                 withKubeConfig([credentialsId: 'K8s-config-file', serverUrl: 'https://167.235.66.115:6443', namespace: 'tango-development']) {
                     // Delete deployment
