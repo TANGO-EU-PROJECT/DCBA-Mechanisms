@@ -1767,7 +1767,14 @@ exports.fetchDeviceRestrictedLocationHistory = async (req, res) => {
 exports.fetchDevicesAlerts = async (req, res) => {
   try {
     // Get timezone from query param (default UTC)
-    const timezone = req.query.timezone || 'UTC';
+    const timezone = req.query.timezone;
+    // Validate timezone
+    if (!moment.tz.zone(timezone)) {
+      return res.status(400).json({
+        status: "failed",
+        message: "Invalid timezone. Please provide a valid IANA timezone name (e.g. 'Europe/Athens', 'America/New_York')."
+      });
+    }
 
     // Fetch all alerts (optionally add filtering here)
     const alerts = await ALERT.find({}).exec();

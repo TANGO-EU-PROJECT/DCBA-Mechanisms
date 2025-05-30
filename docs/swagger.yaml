@@ -1408,6 +1408,24 @@ paths:
                           first_seen_at: "2025-05-30 12:00:00"
                           last_seen_at: "2025-05-30 12:05:00"
                           duration_s: 300
+        '400':
+          description: Bad Request - Missing timezone
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: "failed"
+                  message:
+                    type: string
+              examples:
+                InvalidTimezone:
+                  summary: Invalid timezone format
+                  value:
+                    status: "failed"
+                    message: "Invalid timezone. Please provide a valid IANA timezone name (e.g. 'Europe/Athens', 'America/New_York')."
         '401':
           description: Unauthorized - Authorization token is missing, invalid, expired, or malformed
           content:
