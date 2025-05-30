@@ -5,10 +5,10 @@ metadata:
   name: dcba-mongo-pvc
   namespace: tango-development
 spec:
-  accessModes: [ "ReadWriteOnce" ]
+  accessModes: [ "ReadWriteMany" ]
   resources:
     requests:
       storage: 5Gi
-  storageClassName: local-path # For only one replicas: local-path
+  storageClassName: nfs-csi # For only one replicas: local-path
                                # For multiple replicas (+2): nfs-csi
 
