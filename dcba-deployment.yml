@@ -225,7 +225,7 @@ metadata:
   name: dcba-influx-db
   namespace: tango-development
 spec:
-  replicas: 2
+  replicas: 1
   selector:
     matchLabels:
       app: dcba-influx-db
@@ -255,6 +255,13 @@ spec:
               value: "DCBA"
             - name: DOCKER_INFLUXDB_INIT_ADMIN_TOKEN
               value: "QzaDsrfh8LkP0dnTmxj4fB4KAtQVZb-68BHqTTqWv2jie5daMLpEqeugbn1hIfbTcduNEuR8HAoUtVFjC2M3bw=="
+          volumeMounts:
+            - name: influxdb-storage
+              mountPath: /var/lib/influxdb2
+      volumes:
+        - name: influxdb-storage
+          persistentVolumeClaim:
+            claimName: dcba-influx-pvc
 
 ---
 # ------------------------------- InfluxDB Service ------------------------------- #

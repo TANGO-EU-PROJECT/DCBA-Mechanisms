@@ -8,7 +8,7 @@ spec:
   accessModes: [ "ReadWriteOnce" ]
   resources:
     requests:
-      storage: 5Gi
+      storage: 1Gi
   storageClassName: local-path # For only one replicas: local-path
                                # For multiple replicas (+2): nfs-csi
 
