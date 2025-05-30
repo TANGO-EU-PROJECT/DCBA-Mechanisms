@@ -194,6 +194,15 @@ pipeline {
             }
         }
 
+        stage("Get StorageClasses") {
+            steps {
+                withKubeConfig([credentialsId: 'K8s-config-file', serverUrl: 'https://167.235.66.115:6443']) {
+                    sh 'kubectl get storageclass'
+                }
+            }
+        }
+
+
 
         /* Stage 8: Deploying the new deployment */
         stage("Deploying the new deployment") {
