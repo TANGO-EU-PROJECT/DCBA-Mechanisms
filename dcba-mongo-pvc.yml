@@ -1,0 +1,13 @@
+# dcba-mongo-pvc.yaml
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: dcba-mongo-pvc
+  namespace: tango-development
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 5Gi
+  storageClassName: standard # Or your specific storage class
