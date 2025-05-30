@@ -69,5 +69,13 @@ router.post('/permitted-location-history', verifyToken, controller.fetchDevicePe
  */
 router.post('/restricted-location-history', verifyToken, controller.fetchDeviceRestrictedLocationHistory);
 
+/** [9]
+ * @route   GET /devices/fetch-alert-history
+ * @desc    Returns all the possible alerts for devices navigating to restricted areas
+ * @access  Restricted – Requires jwtAuth for access
+ */
+router.get('/fetch-alert-history', verifyToken, controller.fetchDevicesAlerts);
+
+
 module.exports = router;
 // -------------------------------- External Services API Routes -------------------------------- //

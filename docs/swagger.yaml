@@ -1239,6 +1239,105 @@ paths:
                     type: string
                     example: "Error retrieving device restricted location history."
 
+
+  # [9] GET /devices/fetch-alert-history
+  /devices/fetch-alert-history:
+    get:
+      tags:
+        - Service API Endpoints
+      security:
+        - bearerAuth: []
+      summary: Retrieve all history alert related to devices presence in Restricted Areas.
+      description: >
+        Returns the restricted location history of a device based on provided employee DIDs.
+        This route requires a valid JWT Bearer token in the Authorization header to access.
+      parameters:
+        - name: timezone
+          in: query
+          description: >
+            Preferred IANA timezone name to interpret timestamps and format returned dates accordingly.
+            Example: Europe/Athens, Europe/Lisbon, Asia/Tokyo.
+          required: true
+          schema:
+            type: string
+            example: Europe/Athens
+      responses:
+        '200':
+          description: Alerts retrieved successfully.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: success
+                  message:
+                    type: string
+                    example: Alerts retrieved successfully.
+                  timezone:
+                    type: string
+                    example: Europe/Athens
+                  alerts:
+                    type: array
+              examples:
+                emptyHistory:
+                  summary: Empty alert list
+                  value:
+                    status: success
+                    message: Alerts retrieved successfully.
+                    alerts: []
+                singleAlert:
+                  summary: History with one single alert
+                  value:
+                    status: success
+                    message: Alerts retrieved successfully.
+                    alerts:
+                      - device_id: "5c487cb4a62cb29d"
+                        did: "urn:uuid:2dcd4cb0-acb1-433f-b9a5-0d210f760618"
+                        alert_info:
+                          estimated_location: "WAREHOUSE"
+                          first_seen_at: "2025-05-30 12:00:00"
+                          last_seen_at: "2025-05-30 12:05:00"
+                          duration_s: 300
+                multipleAlerts:
+                  summary: History with multiple alerts
+                  value:
+                    status: success
+                    message: Alerts retrieved successfully.
+                    alerts:
+                      - device_id: "5c487cb4a62cb29d"
+                        did: "urn:uuid:2dcd4cb0-acb1-433f-b9a5-0d210f760618"
+                        alert_info:
+                          estimated_location: "WAREHOUSE"
+                          first_seen_at: "2025-05-30 12:00:00"
+                          last_seen_at: "2025-05-30 12:05:00"
+                          duration_s: 300
+                        createdAt: "2025-05-30T10:00:00+03:00"
+                        updatedAt: "2025-05-30T10:30:00+03:00"
+                      - device_id: "5c487cb4a62cb29d"
+                        did: "urn:uuid:2dcd4cb0-acb1-433f-b9a5-0d210f760618"
+                        alert_info:
+                          estimated_location: "SORTING_LINES_1_TO_3"
+                          first_seen_at: "2025-05-30 12:00:00"
+                          last_seen_at: "2025-05-30 12:05:00"
+                          duration_s: 300
+        '500':
+          description: Internal server error while retrieving alert history
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: error
+                  message:
+                    type: string
+                    example: Error retrieving alert history.
+
+
+
   # Service API Endpoints # 
 
 
