@@ -1813,6 +1813,8 @@ exports.fetchDevicesAlerts = async (req, res) => {
 
 
 
+
+
 /********* BACKEND SERVER EVENT LOGGING MECHANISM *********/
 const logEvent = (eventDetails) => {
   // Define unique delimiters for the start and end of each log event

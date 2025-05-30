@@ -105,7 +105,7 @@ paths:
                         did: "urn:uuid:b115d2e6-03c9-3t7h-000a-125374ffp9ll"
                         sub: "did:my:wallet"
         '401':
-          description: Authorization token is missing or malformed
+          description: Unauthorized - Authorization token is missing, invalid, expired, or malformed
           content:
             application/json:
               schema:
@@ -113,19 +113,32 @@ paths:
                 properties:
                   status:
                     type: string
+                    example: "failed"
                   message:
                     type: string
+                    example: "Authorization token is missing, invalid or expired."
               examples:
                 MissingAuthorizationToken:
                   summary: Missing Authorization header
                   value:
                     status: "failed"
                     message: "Authorization token is missing."
-                MalformedAuthorizationToken:
-                  summary: Malformed Authorization header
+                TokenExpired:
+                  summary: Authorization token has expired
+                  value:
+                    status: "failed"
+                    message: "Authorization token has expired."
+                InvalidToken:
+                  summary: Authorization token is invalid
+                  value:
+                    status: "failed"
+                    message: "Invalid Authorization token."
+                MalformedToken:
+                  summary: Authorization header malformed
                   value:
                     status: "failed"
                     message: "Authorization token is malformed. It should start with 'Bearer '."
+
         '403':
           description: Unauthorized - Authorization token is invalid or expired
           content:
@@ -231,7 +244,7 @@ paths:
                         did: "urn:uuid:b115d2e6-03c9-3t7h-000a-125374ffp9ll"
                         sub: "did:my:wallet"
         '401':
-          description: Authorization token is missing or malformed
+          description: Unauthorized - Authorization token is missing, invalid, expired, or malformed
           content:
             application/json:
               schema:
@@ -239,16 +252,28 @@ paths:
                 properties:
                   status:
                     type: string
+                    example: "failed"
                   message:
                     type: string
+                    example: "Authorization token is missing, invalid or expired."
               examples:
                 MissingAuthorizationToken:
                   summary: Missing Authorization header
                   value:
                     status: "failed"
                     message: "Authorization token is missing."
-                MalformedAuthorizationToken:
-                  summary: Malformed Authorization header
+                TokenExpired:
+                  summary: Authorization token has expired
+                  value:
+                    status: "failed"
+                    message: "Authorization token has expired."
+                InvalidToken:
+                  summary: Authorization token is invalid
+                  value:
+                    status: "failed"
+                    message: "Invalid Authorization token."
+                MalformedToken:
+                  summary: Authorization header malformed
                   value:
                     status: "failed"
                     message: "Authorization token is malformed. It should start with 'Bearer '."
@@ -358,7 +383,7 @@ paths:
                         did: "urn:uuid:b115d2e6-03c9-3t7h-000a-125374ffp9ll"
                         sub: "did:my:wallet"
         '401':
-          description: Authorization token is missing or malformed
+          description: Unauthorized - Authorization token is missing, invalid, expired, or malformed
           content:
             application/json:
               schema:
@@ -366,16 +391,28 @@ paths:
                 properties:
                   status:
                     type: string
+                    example: "failed"
                   message:
                     type: string
+                    example: "Authorization token is missing, invalid or expired."
               examples:
                 MissingAuthorizationToken:
                   summary: Missing Authorization header
                   value:
                     status: "failed"
                     message: "Authorization token is missing."
-                MalformedAuthorizationToken:
-                  summary: Malformed Authorization header
+                TokenExpired:
+                  summary: Authorization token has expired
+                  value:
+                    status: "failed"
+                    message: "Authorization token has expired."
+                InvalidToken:
+                  summary: Authorization token is invalid
+                  value:
+                    status: "failed"
+                    message: "Invalid Authorization token."
+                MalformedToken:
+                  summary: Authorization header malformed
                   value:
                     status: "failed"
                     message: "Authorization token is malformed. It should start with 'Bearer '."
@@ -484,7 +521,7 @@ paths:
                     type: string
                     example: "Missing required fields: didSP or didRequester."
         '401':
-          description: Unauthorized - Authorization token is invalid or expired
+          description: Unauthorized - Authorization token is missing, invalid, expired, or malformed
           content:
             application/json:
               schema:
@@ -495,7 +532,13 @@ paths:
                     example: "failed"
                   message:
                     type: string
+                    example: "Authorization token is missing, invalid or expired."
               examples:
+                MissingAuthorizationToken:
+                  summary: Missing Authorization header
+                  value:
+                    status: "failed"
+                    message: "Authorization token is missing."
                 TokenExpired:
                   summary: Authorization token has expired
                   value:
@@ -505,7 +548,12 @@ paths:
                   summary: Authorization token is invalid
                   value:
                     status: "failed"
-                    message: "Invalid authorization token."
+                    message: "Invalid Authorization token."
+                MalformedToken:
+                  summary: Authorization header malformed
+                  value:
+                    status: "failed"
+                    message: "Authorization token is malformed. It should start with 'Bearer '."
         '404':
           description: Device not found
           content:
@@ -632,7 +680,7 @@ paths:
                     message: "Invalid timezone. Please provide a valid IANA timezone name (e.g. 'Europe/Athens', 'America/New_York')."
 
         '401':
-          description: Unauthorized - Authorization token is invalid or expired
+          description: Unauthorized - Authorization token is missing, invalid, expired, or malformed
           content:
             application/json:
               schema:
@@ -643,8 +691,13 @@ paths:
                     example: "failed"
                   message:
                     type: string
-                    example: "Authorization error message"
+                    example: "Authorization token is missing, invalid or expired."
               examples:
+                MissingAuthorizationToken:
+                  summary: Missing Authorization header
+                  value:
+                    status: "failed"
+                    message: "Authorization token is missing."
                 TokenExpired:
                   summary: Authorization token has expired
                   value:
@@ -654,7 +707,12 @@ paths:
                   summary: Authorization token is invalid
                   value:
                     status: "failed"
-                    message: "Invalid authorization token."
+                    message: "Invalid Authorization token."
+                MalformedToken:
+                  summary: Authorization header malformed
+                  value:
+                    status: "failed"
+                    message: "Authorization token is malformed. It should start with 'Bearer '."
 
         '404':
           description: Device not found
@@ -816,7 +874,7 @@ paths:
                     status: "failed"
                     message: "Invalid timezone. Please provide a valid IANA timezone name (e.g. 'Europe/Athens', 'America/New_York')."
         '401':
-          description: Unauthorized - Authorization token is missing, invalid, or expired
+          description: Unauthorized - Authorization token is missing, invalid, expired, or malformed
           content:
             application/json:
               schema:
@@ -827,8 +885,13 @@ paths:
                     example: "failed"
                   message:
                     type: string
-                    example: "Authorization token is missing or invalid."
+                    example: "Authorization token is missing, invalid or expired."
               examples:
+                MissingAuthorizationToken:
+                  summary: Missing Authorization header
+                  value:
+                    status: "failed"
+                    message: "Authorization token is missing."
                 TokenExpired:
                   summary: Authorization token has expired
                   value:
@@ -839,6 +902,11 @@ paths:
                   value:
                     status: "failed"
                     message: "Invalid Authorization token."
+                MalformedToken:
+                  summary: Authorization header malformed
+                  value:
+                    status: "failed"
+                    message: "Authorization token is malformed. It should start with 'Bearer '."
         '404':
           description: Device not found
           content:
@@ -1004,7 +1072,7 @@ paths:
                     message: "Invalid timezone. Please provide a valid IANA timezone name (e.g. 'Europe/Athens', 'America/New_York')."
 
         '401':
-          description: Unauthorized - Authorization token is missing, invalid, or expired
+          description: Unauthorized - Authorization token is missing, invalid, expired, or malformed
           content:
             application/json:
               schema:
@@ -1015,8 +1083,13 @@ paths:
                     example: "failed"
                   message:
                     type: string
-                    example: "Authorization token is missing or invalid."
+                    example: "Authorization token is missing, invalid or expired."
               examples:
+                MissingAuthorizationToken:
+                  summary: Missing Authorization header
+                  value:
+                    status: "failed"
+                    message: "Authorization token is missing."
                 TokenExpired:
                   summary: Authorization token has expired
                   value:
@@ -1027,6 +1100,11 @@ paths:
                   value:
                     status: "failed"
                     message: "Invalid Authorization token."
+                MalformedToken:
+                  summary: Authorization header malformed
+                  value:
+                    status: "failed"
+                    message: "Authorization token is malformed. It should start with 'Bearer '."
         '404':
           description: Device not found
           content:
@@ -1189,7 +1267,7 @@ paths:
                     message: "Invalid timezone. Please provide a valid IANA timezone name (e.g. 'Europe/Athens', 'America/New_York')."
 
         '401':
-          description: Unauthorized - Authorization token is missing, invalid, or expired
+          description: Unauthorized - Authorization token is missing, invalid, expired, or malformed
           content:
             application/json:
               schema:
@@ -1200,8 +1278,13 @@ paths:
                     example: "failed"
                   message:
                     type: string
-                    example: "Authorization token is missing or invalid."
+                    example: "Authorization token is missing, invalid or expired."
               examples:
+                MissingAuthorizationToken:
+                  summary: Missing Authorization header
+                  value:
+                    status: "failed"
+                    message: "Authorization token is missing."
                 TokenExpired:
                   summary: Authorization token has expired
                   value:
@@ -1212,6 +1295,11 @@ paths:
                   value:
                     status: "failed"
                     message: "Invalid Authorization token."
+                MalformedToken:
+                  summary: Authorization header malformed
+                  value:
+                    status: "failed"
+                    message: "Authorization token is malformed. It should start with 'Bearer '."
         '404':
           description: Device not found
           content:
@@ -1321,7 +1409,7 @@ paths:
                           last_seen_at: "2025-05-30 12:05:00"
                           duration_s: 300
         '401':
-          description: Unauthorized - Authorization token is missing, invalid, or expired
+          description: Unauthorized - Authorization token is missing, invalid, expired, or malformed
           content:
             application/json:
               schema:
@@ -1332,7 +1420,7 @@ paths:
                     example: "failed"
                   message:
                     type: string
-                    example: "Authorization token is missing or invalid."
+                    example: "Authorization token is missing, invalid or expired."
               examples:
                 MissingAuthorizationToken:
                   summary: Missing Authorization header
@@ -1349,6 +1437,11 @@ paths:
                   value:
                     status: "failed"
                     message: "Invalid Authorization token."
+                MalformedToken:
+                  summary: Authorization header malformed
+                  value:
+                    status: "failed"
+                    message: "Authorization token is malformed. It should start with 'Bearer '."
         '500':
           description: Internal server error while retrieving alert history
           content:
