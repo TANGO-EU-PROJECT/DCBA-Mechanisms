@@ -1800,8 +1800,8 @@ exports.fetchDevicesAlerts = async (req, res) => {
       const alertObj = alert.toObject();
 
       if (alertObj.alert_info) {
-        alertObj.alert_info.first_seen_at = moment.utc(firstSeen).tz(timezone).format('YYYY-MM-DD HH:mm:ss');
-        alertObj.alert_info.last_seen_at = moment.utc(lastSeen).tz(timezone).format('YYYY-MM-DD HH:mm:ss');
+        alertObj.alert_info.first_seen_at = moment.utc(alertObj.alert_info.first_seen_at).tz(timezone).format('YYYY-MM-DD HH:mm:ss');
+        alertObj.alert_info.last_seen_at = moment.utc(alertObj.alert_info.last_seen_at).tz(timezone).format('YYYY-MM-DD HH:mm:ss');
       }
 
       return alertObj;
