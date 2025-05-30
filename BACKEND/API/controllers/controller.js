@@ -445,6 +445,7 @@ const processRequest = async (req, res, did, deviceID) => {
           const lastLocationEntry = device.location_history?.[0];
           let accessStatus;
           
+          // DEVICE FOUND IN THE SAME LOCATION
           if ((lastLocationEntry && lastLocationEntry.estimated_location === currentLocation) && (device.login_timestamp && device.login_timestamp <= lastLocationEntry.last_seen_at)) {
             
             // If the last location is the estimated location, just update its duration and its last seen fields
@@ -538,6 +539,30 @@ const processRequest = async (req, res, did, deviceID) => {
                 //   });
                 // }
 
+                // UPDATE THE OLD ALERT
+                if (lastLocationEntry != 'PERMITTED_AREA') {
+                  const latestAlert = await ALERT.findOne({ device_id: deviceID, did }).sort({ 'alert_info.first_seen_at': -1 });
+              
+                  if (latestAlert) {
+                    await ALERT.updateOne(
+                      { _id: latestAlert._id },
+                      {
+                        $set: {
+                          "alert_info.last_seen_at": now,
+                          "alert_info.duration_s": updatedDurationSeconds
+                        }
+                      }
+                    );
+                    logEvent({
+                      event: 'LATEST ALERT UPDATED BEFORE ACCESS TO PERMITTED AREA (RIA)',
+                      status: 'SUCCESS ✅',
+                      did,
+                      device_id: deviceID,
+                      ip: req.ip,
+                    });
+                  }
+                }
+                
                 // Generate the new alert
                 const alertDoc = new ALERT({
                   device_id: deviceID,  // field name in schema
