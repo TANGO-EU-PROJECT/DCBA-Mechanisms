@@ -397,12 +397,12 @@ const processRequest = async (req, res, did, deviceID) => {
         if (LOCALIZATION_ALGORITHM_APPLIED === 'RIA-ED') {
           //const estimatedLocation = result['Estimated Location'];
           const possibleLocations = [
-            //'PACKAGING_LINES',
-            //'PERMITTED_AREA',
+            'PACKAGING_LINES',
+            'PERMITTED_AREA',
             'SORTING_LINES_1_TO_3',
-            //'SORTING_LINES_4_AND_5',
+            'SORTING_LINES_4_AND_5',
             'SORTING_LINES_6_TO_8',
-            //'WAREHOUSE'
+            'WAREHOUSE'
           ];
           const estimatedLocation = possibleLocations[Math.floor(Math.random() * possibleLocations.length)];
           
@@ -558,8 +558,29 @@ const processRequest = async (req, res, did, deviceID) => {
                   ip: req.ip,
                 });
               } else {
-                // no need for alert
+                // no need for alert, just update the latest alert duration and last seen for this device specifically
                 accessStatus = 'ACCESS_PERMITTED';
+                // Find the latest alert for this device and did
+                const latestAlert = await ALERT.findOne({ device_id: deviceID, did }).sort({ 'location.first_seen_at': -1 });
+              
+                if (latestAlert) {
+                  await ALERT.updateOne(
+                    { _id: latestAlert._id },
+                    {
+                      $set: {
+                        "alert_info.last_seen_at": now,
+                        "alert_info.duration_s": updatedDurationSeconds
+                      }
+                    }
+                  );
+                  logEvent({
+                    event: 'LATEST ALERT UPDATED BEFORE ACCESS TO PERMITTED AREA (RIA)',
+                    status: 'SUCCESS ✅',
+                    did,
+                    device_id: deviceID,
+                    ip: req.ip,
+                  });
+                }
               }
               //ALERT CODE
             }
@@ -886,15 +907,17 @@ exports.handleLogout = async (req, res) => {
           lastLocationEntry.duration_s = durationSeconds >= 0 ? durationSeconds : 0; // guard against negatives
 
           // UPDATE THE LATEST ALERT RELATED TO THIS LOCATION AND DEVICE (IF EXISTS)
-          const latestAlert = await ALERT.findOne({
-            device_id: device.device_id,
-            did: device.did,
-            'alert_info.estimated_location': lastLocationEntry.estimated_location
-          }).sort({ 'alert_info.first_seen_at': -1 });
-          if (latestAlert) {
-            latestAlert.alert_info.last_seen_at = nowUtc.toDate();
-            latestAlert.alert_info.duration_s = durationSeconds >= 0 ? durationSeconds : 0;
-            await latestAlert.save();
+          if (lastLocationEntry != "PERMITTED_AREA") {
+            const latestAlert = await ALERT.findOne({
+              device_id: device.device_id,
+              did: device.did,
+              'alert_info.estimated_location': lastLocationEntry.estimated_location
+            }).sort({ 'alert_info.first_seen_at': -1 });
+            if (latestAlert) {
+              latestAlert.alert_info.last_seen_at = nowUtc.toDate();
+              latestAlert.alert_info.duration_s = durationSeconds >= 0 ? durationSeconds : 0;
+              await latestAlert.save();
+            }
           }
         }
       }           
