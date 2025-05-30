@@ -174,10 +174,11 @@ spec:
               value: "dcba-mongo-db-v1"
           volumeMounts:
             - name: mongo-storage
-              mountPath: /data/db/devices
+              mountPath: /data/db/
       volumes:
         - name: mongo-storage
-          emptyDir: {}
+          persistentVolumeClaim:
+            claimName: dcba-mongo-pvc
 
 ---
 # ------------------------------- MongoDB Service ------------------------------- #

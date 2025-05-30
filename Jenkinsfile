@@ -189,7 +189,7 @@ pipeline {
         stage("Deleting the previous deployment") {
             steps {
                 withKubeConfig([credentialsId: 'K8s-config-file', serverUrl: 'https://167.235.66.115:6443', namespace: 'tango-development']) {
-                    sh 'kubectl delete -f dcba-backend-deployment.yml || true' // Deletes the deployment if it exists
+                    sh 'kubectl delete -f dcba-deployment.yml || true' // Deletes the deployment if it exists
                 }
             }
         }
@@ -199,11 +199,13 @@ pipeline {
         stage("Deploying the new deployment") {
             steps {
                 withKubeConfig([credentialsId: 'K8s-config-file', serverUrl: 'https://167.235.66.115:6443', namespace: 'tango-development']) {
+                    // Persistent storage for mongo DB before the new deployment
+                    sh 'kubectl apply -f dcba-mongo-pvc.yaml'
                     // Apply deployment
-                    sh 'kubectl apply -f dcba-backend-deployment.yml'
+                    sh 'kubectl apply -f dcba-deployment.yml'
 
                     // ✅ Apply Ingress rule
-                    sh 'kubectl apply -f dcba-backend-ingress.yml'
+                    sh 'kubectl apply -f dcba-ingress.yml'
 
                     // Verify pod status
                     sh 'kubectl get pods'
