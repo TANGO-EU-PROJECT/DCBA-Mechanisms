@@ -193,11 +193,11 @@ pipeline {
                     sh 'kubectl delete -f dcba-deployment.yml || true'
 
                     // Delete old PVC to apply new storageClass/accessMode
-                    sh 'kubectl delete pvc dcba-mongo-pvc -n tango-development || true' // Uncomment the following line ONLY if i want to delete the existing PVC and erase all MongoDB data.
+                    //sh 'kubectl delete pvc dcba-mongo-pvc -n tango-development || true' // Uncomment the following line ONLY if i want to delete the existing PVC and erase all MongoDB data.
                                                                                         // This will remove the persistent storage, causing data loss in your MongoDB replicas.
 
                     // Delete old PVC to apply new storageClass/accessMode
-                    sh 'kubectl delete pvc dcba-influx-pvc -n tango-development || true' // Uncomment the following line ONLY if i want to delete the existing PVC and erase all MongoDB data.
+                    //sh 'kubectl delete pvc dcba-influx-pvc -n tango-development || true' // Uncomment the following line ONLY if i want to delete the existing PVC and erase all MongoDB data.
                                                                                         // This will remove the persistent storage, causing data loss in your MongoDB replicas.
 
                 }
@@ -209,10 +209,10 @@ pipeline {
             steps {
                 withKubeConfig([credentialsId: 'K8s-config-file', serverUrl: 'https://167.235.66.115:6443', namespace: 'tango-development']) {
                     // Apply new mongo PVC first
-                    sh 'kubectl apply -f dcba-mongo-pvc.yml' // Uncomment this ONLY if i deleted the old PVC implementation and start fresh with new storage.
+                    //sh 'kubectl apply -f dcba-mongo-pvc.yml' // Uncomment this ONLY if i deleted the old PVC implementation and start fresh with new storage.
 
                     // Apply new influx PVC first
-                    sh 'kubectl apply -f dcba-influx-pvc.yml' // Uncomment this ONLY if i deleted the old PVC implementation and start fresh with new storage.
+                    //sh 'kubectl apply -f dcba-influx-pvc.yml' // Uncomment this ONLY if i deleted the old PVC implementation and start fresh with new storage.
 
                     // Apply deployment and ingress
                     sh 'kubectl apply -f dcba-deployment.yml'

@@ -147,6 +147,9 @@ kind: Deployment
 metadata:
   name: dcba-mongo-db
   namespace: tango-development
+  labels:
+    app: dcba-mongo-db
+    type: database
 spec:
   replicas: 1
   selector:
@@ -224,6 +227,9 @@ kind: Deployment
 metadata:
   name: dcba-influx-db
   namespace: tango-development
+  labels:
+    app: dcba-influx-db
+    type: database
 spec:
   replicas: 1
   selector:
