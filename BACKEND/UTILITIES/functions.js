@@ -100,6 +100,7 @@ const createDeviceDocument = async (did, sub, device_id, log_file_uri) => {
       log_file_uri,
       status: 'online',
       location_history: [initialLocation],
+      login_timestamp: new Date(),
     });
 
     await newDevice.save();
@@ -369,6 +370,7 @@ async function processSessionRequest(authToken, qr_scanner_state_request, did, s
           // 1. Check if the device is already online
           if (existingDevice.status === 'offline') {
             existingDevice.status = 'online';
+            existingDevice.login_timestamp = new Date();
             await existingDevice.save();  // Save the updated device document
             logEvent({
               event: 'DEVICE ALREADY REGISTERED IN THE DATABASE',

@@ -80,6 +80,10 @@ const deviceSchema = new mongoose.Schema({
     min: 0,
     max: 1,
     default: 1 
+  },
+  login_timestamp: {          
+    type: Date,
+    default: null       
   }
 }, schema_opts);
 
