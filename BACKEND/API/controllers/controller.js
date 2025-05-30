@@ -397,12 +397,12 @@ const processRequest = async (req, res, did, deviceID) => {
         if (LOCALIZATION_ALGORITHM_APPLIED === 'RIA-ED') {
           //const estimatedLocation = result['Estimated Location'];
           const possibleLocations = [
-            'PACKAGING_LINES',
-            'PERMITTED_AREA',
+            //'PACKAGING_LINES',
+            //'PERMITTED_AREA',
             'SORTING_LINES_1_TO_3',
-            'SORTING_LINES_4_AND_5',
+            //'SORTING_LINES_4_AND_5',
             'SORTING_LINES_6_TO_8',
-            'WAREHOUSE'
+            //'WAREHOUSE'
           ];
           const estimatedLocation = possibleLocations[Math.floor(Math.random() * possibleLocations.length)];
           
@@ -444,7 +444,7 @@ const processRequest = async (req, res, did, deviceID) => {
         
           const lastLocationEntry = device.location_history?.[0];
           let accessStatus;
-          if (lastLocationEntry && lastLocationEntry.estimated_location === currentLocation) {
+          if (lastLocationEntry && lastLocationEntry.estimated_location === currentLocation && (device.login_timestamp && device.login_timestamp < now)) {
             // If the last location is the estimated location, just update its duration and its last seen fields
             const updatedDurationSeconds = Math.floor(
               (now - new Date(lastLocationEntry.first_seen_at)) / 1000
@@ -493,18 +493,22 @@ const processRequest = async (req, res, did, deviceID) => {
             // Otherwise, append the new location
             // Step 1: Update the last-previous location's last_seen_at and duration_s (the current first element) (if exists)
             if (device.location_history.length > 0) {
-              const lastLocationEntry = device.location_history[0];
-              const updatedDurationSeconds = Math.floor((now - new Date(lastLocationEntry.first_seen_at)) / 1000);
 
-              await DEVICE.updateOne(
-                { _id: device._id, "location_history.0.estimated_location": lastLocationEntry.estimated_location },
-                {
-                  $set: {
-                    "location_history.0.last_seen_at": now,
-                    "location_history.0.duration_s": updatedDurationSeconds
+              if (device.login_timestamp && device.login_timestamp < now) {
+                const lastLocationEntry = device.location_history[0];
+                const updatedDurationSeconds = Math.floor((now - new Date(lastLocationEntry.first_seen_at)) / 1000);
+  
+                await DEVICE.updateOne(
+                  { _id: device._id, "location_history.0.estimated_location": lastLocationEntry.estimated_location },
+                  {
+                    $set: {
+                      "location_history.0.last_seen_at": now,
+                      "location_history.0.duration_s": updatedDurationSeconds
+                    }
                   }
-                }
-              );
+                );
+              }
+              
               //ALERT CODE
               if (estimatedLocation != 'PERMITTED_AREA') {
                 accessStatus = 'ACCESS_RESTRICTED';
@@ -1501,8 +1505,8 @@ exports.fetchDeviceLocationHistory = async (req, res) => {
 
       return {
         estimated_location: entryObj.estimated_location,
-        firstSeenAt: moment(firstSeen).tz(timezone).format('YYYY-MM-DD HH:mm:ss'),
-        lastSeenAt: moment(lastSeen).tz(timezone).format('YYYY-MM-DD HH:mm:ss'),
+        firstSeenAt: moment.utc(firstSeen).tz(timezone).format('YYYY-MM-DD HH:mm:ss'),
+        lastSeenAt: moment.utc(lastSeen).tz(timezone).format('YYYY-MM-DD HH:mm:ss'),
         durationSeconds: duration
       };
     });
@@ -1625,8 +1629,8 @@ exports.fetchDevicePermittedLocationHistory = async (req, res) => {
 
       return {
         estimated_location: entryObj.estimated_location,
-        firstSeenAt: moment(firstSeen).tz(timezone).format('YYYY-MM-DD HH:mm:ss'),
-        lastSeenAt: moment(lastSeen).tz(timezone).format('YYYY-MM-DD HH:mm:ss'),
+        firstSeenAt: moment.utc(firstSeen).tz(timezone).format('YYYY-MM-DD HH:mm:ss'),
+        lastSeenAt: moment.utc(lastSeen).tz(timezone).format('YYYY-MM-DD HH:mm:ss'),
         durationSeconds: duration
       };
     });
@@ -1740,8 +1744,8 @@ exports.fetchDeviceRestrictedLocationHistory = async (req, res) => {
 
       return {
         estimated_location: entryObj.estimated_location,
-        firstSeenAt: moment(firstSeen).tz(timezone).format('YYYY-MM-DD HH:mm:ss'),
-        lastSeenAt: moment(lastSeen).tz(timezone).format('YYYY-MM-DD HH:mm:ss'),
+        firstSeenAt: moment.utc(firstSeen).tz(timezone).format('YYYY-MM-DD HH:mm:ss'),
+        lastSeenAt: moment.utc(lastSeen).tz(timezone).format('YYYY-MM-DD HH:mm:ss'),
         durationSeconds: duration
       };
     });
