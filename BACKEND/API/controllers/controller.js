@@ -46,16 +46,18 @@ const mutexes = {};                                // Stores mutexes for handlin
 
 // Import and configure localization algorithm mode
 const LOCALIZATION_ALGORITHM_APPLIED = process.env.LOCALIZATION_ALGORITHM_APPLIED;
-const LOCALIZATION_ALGORITHM_SCRIPT_PATH=process.env.LOCALIZATION_ALGORITHM_SCRIPT_PATH;
+const LOCALIZATION_ALGORITHM_SCRIPT_PATH = process.env.LOCALIZATION_ALGORITHM_SCRIPT_PATH;
 
 
 // Retrieve the paths to MongoDB schema models from the environment variables
 const deviceModelPath = process.env.MONGO_DB_DEVICE_SCHEME_PATH;
 const sessionRequestModelPath = process.env.MONGO_DB_SESSION_REQUEST_SCHEME_PATH;
+const deviceAlertModelPath = process.env.MONGO_DB_DEVICE_ALERT_SCHEME_PATH;
 
 // Dynamically load the MongoDB schema models based on the paths specified in .env
 const DEVICE = require(path.resolve(deviceModelPath));
 const SESSION_REQUEST = require(path.resolve(sessionRequestModelPath));
+const ALERT = require(path.resolve(deviceAlertModelPath));
 /************************************************************************************************************************************************************************************************/
 
 
@@ -389,6 +391,7 @@ const processRequest = async (req, res, did, deviceID) => {
 
         console.log(`\n${yellow}*** LOCALIZATION APPLIED ***${reset}`);
         console.log(JSON.stringify(result, null, 2));
+        //const accessStatus = result['Access Status'];
         const now = moment().utc().toDate();
 
         if (LOCALIZATION_ALGORITHM_APPLIED === 'RIA-ED') {
@@ -402,6 +405,20 @@ const processRequest = async (req, res, did, deviceID) => {
             'WAREHOUSE'
           ];
           const estimatedLocation = possibleLocations[Math.floor(Math.random() * possibleLocations.length)];
+          
+
+          // if (accessStatus === "ACCESS_RESTRICTED") {
+          //   const alertDoc = new ALERT({
+          //     deviceID,
+          //     did,
+          //     locations: {
+          //       estimated_location: result['Estimated Location'],
+          //       first_seen_at: new Date(),
+          //       last_seen_at: new Date(),
+          //       duration_s: 0
+          //     }
+          //   });
+          // }
           
 
           const currentLocation = Array.isArray(estimatedLocation)
@@ -426,7 +443,7 @@ const processRequest = async (req, res, did, deviceID) => {
           }
         
           const lastLocationEntry = device.location_history?.[0];
-        
+          let accessStatus;
           if (lastLocationEntry && lastLocationEntry.estimated_location === currentLocation) {
             // If the last location is the estimated location, just update its duration and its last seen fields
             const updatedDurationSeconds = Math.floor(
@@ -442,6 +459,29 @@ const processRequest = async (req, res, did, deviceID) => {
                 }
               }
             );
+
+            //ALERT CODE
+            if (estimatedLocation != 'PERMITTED_AREA') {
+              accessStatus = 'ACCESS_RESTRICTED';
+            
+              // Find the latest alert for this device and did
+              const latestAlert = await ALERT.findOne({ device_id: deviceID, did }).sort({ 'location.first_seen_at': -1 });
+            
+              if (latestAlert) {
+                await ALERT.updateOne(
+                  { _id: latestAlert._id },
+                  {
+                    $set: {
+                      "alert_info.last_seen_at": now,
+                      "alert_info.duration_s": updatedDurationSeconds
+                    }
+                  }
+                );
+              } else {
+                accessStatus = 'ACCESS_PERMITTED';
+              }
+            }
+            //ALERT CODE
           } else {
             // Otherwise, append the new location
             // Step 1: Update the last-previous location's last_seen_at and duration_s (the current first element) (if exists)
@@ -458,6 +498,27 @@ const processRequest = async (req, res, did, deviceID) => {
                   }
                 }
               );
+              //ALERT CODE
+              if (estimatedLocation != 'PERMITTED_AREA') {
+                accessStatus = 'ACCESS_RESTRICTED';
+                // Generate alert
+                const alertDoc = new ALERT({
+                  device_id: deviceID,  // field name in schema
+                  did,
+                  alert_info: {         // updated field name here
+                    estimated_location: estimatedLocation,
+                    first_seen_at: new Date(),
+                    last_seen_at: new Date(),
+                    duration_s: 0
+                  }
+                });
+              
+                await alertDoc.save();
+              } else {
+                // no need for alert
+                accessStatus = 'ACCESS_PERMITTED';
+              }
+              //ALERT CODE
             }
 
             // Step 2: Push the new location entry at the beginning of the array
@@ -1700,6 +1761,52 @@ exports.fetchDeviceRestrictedLocationHistory = async (req, res) => {
   }
 };
 
+
+
+
+exports.fetchDevicesAlerts = async (req, res) => {
+  try {
+    // Get timezone from query param (default UTC)
+    const timezone = req.query.timezone || 'UTC';
+
+    // Fetch all alerts (optionally add filtering here)
+    const alerts = await ALERT.find({}).exec();
+
+    // Convert timestamps inside each alert to requested timezone
+    const alertsWithTimezone = alerts.map(alert => {
+      const alertObj = alert.toObject();
+
+      // Convert alert_info timestamps
+      if (alertObj.alert_info) {
+        alertObj.alert_info.first_seen_at = moment(alertObj.alert_info.first_seen_at).tz(timezone).format();
+        alertObj.alert_info.last_seen_at = moment(alertObj.alert_info.last_seen_at).tz(timezone).format();
+      }
+
+      // Convert createdAt and updatedAt
+      if (alertObj.createdAt) {
+        alertObj.createdAt = moment(alertObj.createdAt).tz(timezone).format();
+      }
+      if (alertObj.updatedAt) {
+        alertObj.updatedAt = moment(alertObj.updatedAt).tz(timezone).format();
+      }
+
+      return alertObj;
+    });
+
+    return res.status(200).json({
+      status: "success",
+      message: "Alerts retrieved successfully.",
+      alerts: alertsWithTimezone
+    });
+
+  } catch (error) {
+    console.error('Error fetching alerts:', error);
+    return res.status(500).json({
+      status: "error",
+      message: "Error retrieving alert history."
+    });
+  }
+};
 
 
 

@@ -72,6 +72,8 @@ spec:
               value: "MONGO_DB/MODELS/DEVICE.js"
             - name: MONGO_DB_SESSION_REQUEST_SCHEME_PATH
               value: "MONGO_DB/MODELS/SESSION_REQUEST.js"
+            - name: MONGO_DB_DEVICE_ALERT_SCHEME_PATH
+              value: "MONGO_DB/MODELS/ALERTS.js"
             - name: INFLUX_INITDB_ADMIN_USERNAME
               value: "admin-username"
             - name: INFLUX_INITDB_ADMIN_PASSWORD
