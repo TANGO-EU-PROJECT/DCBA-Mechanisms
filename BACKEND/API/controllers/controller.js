@@ -477,6 +477,13 @@ const processRequest = async (req, res, did, deviceID) => {
                     }
                   }
                 );
+                logEvent({
+                  event: 'ALERT UPDATED (RIA)',
+                  status: 'SUCCESS ✅',
+                  did,
+                  device_id: deviceID,
+                  ip: req.ip,
+                });
               } else {
                 accessStatus = 'ACCESS_PERMITTED';
               }
@@ -514,6 +521,13 @@ const processRequest = async (req, res, did, deviceID) => {
                 });
               
                 await alertDoc.save();
+                logEvent({
+                  event: 'ALERT GENERATED (RIA)',
+                  status: 'SUCCESS ✅',
+                  did,
+                  device_id: deviceID,
+                  ip: req.ip,
+                });
               } else {
                 // no need for alert
                 accessStatus = 'ACCESS_PERMITTED';
