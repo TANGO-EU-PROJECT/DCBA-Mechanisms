@@ -1313,8 +1313,6 @@ paths:
                           first_seen_at: "2025-05-30 12:00:00"
                           last_seen_at: "2025-05-30 12:05:00"
                           duration_s: 300
-                        createdAt: "2025-05-30T10:00:00+03:00"
-                        updatedAt: "2025-05-30T10:30:00+03:00"
                       - device_id: "5c487cb4a62cb29d"
                         did: "urn:uuid:2dcd4cb0-acb1-433f-b9a5-0d210f760618"
                         alert_info:
@@ -1322,6 +1320,30 @@ paths:
                           first_seen_at: "2025-05-30 12:00:00"
                           last_seen_at: "2025-05-30 12:05:00"
                           duration_s: 300
+        '401':
+          description: Unauthorized - Authorization token is missing, invalid, or expired
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: "failed"
+                  message:
+                    type: string
+                    example: "Authorization token is missing or invalid."
+              examples:
+                TokenExpired:
+                  summary: Authorization token has expired
+                  value:
+                    status: "failed"
+                    message: "Authorization token has expired."
+                InvalidToken:
+                  summary: Authorization token is invalid
+                  value:
+                    status: "failed"
+                    message: "Invalid Authorization token."
         '500':
           description: Internal server error while retrieving alert history
           content:
@@ -1331,7 +1353,7 @@ paths:
                 properties:
                   status:
                     type: string
-                    example: error
+                    example: failed
                   message:
                     type: string
                     example: Error retrieving alert history.
