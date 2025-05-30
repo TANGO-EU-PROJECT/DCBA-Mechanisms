@@ -849,8 +849,19 @@ exports.handleLogout = async (req, res) => {
     if (device) {
       device.status = 'offline';
       if (device.location_history && device.location_history.length > 0) {
-        device.location_history[0].last_seen_at = moment().utc().toDate();
-      }      
+        const lastLocationEntry = device.location_history[0];
+        if (device.login_timestamp && device.login_timestamp < lastLocationEntry.first_seen_at) {
+          const nowUtc = moment().utc();
+      
+          lastLocationEntry.last_seen_at = nowUtc.toDate();
+        
+          // Calculate duration in seconds between first_seen_at and last_seen_at
+          const firstSeen = moment(lastLocationEntry.first_seen_at);
+          const durationSeconds = nowUtc.diff(firstSeen, 'seconds');
+        
+          lastLocationEntry.duration_s = durationSeconds >= 0 ? durationSeconds : 0; // guard against negatives
+        }
+      }           
       await device.save();  // Save the updated device document to mark them as offline
       logEvent({
         event: 'DEVICE STATUS UPDATED',
