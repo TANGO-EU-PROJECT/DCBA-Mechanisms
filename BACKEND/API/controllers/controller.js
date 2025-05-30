@@ -444,7 +444,7 @@ const processRequest = async (req, res, did, deviceID) => {
         
           const lastLocationEntry = device.location_history?.[0];
           let accessStatus;
-          if (lastLocationEntry && lastLocationEntry.estimated_location === currentLocation && (device.login_timestamp && device.login_timestamp < now)) {
+          if (lastLocationEntry && lastLocationEntry.estimated_location === currentLocation && (device.login_timestamp && device.login_timestamp < lastLocationEntry.first_seen_at)) {
             // If the last location is the estimated location, just update its duration and its last seen fields
             const updatedDurationSeconds = Math.floor(
               (now - new Date(lastLocationEntry.first_seen_at)) / 1000
@@ -493,9 +493,8 @@ const processRequest = async (req, res, did, deviceID) => {
             // Otherwise, append the new location
             // Step 1: Update the last-previous location's last_seen_at and duration_s (the current first element) (if exists)
             if (device.location_history.length > 0) {
-
-              if (device.login_timestamp && device.login_timestamp < now) {
-                const lastLocationEntry = device.location_history[0];
+              const lastLocationEntry = device.location_history[0];
+              if (device.login_timestamp && device.login_timestamp < lastLocationEntry.first_seen_at) {
                 const updatedDurationSeconds = Math.floor((now - new Date(lastLocationEntry.first_seen_at)) / 1000);
   
                 await DEVICE.updateOne(
