@@ -1368,6 +1368,32 @@ paths:
                     example: Europe/Athens
                   alerts:
                     type: array
+                    items:
+                      type: object
+                      properties:
+                        device_id:
+                          type: string
+                          example: "5c487cb4a62cb29d"
+                        did:
+                          type: string
+                          example: "urn:uuid:2dcd4cb0-acb1-433f-b9a5-0d210f760618"
+                        alert_info:
+                          type: object
+                          properties:
+                            estimated_location:
+                              type: string
+                              example: "WAREHOUSE"
+                            first_seen_at:
+                              type: string
+                              format: date-time
+                              example: "2025-05-30 12:00:00"
+                            last_seen_at:
+                              type: string
+                              format: date-time
+                              example: "2025-05-30 12:00:00"
+                            duration_s:
+                              type: integer
+                              example: 0
               examples:
                 emptyHistory:
                   summary: Empty alert list
