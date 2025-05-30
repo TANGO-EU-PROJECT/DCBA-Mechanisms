@@ -200,7 +200,7 @@ pipeline {
             steps {
                 withKubeConfig([credentialsId: 'K8s-config-file', serverUrl: 'https://167.235.66.115:6443', namespace: 'tango-development']) {
                     // Persistent storage for mongo DB before the new deployment
-                    sh 'kubectl apply -f dcba-mongo-pvc.yaml'
+                    //sh 'kubectl apply -f dcba-mongo-pvc.yaml'
                     // Apply deployment
                     sh 'kubectl apply -f dcba-deployment.yml'
 
