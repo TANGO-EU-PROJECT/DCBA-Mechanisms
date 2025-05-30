@@ -444,7 +444,7 @@ const processRequest = async (req, res, did, deviceID) => {
         
           const lastLocationEntry = device.location_history?.[0];
           let accessStatus;
-          if ((lastLocationEntry && lastLocationEntry.estimated_location === currentLocation) && (device.login_timestamp && device.login_timestamp <= lastLocationEntry.first_seen_at)) {
+          if ((lastLocationEntry && lastLocationEntry.estimated_location === currentLocation) && (device.login_timestamp && device.login_timestamp <= lastLocationEntry.last_seen_at)) {
             // If the last location is the estimated location, just update its duration and its last seen fields
             const updatedDurationSeconds = Math.floor(
               (now - new Date(lastLocationEntry.first_seen_at)) / 1000
@@ -494,7 +494,7 @@ const processRequest = async (req, res, did, deviceID) => {
             // Step 1: Update the last-previous location's last_seen_at and duration_s (the current first element) (if exists)
             if (device.location_history.length > 0) {
               const lastLocationEntry = device.location_history[0];
-              if (device.login_timestamp && device.login_timestamp <= lastLocationEntry.first_seen_at) {
+              if (device.login_timestamp && device.login_timestamp <= lastLocationEntry.last_seen_at) {
                 const updatedDurationSeconds = Math.floor((now - new Date(lastLocationEntry.first_seen_at)) / 1000);
   
                 await DEVICE.updateOne(
@@ -511,32 +511,33 @@ const processRequest = async (req, res, did, deviceID) => {
               //ALERT CODE
               if (estimatedLocation != 'PERMITTED_AREA') {
                 accessStatus = 'ACCESS_RESTRICTED';
-                 // Check if there is an existing latest alert for this device and location
-                const latestAlert = await ALERT.findOne({
-                  device_id: deviceID,
-                  'alert_info.estimated_location': estimatedLocation
-                }).sort({ 'alert_info.first_seen_at': -1 });
+                //  // Check if there is an existing latest alert for this device and location
+                // const latestAlert = await ALERT.findOne({
+                //   device_id: deviceID,
+                //   did: did,
+                //   'alert_info.estimated_location': estimatedLocation
+                // }).sort({ 'alert_info.first_seen_at': -1 });
 
-                if (latestAlert && device.login_timestamp && device.login_timestamp < latestAlert.alert_info.first_seen_at) {
-                  // Update the last_seen_at and duration_s of the latest alert
-                  const now = moment();
-                  const firstSeen = moment(latestAlert.alert_info.first_seen_at);
+                // if (latestAlert && device.login_timestamp && device.login_timestamp <= latestAlert.alert_info.last_seen_at) {
+                //   // Update the last_seen_at and duration_s of the latest alert
+                //   const now = moment();
+                //   const firstSeen = moment(latestAlert.alert_info.first_seen_at);
               
-                  latestAlert.alert_info.last_seen_at = now.toDate();
-                  latestAlert.alert_info.duration_s = now.diff(firstSeen, 'seconds');
+                //   latestAlert.alert_info.last_seen_at = now.toDate();
+                //   latestAlert.alert_info.duration_s = now.diff(firstSeen, 'seconds');
               
-                  await latestAlert.save();
+                //   await latestAlert.save();
               
-                  logEvent({
-                    event: 'ALERT UPDATED (RIA)',
-                    status: 'SUCCESS ✅',
-                    did,
-                    device_id: deviceID,
-                    ip: req.ip,
-                  });
-                }
+                //   logEvent({
+                //     event: 'ALERT UPDATED (RIA)',
+                //     status: 'SUCCESS ✅',
+                //     did,
+                //     device_id: deviceID,
+                //     ip: req.ip,
+                //   });
+                // }
 
-                // Generate the alert
+                // Generate the new alert
                 const alertDoc = new ALERT({
                   device_id: deviceID,  // field name in schema
                   did,
@@ -875,7 +876,7 @@ exports.handleLogout = async (req, res) => {
       device.status = 'offline';
       if (device.location_history && device.location_history.length > 0) {
         const lastLocationEntry = device.location_history[0];
-        if (device.login_timestamp && device.login_timestamp <= lastLocationEntry.first_seen_at) {
+        if (device.login_timestamp && device.login_timestamp <= lastLocationEntry.last_seen_at) {
           const nowUtc = moment().utc();
       
           lastLocationEntry.last_seen_at = nowUtc.toDate();
