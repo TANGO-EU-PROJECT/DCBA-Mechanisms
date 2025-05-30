@@ -875,7 +875,7 @@ exports.handleLogout = async (req, res) => {
       device.status = 'offline';
       if (device.location_history && device.location_history.length > 0) {
         const lastLocationEntry = device.location_history[0];
-        if (device.login_timestamp && device.login_timestamp < lastLocationEntry.first_seen_at) {
+        if (device.login_timestamp && device.login_timestamp <= lastLocationEntry.first_seen_at) {
           const nowUtc = moment().utc();
       
           lastLocationEntry.last_seen_at = nowUtc.toDate();
