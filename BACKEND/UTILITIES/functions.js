@@ -100,7 +100,7 @@ const createDeviceDocument = async (did, sub, device_id, log_file_uri) => {
       log_file_uri,
       status: 'online',
       location_history: [initialLocation],
-      login_timestamp: new Date(),
+      login_timestamp: now,
     });
 
     await newDevice.save();
