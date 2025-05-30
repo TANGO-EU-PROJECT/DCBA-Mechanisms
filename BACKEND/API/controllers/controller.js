@@ -511,7 +511,32 @@ const processRequest = async (req, res, did, deviceID) => {
               //ALERT CODE
               if (estimatedLocation != 'PERMITTED_AREA') {
                 accessStatus = 'ACCESS_RESTRICTED';
-                // Generate alert
+                 // Check if there is an existing latest alert for this device and location
+                const latestAlert = await ALERT.findOne({
+                  device_id: deviceID,
+                  'alert_info.estimated_location': estimatedLocation
+                }).sort({ 'alert_info.first_seen_at': -1 });
+
+                if (latestAlert && device.login_timestamp && device.login_timestamp < latestAlert.alert_info.first_seen_at) {
+                  // Update the last_seen_at and duration_s of the latest alert
+                  const now = moment();
+                  const firstSeen = moment(latestAlert.alert_info.first_seen_at);
+              
+                  latestAlert.alert_info.last_seen_at = now.toDate();
+                  latestAlert.alert_info.duration_s = now.diff(firstSeen, 'seconds');
+              
+                  await latestAlert.save();
+              
+                  logEvent({
+                    event: 'ALERT UPDATED (RIA)',
+                    status: 'SUCCESS ✅',
+                    did,
+                    device_id: deviceID,
+                    ip: req.ip,
+                  });
+                }
+
+                // Generate the alert
                 const alertDoc = new ALERT({
                   device_id: deviceID,  // field name in schema
                   did,
