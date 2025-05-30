@@ -185,21 +185,24 @@ pipeline {
             }
         }
 
-        /* Stage 7: Deleting the previous deployment */
-        stage("Deleting the previous deployment") {
+        /* Stage 7: Deleting the previous deployment and PVC */
+        stage("Deleting the previous deployment and PVC") {
             steps {
                 withKubeConfig([credentialsId: 'K8s-config-file', serverUrl: 'https://167.235.66.115:6443', namespace: 'tango-development']) {
-                    sh 'kubectl delete -f dcba-deployment.yml || true' // Deletes the deployment if it exists
+                    // Delete deployment
+                    sh 'kubectl delete -f dcba-deployment.yml || true'
+                    // Delete old PVC to apply new storageClass/accessMode
+                    sh 'kubectl delete pvc dcba-mongo-pvc -n tango-development || true'
                 }
             }
         }
-
-
 
         /* Stage 8: Deploying the new deployment */
         stage("Deploying the new deployment") {
             steps {
                 withKubeConfig([credentialsId: 'K8s-config-file', serverUrl: 'https://167.235.66.115:6443', namespace: 'tango-development']) {
+                    // Apply new PVC first
+                    sh 'kubectl apply -f dcba-mongo-pvc.yml'
                     // Apply deployment and ingress
                     sh 'kubectl apply -f dcba-deployment.yml'
                     sh 'kubectl apply -f dcba-ingress.yml'
@@ -209,6 +212,7 @@ pipeline {
                 }
             }
         }
+
 
 
 
