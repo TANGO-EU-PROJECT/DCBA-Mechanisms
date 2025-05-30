@@ -10,4 +10,6 @@ spec:
   resources:
     requests:
       storage: 5Gi
-  storageClassName: local-path # Or your specific storage class
+  storageClassName: nfs-csi    # For only one replicas: local-path
+                               # For multiple replicas (+2): nfs-csi
+
