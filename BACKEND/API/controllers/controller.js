@@ -444,7 +444,7 @@ const processRequest = async (req, res, did, deviceID) => {
         
           const lastLocationEntry = device.location_history?.[0];
           let accessStatus;
-          if (lastLocationEntry && lastLocationEntry.estimated_location === currentLocation && (device.login_timestamp && device.login_timestamp < lastLocationEntry.first_seen_at)) {
+          if ((lastLocationEntry && lastLocationEntry.estimated_location === currentLocation) && (device.login_timestamp && device.login_timestamp < lastLocationEntry.first_seen_at)) {
             // If the last location is the estimated location, just update its duration and its last seen fields
             const updatedDurationSeconds = Math.floor(
               (now - new Date(lastLocationEntry.first_seen_at)) / 1000
@@ -848,6 +848,9 @@ exports.handleLogout = async (req, res) => {
 
     if (device) {
       device.status = 'offline';
+      if (device.location_history && device.location_history.length > 0) {
+        device.location_history[0].last_seen_at = moment().utc().toDate();
+      }      
       await device.save();  // Save the updated device document to mark them as offline
       logEvent({
         event: 'DEVICE STATUS UPDATED',
