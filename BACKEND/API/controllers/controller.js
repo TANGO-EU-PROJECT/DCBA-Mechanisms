@@ -1780,8 +1780,8 @@ exports.fetchDeviceRestrictedLocationHistory = async (req, res) => {
 
 exports.fetchDevicesAlerts = async (req, res) => {
   try {
-    // Get timezone from query param (default UTC)
     const timezone = req.query.timezone;
+    
     // Validate timezone
     if (!moment.tz.zone(timezone)) {
       return res.status(400).json({
@@ -1790,25 +1790,18 @@ exports.fetchDevicesAlerts = async (req, res) => {
       });
     }
 
-    // Fetch all alerts (optionally add filtering here)
-    const alerts = await ALERT.find({}).exec();
+    // Fetch alerts excluding unwanted fields
+    const alerts = await ALERT.find({})
+      .select('-_id -createdAt -updatedAt -__v')
+      .exec();
 
     // Convert timestamps inside each alert to requested timezone
     const alertsWithTimezone = alerts.map(alert => {
       const alertObj = alert.toObject();
 
-      // Convert alert_info timestamps
       if (alertObj.alert_info) {
-        alertObj.alert_info.first_seen_at = moment(alertObj.alert_info.first_seen_at).tz(timezone).format();
-        alertObj.alert_info.last_seen_at = moment(alertObj.alert_info.last_seen_at).tz(timezone).format();
-      }
-
-      // Convert createdAt and updatedAt
-      if (alertObj.createdAt) {
-        alertObj.createdAt = moment(alertObj.createdAt).tz(timezone).format();
-      }
-      if (alertObj.updatedAt) {
-        alertObj.updatedAt = moment(alertObj.updatedAt).tz(timezone).format();
+        alertObj.alert_info.first_seen_at = moment.utc(firstSeen).tz(timezone).format('YYYY-MM-DD HH:mm:ss');
+        alertObj.alert_info.last_seen_at = moment.utc(lastSeen).tz(timezone).format('YYYY-MM-DD HH:mm:ss');
       }
 
       return alertObj;
