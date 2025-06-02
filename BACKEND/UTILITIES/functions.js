@@ -28,6 +28,8 @@ const sessionRequestModelPath = process.env.MONGO_DB_SESSION_REQUEST_SCHEME_PATH
 const DEVICE = require(path.resolve(deviceModelPath));
 const SESSION_REQUEST = require(path.resolve(sessionRequestModelPath));
 const WSS_CONNECTIONS_FROM_QR_SCANNER_REQUESTS = new Map(); // returns the wss connections associated with their qr_state_requests
+const deviceAlertModelPath = process.env.MONGO_DB_DEVICE_ALERT_SCHEME_PATH;
+const ALERT = require(path.resolve(deviceAlertModelPath));
 
 // ──────────────────────────────────────────────────────────────────────────────
 // ANSI escape codes for colored console output to improve log readability
@@ -701,7 +703,7 @@ const findDeviceByDeviceID = async (device_id) => {
  * @returns {Promise<string>} - The access status after the location update ('ACCESS_PERMITTED' or 'ACCESS_RESTRICTED')
  */
 async function handleDeviceLocationUpdate(device, currentLocation, now, req) {
-  console.log("ESTIMATED LOCATION: ", currentLocation);
+  console.log("DUMMY ESTIMATED LOCATION: ", currentLocation);
   try {
     // Default access status is permitted unless proven otherwise
     let accessStatus = 'ACCESS_PERMITTED';
