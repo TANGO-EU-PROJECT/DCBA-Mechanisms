@@ -1244,6 +1244,7 @@ exports.fetchDeviceBehaviouralScore = async (req, res) => {
  * @param   {Object} req.body - The request payload containing:
  *          - {string} didSP - Service Provider's DID
  *          - {string} didRequester - Device's DID to query
+ *          - timezone
  * @param   {Object} res - Express response object used to return the result or an error message.
  */
 exports.fetchDeviceLastLocation = async (req, res) => {
@@ -1344,6 +1345,7 @@ exports.fetchDeviceLastLocation = async (req, res) => {
  *          - {Object} timeframe - Time range to filter location history:
  *              - {string} from - ISO timestamp for the start of the range
  *              - {string} to - ISO timestamp for the end of the range
+ *          - timezone
  * @param   {Object} res - Express response object used to return the result or an error message.
  */
 exports.fetchDeviceLocationHistory = async (req, res) => {
@@ -1464,6 +1466,7 @@ exports.fetchDeviceLocationHistory = async (req, res) => {
  *          - {Object} timeframe - Time range to filter location history:
  *              - {string} from - ISO timestamp for the start of the range
  *              - {string} to - ISO timestamp for the end of the range
+ *          - timezone
  * @param   {Object} res - Express response object used to return the result or an error message.
  */
 exports.fetchDevicePermittedLocationHistory = async (req, res) => {
@@ -1579,6 +1582,7 @@ exports.fetchDevicePermittedLocationHistory = async (req, res) => {
  *          - {Object} timeframe - Time range to filter location history:
  *              - {string} from - ISO timestamp for the start of the range
  *              - {string} to - ISO timestamp for the end of the range
+ *          - timezone
  * @param   {Object} res - Express response object used to return the result or an error message.
  */
 exports.fetchDeviceRestrictedLocationHistory = async (req, res) => {
@@ -1681,6 +1685,21 @@ exports.fetchDeviceRestrictedLocationHistory = async (req, res) => {
 
 
 
+/** [22]
+ * Retrieves the alert history of all devices.
+ * 
+ * @route   GET /devices/fetch-alert-history
+ * @desc    This endpoint receives a get request from an external service and returns the alert history of all devices.
+ *          Handles the following cases:
+ *          - Missing required fields → returns 400 Bad Request
+ *          - Invalid or expired JWT token → returns 401 Unauthorized
+ *          - Database retrieval errors → returns 500 Internal Server Error
+ *          - Successful retrieval → returns 200 OK alert history
+ * 
+ * @access  Restricted – Requires a valid `jwtAuth` token.
+ * @param   - timezone
+ * @param   {Object} res - Express response object used to return the result or an error message.
+ */
 exports.fetchDevicesAlerts = async (req, res) => {
   try {
     const timezone = req.query.timezone;
