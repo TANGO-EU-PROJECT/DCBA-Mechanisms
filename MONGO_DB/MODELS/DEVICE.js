@@ -84,6 +84,16 @@ const deviceSchema = new mongoose.Schema({
   login_timestamp: {          
     type: Date,
     default: null       
+  },
+  role: {
+    type: String,
+    enum: ['employee', 'manager'],
+    required: true
+  },
+  restricted_areas: {
+    type: [String],
+    enum: possibleLocations,
+    default: [] // Will be populated based on role
   }
 }, schema_opts);
 
