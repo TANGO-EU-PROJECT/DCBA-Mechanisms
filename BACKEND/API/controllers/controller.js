@@ -31,7 +31,8 @@ const {
   malformedLogsExaminator,
   processSessionRequest,
   findDeviceByDeviceID,
-  findDeviceByDID
+  findDeviceByDID,
+  handleDeviceLocationUpdate
 } = require('../../UTILITIES/functions');          // Import utility functions (database interactions, hashing, signatures, etc.)
 const { MinPriorityQueue } = require('@datastructures-js/priority-queue'); // Import Min Heap
 
@@ -367,7 +368,6 @@ const processRequest = async (req, res, did, deviceID) => {
   }
 
   const logLines = logData.split('\n');
-  const currentTimestamp = moment().tz("Europe/Athens").toDate();
 
   for (const line of logLines) {
     if (line.trim() === '') continue;
@@ -405,8 +405,11 @@ const processRequest = async (req, res, did, deviceID) => {
             'WAREHOUSE'
           ];
           const estimatedLocation = possibleLocations[Math.floor(Math.random() * possibleLocations.length)];
-          
-
+          const currentLocation = Array.isArray(estimatedLocation)
+            ? estimatedLocation.join(' | ')
+            : estimatedLocation;
+        
+          const device = await DEVICE.findOne({ did, device_id: deviceID });
           // if (accessStatus === "ACCESS_RESTRICTED") {
           //   const alertDoc = new ALERT({
           //     deviceID,
@@ -419,14 +422,6 @@ const processRequest = async (req, res, did, deviceID) => {
           //     }
           //   });
           // }
-          
-
-          const currentLocation = Array.isArray(estimatedLocation)
-            ? estimatedLocation.join(' | ')
-            : estimatedLocation;
-        
-          const device = await DEVICE.findOne({ did, device_id: deviceID });
-        
           if (!device) {
             logEvent({
               event: 'PERFORMING LOCALIZATION (RIA)',
@@ -441,202 +436,8 @@ const processRequest = async (req, res, did, deviceID) => {
               message: "Failed to perform localization."
             });
           }
-        
-          const lastLocationEntry = device.location_history?.[0];
-          let accessStatus;
-          
-          // DEVICE FOUND IN THE SAME LOCATION
-          if ((lastLocationEntry && lastLocationEntry.estimated_location === currentLocation) && (device.login_timestamp && device.login_timestamp <= lastLocationEntry.last_seen_at)) {
-            
-            // If the last location is the estimated location, just update its duration and its last seen fields
-            const updatedDurationSeconds = Math.floor(
-              (now - new Date(lastLocationEntry.first_seen_at)) / 1000
-            );
-            await DEVICE.updateOne(
-              { _id: device._id, "location_history.0.estimated_location": currentLocation },
-              {
-                $set: {
-                  "location_history.0.last_seen_at": now,
-                  "location_history.0.duration_s": updatedDurationSeconds
-                }
-              }
-            );
-
-            //ALERT CODE
-            if (estimatedLocation != 'PERMITTED_AREA') {
-              accessStatus = 'ACCESS_RESTRICTED';
-            
-              // Find the latest alert for this device and did
-              const latestAlert = await ALERT.findOne({ device_id: deviceID, did }).sort({ 'alert_info.first_seen_at': -1 });
-            
-              if (latestAlert) {
-                await ALERT.updateOne(
-                  { _id: latestAlert._id },
-                  {
-                    $set: {
-                      "alert_info.last_seen_at": now,
-                      "alert_info.duration_s": updatedDurationSeconds
-                    }
-                  }
-                );
-                logEvent({
-                  event: 'ALERT UPDATED (RIA)',
-                  status: 'SUCCESS ✅',
-                  did,
-                  device_id: deviceID,
-                  ip: req.ip,
-                });
-              } else {
-                accessStatus = 'ACCESS_PERMITTED';
-              }
-            }
-            //ALERT CODE
-          } else {
-            // Otherwise, append the new location
-            // Step 1: Update the last-previous location's last_seen_at and duration_s (the current first element) (if exists)
-            if (device.location_history.length > 0) {
-              const lastLocationEntry = device.location_history[0];
-              if (device.login_timestamp && device.login_timestamp <= lastLocationEntry.last_seen_at) {
-                const updatedDurationSeconds = Math.floor((now - new Date(lastLocationEntry.first_seen_at)) / 1000);
-  
-                await DEVICE.updateOne(
-                  { _id: device._id, "location_history.0.estimated_location": lastLocationEntry.estimated_location },
-                  {
-                    $set: {
-                      "location_history.0.last_seen_at": now,
-                      "location_history.0.duration_s": updatedDurationSeconds
-                    }
-                  }
-                );
-              }
-              
-              //ALERT CODE
-              if (estimatedLocation != 'PERMITTED_AREA') {
-                accessStatus = 'ACCESS_RESTRICTED';
-                //  // Check if there is an existing latest alert for this device and location
-                // const latestAlert = await ALERT.findOne({
-                //   device_id: deviceID,
-                //   did: did,
-                //   'alert_info.estimated_location': estimatedLocation
-                // }).sort({ 'alert_info.first_seen_at': -1 });
-
-                // if (latestAlert && device.login_timestamp && device.login_timestamp <= latestAlert.alert_info.last_seen_at) {
-                //   // Update the last_seen_at and duration_s of the latest alert
-                //   const now = moment();
-                //   const firstSeen = moment(latestAlert.alert_info.first_seen_at);
-              
-                //   latestAlert.alert_info.last_seen_at = now.toDate();
-                //   latestAlert.alert_info.duration_s = now.diff(firstSeen, 'seconds');
-              
-                //   await latestAlert.save();
-              
-                //   logEvent({
-                //     event: 'ALERT UPDATED (RIA)',
-                //     status: 'SUCCESS ✅',
-                //     did,
-                //     device_id: deviceID,
-                //     ip: req.ip,
-                //   });
-                // }
-
-                // UPDATE THE OLD ALERT
-                if (lastLocationEntry != 'PERMITTED_AREA') {
-                  const latestAlert = await ALERT.findOne({ device_id: deviceID, did }).sort({ 'alert_info.first_seen_at': -1 });
-              
-                  if (latestAlert) {
-                    await ALERT.updateOne(
-                      { _id: latestAlert._id },
-                      {
-                        $set: {
-                          "alert_info.last_seen_at": now,
-                          "alert_info.duration_s": updatedDurationSeconds
-                        }
-                      }
-                    );
-                    logEvent({
-                      event: 'LATEST ALERT UPDATED BEFORE ACCESS TO PERMITTED AREA (RIA)',
-                      status: 'SUCCESS ✅',
-                      did,
-                      device_id: deviceID,
-                      ip: req.ip,
-                    });
-                  }
-                }
-                
-                // Generate the new alert
-                const alertDoc = new ALERT({
-                  device_id: deviceID,  // field name in schema
-                  did,
-                  alert_info: {         // updated field name here
-                    estimated_location: estimatedLocation,
-                    first_seen_at: new Date(),
-                    last_seen_at: new Date(),
-                    duration_s: 0
-                  }
-                });
-              
-                await alertDoc.save();
-                logEvent({
-                  event: 'ALERT GENERATED (RIA)',
-                  status: 'SUCCESS ✅',
-                  did,
-                  device_id: deviceID,
-                  ip: req.ip,
-                });
-              } else {
-                // no need for alert, just update the latest alert duration and last seen for this device specifically
-                accessStatus = 'ACCESS_PERMITTED';
-                // Find the latest alert for this device and did
-                const latestAlert = await ALERT.findOne({ device_id: deviceID, did }).sort({ 'alert_info.first_seen_at': -1 });
-              
-                if (latestAlert) {
-                  await ALERT.updateOne(
-                    { _id: latestAlert._id },
-                    {
-                      $set: {
-                        "alert_info.last_seen_at": now,
-                        "alert_info.duration_s": updatedDurationSeconds
-                      }
-                    }
-                  );
-                  logEvent({
-                    event: 'LATEST ALERT UPDATED BEFORE ACCESS TO PERMITTED AREA (RIA)',
-                    status: 'SUCCESS ✅',
-                    did,
-                    device_id: deviceID,
-                    ip: req.ip,
-                  });
-                }
-              }
-              //ALERT CODE
-            }
-
-            // Step 2: Push the new location entry at the beginning of the array
-            await DEVICE.updateOne(
-              { _id: device._id },
-              {
-                $push: {
-                  location_history: {
-                    $each: [{
-                      estimated_location: currentLocation,
-                      first_seen_at: now,
-                      last_seen_at: now,
-                      duration_s: 0
-                    }],
-                    $position: 0
-                  }
-                }
-              }
-            );
-          }
-          logEvent({
-            event: 'UPDATING DEVICE LOCATION (RIA)',
-            status: 'SUCCESS ✅',
-            did,
-            device_id: deviceID,
-            ip: req.ip,
-            cause: `DEVICE LAST LOCATION UPDATED TO: ${currentLocation}`
-          });
+          // update location history and alert based on the device.role
+          await handleDeviceLocationUpdate(device, currentLocation, now, req);
         }
          else {
           logEvent({

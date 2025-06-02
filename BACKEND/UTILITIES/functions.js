@@ -83,7 +83,7 @@ const getDeviceURI = async (did) => {
  * @param {string} device_id - The device ID associated with the device.
  * @returns {Promise<void>} - A promise that resolves once the device has been successfully stored to the database.
  */
-const createDeviceDocument = async (did, sub, device_id, log_file_uri) => {
+const createDeviceDocument = async (did, sub, device_id, log_file_uri, role) => {
   try {
     const now = moment().utc().toDate();
     const initialLocation = {
@@ -92,15 +92,32 @@ const createDeviceDocument = async (did, sub, device_id, log_file_uri) => {
       last_seen_at: now,
       duration_s: 0
     };
-  
+
+    const locationsDir = path.join(__dirname, '../SCRIPTS/LOCALIZATION/RIASTONE');
+    const possibleLocations = getPossibleLocations(locationsDir);
+
+
+    // Determine restricted areas based on role
+    let restricted_areas = [];
+    if (role === 'manager') {
+      restricted_areas = possibleLocations.filter(loc => loc === 'UNKNOWN');
+    } else if (role === 'employee') {
+      restricted_areas = possibleLocations.filter(loc => loc !== 'PERMITTED_AREA');
+    } else {
+      throw new Error(`Invalid role provided: ${role}`);
+    }
+
+
     const newDevice = new DEVICE({
       did,
       sub,
       device_id,
       log_file_uri,
+      role,
       status: 'online',
       location_history: [initialLocation],
       login_timestamp: now,
+      restricted_areas
     });
 
     await newDevice.save();
@@ -122,6 +139,7 @@ const createDeviceDocument = async (did, sub, device_id, log_file_uri) => {
     });
   }
 };
+
 
 
 
@@ -340,7 +358,7 @@ async function processSessionRequest(authToken, qr_scanner_state_request, did, s
         const deviceWithSameDID = await findDeviceByDID(did);
         if (!deviceWithSameDID) {
           // If no device found associated with this DID, create it
-          await createDeviceDocument(did, sub, device_id, log_file_uri);
+          await createDeviceDocument(did, sub, device_id, log_file_uri, 'employee');
           notifyDevice(authToken, qr_scanner_state_request, device_id, did, sub, log_file_uri, "session-request-valid");
           logEvent({
             event: 'DEVICE STATUS UPDATED',
@@ -667,6 +685,227 @@ const findDeviceByDeviceID = async (device_id) => {
   }
 };
 
+/** [17]
+ * Handles updating a device's location history and alerts based on its current location.
+ *
+ * This function checks if the device is detected in the same location as its last recorded
+ * location or a different location. It updates the location history duration and timestamps,
+ * and manages alerts if the device enters or remains in restricted areas.
+ *
+ * @param {Object} params - Parameters object
+ * @param {Object} params.device - The device document containing current state and history
+ * @param {string} params.currentLocation - The newly estimated location of the device
+ * @param {Date} params.now - The current timestamp (Date object)
+ * @param {Object} params.req - Express request object for logging IP
+ *
+ * @returns {Promise<string>} - The access status after the location update ('ACCESS_PERMITTED' or 'ACCESS_RESTRICTED')
+ */
+async function handleDeviceLocationUpdate({ device, currentLocation, now, req }) {
+  try {
+    // Default access status is permitted unless proven otherwise
+    let accessStatus = 'ACCESS_PERMITTED';
+
+    // Get the last known location entry from the device's location history (most recent entry)
+    const lastLocationEntry = device.location_history[0] || null;
+
+    // SCENARIO #1: Device detected in the SAME location as last entry
+    if (
+      lastLocationEntry &&
+      lastLocationEntry.estimated_location === currentLocation &&
+      device.login_timestamp &&
+      device.login_timestamp <= lastLocationEntry.last_seen_at
+    ) {
+      // Calculate the updated duration the device has spent in the current location
+      const updatedDurationSeconds = Math.floor(
+        (now - new Date(lastLocationEntry.first_seen_at)) / 1000
+      );
+
+      // Update the last_seen_at and duration_s fields for the latest location entry in DB
+      await DEVICE.updateOne(
+        { device_id: device.device_id, "location_history.0.estimated_location": currentLocation },
+        {
+          $set: {
+            "location_history.0.last_seen_at": now,
+            "location_history.0.duration_s": updatedDurationSeconds
+          }
+        }
+      );
+
+      // If this location is restricted, update the latest alert accordingly
+      if (device.restricted_areas.includes(currentLocation)) {
+        accessStatus = 'ACCESS_RESTRICTED';
+
+        // Retrieve the latest alert for this device and did, sorted by most recent first_seen_at
+        const latestAlert = await ALERT.findOne({ device_id: device.device_id, did: device.did }).sort({ 'alert_info.first_seen_at': -1 });
+
+        if (latestAlert) {
+          // Update the last_seen_at and duration_s on the latest alert document
+          await ALERT.updateOne(
+            { _id: latestAlert._id },
+            {
+              $set: {
+                "alert_info.last_seen_at": now,
+                "alert_info.duration_s": updatedDurationSeconds
+              }
+            }
+          );
+
+          // Log success event for alert update
+          logEvent({
+            event: 'ALERT UPDATED (RIA)',
+            status: 'SUCCESS ✅',
+            did: device.did,
+            device_id: device.device_id,
+            ip: req.ip,
+          });
+        } 
+      }
+
+    } else {
+      // SCENARIO #2: Device detected in a DIFFERENT location than last entry
+
+      if (device.location_history.length > 0) {
+        // Update duration and last_seen_at of the previous location entry if applicable
+        if (device.login_timestamp && device.login_timestamp <= lastLocationEntry.last_seen_at) {
+          const updatedDurationSeconds = Math.floor(
+            (now - new Date(lastLocationEntry.first_seen_at)) / 1000
+          );
+
+          await DEVICE.updateOne(
+            { device_id: device.device_id, "location_history.0.estimated_location": lastLocationEntry.estimated_location },
+            {
+              $set: {
+                "location_history.0.last_seen_at": now,
+                "location_history.0.duration_s": updatedDurationSeconds
+              }
+            }
+          );
+
+          // If the current location is restricted, handle alert updates and creation
+          if (device.restricted_areas.includes(currentLocation)) {
+            accessStatus = 'ACCESS_RESTRICTED';
+
+            // If the previous location was also restricted, update its latest alert
+            if (device.restricted_areas.includes(lastLocationEntry.estimated_location)) {
+              const latestAlert = await ALERT.findOne({ device_id: device.device_id, did: device.did }).sort({ 'alert_info.first_seen_at': -1 });
+
+              if (latestAlert) {
+                await ALERT.updateOne(
+                  { _id: latestAlert._id },
+                  {
+                    $set: {
+                      "alert_info.last_seen_at": now,
+                      "alert_info.duration_s": updatedDurationSeconds
+                    }
+                  }
+                );
+
+                logEvent({
+                  event: 'LATEST ALERT UPDATED BEFORE ACCESS TO PERMITTED AREA (RIA)',
+                  status: 'SUCCESS ✅',
+                  did: device.did,
+                  device_id: device.device_id,
+                  ip: req.ip,
+                });
+              }
+            }
+
+            // Generate a new alert document for the new restricted location
+            const alertDoc = new ALERT({
+              device_id: device.device_id,
+              did: device.did,
+              alert_info: {
+                estimated_location: currentLocation,
+                first_seen_at: now,
+                last_seen_at: now,
+                duration_s: 0
+              }
+            });
+
+            await alertDoc.save();
+
+            logEvent({
+              event: 'ALERT GENERATED (RIA)',
+              status: 'SUCCESS ✅',
+              did: device.did,
+              device_id: device.device_id,
+              ip: req.ip,
+            });
+
+          } else {
+            // Current location is permitted — update latest alert duration if exists
+            accessStatus = 'ACCESS_PERMITTED';
+
+            const latestAlert = await ALERT.findOne({ device_id: device.device_id, did: device.did }).sort({ 'alert_info.first_seen_at': -1 });
+
+            if (latestAlert) {
+              await ALERT.updateOne(
+                { _id: latestAlert._id },
+                {
+                  $set: {
+                    "alert_info.last_seen_at": now,
+                    "alert_info.duration_s": updatedDurationSeconds
+                  }
+                }
+              );
+
+              logEvent({
+                event: 'LATEST ALERT UPDATED BEFORE ACCESS TO PERMITTED AREA (RIA)',
+                status: 'SUCCESS ✅',
+                did: device.did,
+                device_id: device.device_id,
+                ip: req.ip,
+              });
+            }
+          }
+        }
+      }
+
+      // Add the new location entry to the front of the device's location history array
+      await DEVICE.updateOne(
+        { device_id: device.device_id },
+        {
+          $push: {
+            location_history: {
+              $each: [{
+                estimated_location: currentLocation,
+                first_seen_at: now,
+                last_seen_at: now,
+                duration_s: 0
+              }],
+              $position: 0
+            }
+          }
+        }
+      );
+    }
+
+    // If we reach this point without exceptions, return success
+
+  } catch (error) {
+    // Optionally log the error somewhere here if you want
+    // console.error('handleDeviceLocationUpdate error:', error);
+    logEvent({
+      event: 'SOMETHING UNEXPECTED HAPPENED DURING LOCATION/ALERT UPDATES',
+      status: 'FAILED ❌',
+      did: device.did,
+      device_id: device.device_id,
+      ip: req.ip,
+      cause: `ERROR STACK TRACE: ${error.stack}`
+    });
+  }
+}
+
+
+
+/** [17] **/
+const getPossibleLocations = (directoryPath) => {
+  const files = fs.readdirSync(directoryPath);
+  return files
+    .filter(file => file.endsWith('.csv'))
+    .map(file => path.basename(file, '.csv').toUpperCase());
+};
+
 
 
 
@@ -732,5 +971,6 @@ module.exports = {
   processSessionRequest,          // Process and notifies the devices begin session requests
   notifyDevice,                   // Notify the devices using the web socket connection
   initializeWebSocketServer,      // Initialize the web socket server connection
+  handleDeviceLocationUpdate,
 };
 
