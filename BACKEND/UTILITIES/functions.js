@@ -360,7 +360,7 @@ async function processSessionRequest(authToken, qr_scanner_state_request, did, s
         const deviceWithSameDID = await findDeviceByDID(did);
         if (!deviceWithSameDID) {
           // If no device found associated with this DID, create it
-          await createDeviceDocument(did, sub, device_id, log_file_uri, 'employee');
+          await createDeviceDocument(did, sub, device_id, log_file_uri, 'customer');
           notifyDevice(authToken, qr_scanner_state_request, device_id, did, sub, log_file_uri, "session-request-valid");
           logEvent({
             event: 'DEVICE STATUS UPDATED',
