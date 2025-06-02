@@ -99,9 +99,9 @@ const createDeviceDocument = async (did, sub, device_id, log_file_uri, role) => 
 
     // Determine restricted areas based on role
     let restricted_areas = [];
-    if (role === 'manager') {
+    if (role === 'employee') {
       restricted_areas = possibleLocations.filter(loc => loc === 'UNKNOWN');
-    } else if (role === 'employee') {
+    } else if (role === 'customer') {
       restricted_areas = possibleLocations.filter(loc => loc !== 'PERMITTED_AREA');
     } else {
       throw new Error(`Invalid role provided: ${role}`);
@@ -700,7 +700,7 @@ const findDeviceByDeviceID = async (device_id) => {
  *
  * @returns {Promise<string>} - The access status after the location update ('ACCESS_PERMITTED' or 'ACCESS_RESTRICTED')
  */
-async function handleDeviceLocationUpdate({ device, currentLocation, now, req }) {
+async function handleDeviceLocationUpdate(device, currentLocation, now, req) {
   try {
     // Default access status is permitted unless proven otherwise
     let accessStatus = 'ACCESS_PERMITTED';

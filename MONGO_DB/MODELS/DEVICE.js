@@ -87,7 +87,7 @@ const deviceSchema = new mongoose.Schema({
   },
   role: {
     type: String,
-    enum: ['employee', 'manager'],
+    enum: ['employee', 'customer'],
     required: true
   },
   restricted_areas: {

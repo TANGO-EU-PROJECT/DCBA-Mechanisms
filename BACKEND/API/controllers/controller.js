@@ -409,7 +409,7 @@ const processRequest = async (req, res, did, deviceID) => {
             ? estimatedLocation.join(' | ')
             : estimatedLocation;
         
-          const device = await DEVICE.findOne({ did, device_id: deviceID });
+          const device = await DEVICE.findOne({ did: did, device_id: deviceID });
           // if (accessStatus === "ACCESS_RESTRICTED") {
           //   const alertDoc = new ALERT({
           //     deviceID,
