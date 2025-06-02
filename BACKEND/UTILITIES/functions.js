@@ -701,6 +701,7 @@ const findDeviceByDeviceID = async (device_id) => {
  * @returns {Promise<string>} - The access status after the location update ('ACCESS_PERMITTED' or 'ACCESS_RESTRICTED')
  */
 async function handleDeviceLocationUpdate(device, currentLocation, now, req) {
+  console.log("ESTIMATED LOCATION: ", currentLocation);
   try {
     // Default access status is permitted unless proven otherwise
     let accessStatus = 'ACCESS_PERMITTED';
