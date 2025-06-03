@@ -4,6 +4,27 @@ FROM nikolaik/python-nodejs:python3.11-nodejs18
 # Set the working directory inside the container
 WORKDIR /production
 
+# Install Puppeteer dependencies including libnss3
+RUN apt-get update && apt-get install -y \
+    libnss3 \
+    libatk1.0-0 \
+    libatk-bridge2.0-0 \
+    libcups2 \
+    libx11-xcb1 \
+    libxcomposite1 \
+    libxdamage1 \
+    libxrandr2 \
+    libgbm1 \
+    libpango1.0-0 \
+    libasound2 \
+    libpangocairo-1.0-0 \
+    libxcb1 \
+    libxss1 \
+    libgtk-3-0 \
+    libxtst6 \
+    --no-install-recommends && \
+    rm -rf /var/lib/apt/lists/*
+
 # Copy package.json and package-lock.json to install Node.js DEPENDENCIES
 COPY ./package*.json ./
 RUN npm install
