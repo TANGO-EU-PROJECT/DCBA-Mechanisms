@@ -10,6 +10,7 @@ const https = require('https');
 const fs = require('fs');
 const qs = require('qs');
 const csv = require('csv-parser');
+const QRCode = require('qrcode');
 
 // ──────────────────────────────────────────────────────────────────────────────
 // ANSI escape codes for colored console output to improve log readability
@@ -927,17 +928,20 @@ exports.beginSession = async (req, res) => {
     const document = dom.window.document;
 
     // Locate the <img> tag inside the <main> element (where the QR code is expected to be)
-    const svgElement = document.querySelector("svg");
+    //const svgElement = document.querySelector("svg");
 
+    const openidUrlMatch = response.data.match(/openid:\/\/\?[^"'\s<]+/);
     // Check if the <img> element was found
-    if (svgElement) {
-      const DEVICE_AUTHENTICATION_QR_CODE = svgElement.outerHTML;
+    if (openidUrlMatch) {
+      const openidUrl = openidUrlMatch[0];
 
+      // Generate a QR code as a base64 image
+      const qrDataUrl = await QRCode.toDataURL(openidUrl); // This is a base64 PNG
       // Send the extracted QR code as a response to the client
       res.status(200).json({
         status: "success",
         message: 'QR Code generated successfully.',
-        deviceAuthQRCode: DEVICE_AUTHENTICATION_QR_CODE, // Include the extracted QR code
+        deviceAuthQRCode: qrDataUrl, // Include the extracted QR code
         sessionRequest: savedSessionRequest,
         role: role,
       });
