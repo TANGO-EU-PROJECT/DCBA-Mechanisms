@@ -884,7 +884,7 @@ exports.beginSession = async (req, res) => {
     //const loginQRUrl = `https://ips-verifier.tango.io/api/v1/loginQR?state=${qr_scanner_state_request}&client_callback=http%3A%2F%2F${process.env.HOSTNAME_STATIC_IP_CALLBACK_TANGO_VERIFIER}%3A${process.env.SERVER_EXTERNAL_BIND_PORT}%2Fauthenticator%2Fauth-callback&client_id=`;
     const clientCallbackUrl = `https://${process.env.HOSTNAME_DNS_INTRASOFT_DCBA_BACKEND_SERVICE}/development/dcba-backend/authenticator/auth-callback`;
     //const loginQRUrl = `https://ips-verifier.k8s-cluster.tango.rid-intrasoft.eu/api/v1/loginQR?state=${qr_scanner_state_request}&client_callback=${encodeURIComponent(clientCallbackUrl)}&client_id=`;
-    const baseQrUrl = `https://${process.env.HOHOSTNAME_FRONT_UI_TANGO_LOGIN}/auth/login/qrcode`;
+    const baseQrUrl = `https://${process.env.HOSTNAME_FRONT_UI_TANGO_LOGIN}/auth/login/qrcode`;
     let loginQRUrl;
 
     if (role === 'customer' || role === 'employee') {
