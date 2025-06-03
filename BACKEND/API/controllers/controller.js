@@ -3,6 +3,7 @@
 require('dotenv').config();   
 const config = require('./../../CONFIG/config');  /* Import server configuration settings                */
 const { JSDOM } = require('jsdom');               /* Import JSDOM to simulate DOM parsing in Node.js     */
+const puppeteer = require('puppeteer');
 
 // For executing external scripts (e.g., localization and RiskAssessmentEngine)
 const { exec } = require('child_process');
@@ -826,32 +827,6 @@ exports.beginSession = async (req, res) => {
     }
 
     try {
-      // // Check if a session request already exists for this device_id
-      // const existingSessionRequest = await SESSION_REQUEST.findOne({
-      //   device_id: device_id,
-      //   qr_scanner_state_request: qr_scanner_state_request
-      // });
-      
-      // if (existingSessionRequest) {
-      //   // If found, delete the existing session request
-      //   await SESSION_REQUEST.deleteOne({ device_id });
-      //   logEvent({
-      //     event: 'DELETED EXISTED SESSION REQUEST',
-      //     status: 'SUCCESS ✅',
-      //     device_id: device_id,
-      //     ip: req.ip
-      //   });
-      // }
-
-      // // Create a new SESSION_REQUEST instance
-      // const sessionRequest = new SESSION_REQUEST({
-      //   device_id,
-      //   qr_scanner_state_request,
-      //   log_file_uri
-      // });
-
-      // // Save to the database
-      // savedSessionRequest = await sessionRequest.save();
       savedSessionRequest = await SESSION_REQUEST.replaceOne(
         { device_id: device_id },
         {
@@ -859,11 +834,10 @@ exports.beginSession = async (req, res) => {
           qr_scanner_state_request,
           log_file_uri,
           timestamp: moment().tz("Europe/Athens").toDate()
-          // any other required/default fields
         },
         { upsert: true }
       );
-      
+
       logEvent({
         event: 'CREATED NEW SESSION REQUEST',
         status: 'SUCCESS ✅',
@@ -877,78 +851,54 @@ exports.beginSession = async (req, res) => {
         cause: `AN ERROR OCCURRED DURING HANDLING SESSION REQUEST: ${error.stack}`,
         device_id: device_id,
         ip: req.ip
-      });      
+      });
       return res.status(500).json({ status: "failed", message: 'Error handling session request.' });
     }
 
-    // Construct the login QR URL with the device_id and other required parameters
-    //const loginQRUrl = `https://ips-verifier.tango.io/api/v1/loginQR?state=${qr_scanner_state_request}&client_callback=http%3A%2F%2F${process.env.HOSTNAME_STATIC_IP_CALLBACK_TANGO_VERIFIER}%3A${process.env.SERVER_EXTERNAL_BIND_PORT}%2Fauthenticator%2Fauth-callback&client_id=`;
     const clientCallbackUrl = `https://${process.env.HOSTNAME_DNS_INTRASOFT_DCBA_BACKEND_SERVICE}/development/dcba-backend/authenticator/auth-callback`;
-    //const loginQRUrl = `https://ips-verifier.k8s-cluster.tango.rid-intrasoft.eu/api/v1/loginQR?state=${qr_scanner_state_request}&client_callback=${encodeURIComponent(clientCallbackUrl)}&client_id=`;
     const baseQrUrl = `https://${process.env.HOSTNAME_FRONT_UI_TANGO_LOGIN}/auth/login/qrcode`;
     let loginQRUrl;
 
     if (role === 'customer' || role === 'employee') {
       loginQRUrl = `${baseQrUrl}?t=${role}&state=${qr_scanner_state_request}&client_callback=${encodeURIComponent(clientCallbackUrl)}`;
-      console.log(loginQRUrl)
+      console.log('loginQRUrl:', loginQRUrl);
     } else {
       return res.status(400).json({ status: 'failed', message: 'Invalid role provided.' });
     }
-    
 
+    // Puppeteer launch with https agent (to skip SSL errors if needed)
+    const browser = await puppeteer.launch({
+      args: ['--no-sandbox', '--disable-setuid-sandbox'],
+      headless: true,
+      ignoreHTTPSErrors: true
+    });
+    const page = await browser.newPage();
 
-    // Define the certificate path
-    // const certPath = '/usr/local/share/ca-certificates/ca.crt';
-    // let cert;
-    // try {
-    //   // Read the certificate file from the specified path
-    //   cert = fs.readFileSync(certPath);
-    // } catch (err) {
-    //   logEvent({
-    //     event: 'READING CERTIFICATE FILE',
-    //     status: 'FAILED ❌',
-    //     cause: `AN ERROR OCCURRED DURING READING CERTIFICATE FILE: ${err}`,
-    //     device_id: device_id,
-    //     ip: req.ip
-    //   });
-      
-    //   return res.status(200).json({ status: "failed", message: 'Error reading the certificate.' });
-    // }
-    // Create an HTTPS agent with the certificate for secure communication
-    const httpsAgent = new https.Agent({
-      //ca: cert, // Use the custom CA certificate
-      rejectUnauthorized: false // Ensure SSL verification is enabled
+    await page.goto(loginQRUrl, { waitUntil: 'networkidle0' });
+
+    // Extract openid:// URL from the page content (adjust selector as needed)
+    // Example: assume it's somewhere in the page text or in a QR image src
+    const openidUrl = await page.evaluate(() => {
+      // Try to find any text matching openid://? pattern
+      const regex = /openid:\/\/\?[^"'<> ]+/;
+      const bodyText = document.body.innerText || "";
+      const match = bodyText.match(regex);
+      return match ? match[0] : null;
     });
 
-    // Fetch the page content from the login QR URL
-    const response = await axios.get(loginQRUrl, { httpsAgent });
-    console.log(response.data); // 👈 DEBUG: check what the HTML contains
+    await browser.close();
 
+    if (openidUrl) {
+      const qrDataUrl = await QRCode.toDataURL(openidUrl); // base64 PNG QR code
 
-    // Parse the response HTML using JSDOM
-    const dom = new JSDOM(response.data);
-    const document = dom.window.document;
-
-    // Locate the <img> tag inside the <main> element (where the QR code is expected to be)
-    //const svgElement = document.querySelector("svg");
-
-    const openidUrlMatch = response.data.match(/openid:\/\/\?[^"'<>]+/);
-    // Check if the <img> element was found
-    if (openidUrlMatch) {
-      const openidUrl = openidUrlMatch[0];
-
-      // Generate a QR code as a base64 image
-      const qrDataUrl = await QRCode.toDataURL(openidUrl); // This is a base64 PNG
-      // Send the extracted QR code as a response to the client
-      res.status(200).json({
+      return res.status(200).json({
         status: "success",
         message: 'QR Code generated successfully.',
-        deviceAuthQRCode: qrDataUrl, // Include the extracted QR code
+        deviceAuthQRCode: qrDataUrl,
         sessionRequest: savedSessionRequest,
         role: role,
       });
     } else {
-      // Log an error message if no QR code image was found
       logEvent({
         event: 'PROCESSING QR CODE BASE64',
         status: 'FAILED ❌',
@@ -956,10 +906,10 @@ exports.beginSession = async (req, res) => {
         device_id: device_id,
         ip: req.ip
       });
-      res.status(502).json({ status: "failed", message: 'QR code not found in the verifier service response.' });
+      return res.status(502).json({ status: "failed", message: 'QR code not found in the verifier service response.' });
     }
+
   } catch (err) {
-    // Handle errors, such as network failures or parsing issues
     logEvent({
       event: 'EXTRACTING QR CODE BASE64',
       status: 'FAILED ❌',
@@ -967,11 +917,9 @@ exports.beginSession = async (req, res) => {
       device_id: req.body?.device_id || 'UNKNOWN',
       ip: req.ip
     });
-    
-    res.status(500).json({ status: "failed", message: 'Failed to extract QR code due to an internal server error.' });
+    return res.status(500).json({ status: "failed", message: 'Failed to extract QR code due to an internal server error.' });
   }
 };
-
 
 
 /** [14]
