@@ -5,7 +5,7 @@ FROM nikolaik/python-nodejs:python3.11-nodejs18
 WORKDIR /production
 
 # Install Puppeteer dependencies including libnss3
-RUN apt-get install -y \
+RUN apt-get update && apt-get install -y \
     libnss3 \
     libatk1.0-0 \
     libatk-bridge2.0-0 \
