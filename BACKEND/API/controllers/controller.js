@@ -917,7 +917,7 @@ exports.beginSession = async (req, res) => {
 
     const svgElement = document.querySelector("svg");
     if (svgElement) {
-      console.log(svgElement)
+      console.log(svgElement.outerHTML)
       const DEVICE_AUTHENTICATION_QR_CODE = svgElement.outerHTML;
 
       res.status(200).json({
