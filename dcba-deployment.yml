@@ -104,6 +104,8 @@ spec:
               value: "127.0.0.1"
             - name: HOSTNAME_FRONT_PROD
               value: "0.0.0.0"
+            - name: HOSTNAME_FRONT_UI_TANGO_LOGIN
+              value: "ui-frontend.tango.nadiaplatform.com"
 
 ---
 # ------------------------------- DCBA Backend Service ------------------------------- #
