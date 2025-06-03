@@ -922,6 +922,8 @@ exports.beginSession = async (req, res) => {
 
     // Fetch the page content from the login QR URL
     const response = await axios.get(loginQRUrl, { httpsAgent });
+    console.log(response.data); // 👈 DEBUG: check what the HTML contains
+
 
     // Parse the response HTML using JSDOM
     const dom = new JSDOM(response.data);
@@ -930,7 +932,7 @@ exports.beginSession = async (req, res) => {
     // Locate the <img> tag inside the <main> element (where the QR code is expected to be)
     //const svgElement = document.querySelector("svg");
 
-    const openidUrlMatch = response.data.match(/openid:\/\/\?[^"'\s<]+/);
+    const openidUrlMatch = response.data.match(/openid:\/\/\?[^"'<>]+/);
     // Check if the <img> element was found
     if (openidUrlMatch) {
       const openidUrl = openidUrlMatch[0];
