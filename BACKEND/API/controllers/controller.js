@@ -902,7 +902,7 @@ exports.beginSession = async (req, res) => {
     });
     const page = await browser.newPage();
     await page.goto(loginQRUrl, { waitUntil: 'networkidle2' });
-    await page.waitForTimeout(2000);
+    await page.waitFor(2000);
     const html = await page.content();
     await browser.close();
 
