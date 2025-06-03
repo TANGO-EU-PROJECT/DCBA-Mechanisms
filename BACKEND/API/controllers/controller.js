@@ -906,6 +906,9 @@ exports.beginSession = async (req, res) => {
     const html = await page.content();
     await browser.close();
 
+    // Debug: log entire HTML to console (or save to file)
+    console.log("📄 Rendered HTML:", html);
+
     // Use JSDOM on rendered HTML
     const { JSDOM } = require('jsdom');
     const dom = new JSDOM(html);
