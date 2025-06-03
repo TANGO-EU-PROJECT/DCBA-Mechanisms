@@ -902,7 +902,9 @@ exports.beginSession = async (req, res) => {
     });
     const page = await browser.newPage();
     await page.goto(loginQRUrl, { waitUntil: 'networkidle2' });
-    await page.waitFor(2000);
+    //await page.waitFor(2000);
+    await delay(2000);
+
     const html = await page.content();
     await browser.close();
 
@@ -949,6 +951,12 @@ exports.beginSession = async (req, res) => {
     res.status(500).json({ status: "failed", message: 'Failed to extract QR code due to an internal server error.' });
   }
 };
+
+function delay(time) {
+  return new Promise(function(resolve) { 
+      setTimeout(resolve, time)
+  });
+}
     
     // Define the certificate path
     // const certPath = '/usr/local/share/ca-certificates/ca.crt';
