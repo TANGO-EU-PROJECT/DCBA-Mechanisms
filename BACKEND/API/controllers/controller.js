@@ -10,6 +10,7 @@ const https = require('https');
 const fs = require('fs');
 const qs = require('qs');
 const csv = require('csv-parser');
+const puppeteer = require('puppeteer');
 
 // ──────────────────────────────────────────────────────────────────────────────
 // ANSI escape codes for colored console output to improve log readability
@@ -893,9 +894,59 @@ exports.beginSession = async (req, res) => {
     } else {
       return res.status(400).json({ status: 'failed', message: 'Invalid role provided.' });
     }
+
+    // Launch Puppeteer and get rendered HTML
+    const browser = await puppeteer.launch({
+      args: ['--no-sandbox', '--disable-setuid-sandbox'],
+      headless: true,
+    });
+    const page = await browser.newPage();
+    await page.goto(loginQRUrl, { waitUntil: 'networkidle2' });
+    await page.waitForTimeout(2000);
+    const html = await page.content();
+    await browser.close();
+
+    // Use JSDOM on rendered HTML
+    const { JSDOM } = require('jsdom');
+    const dom = new JSDOM(html);
+    const document = dom.window.document;
+
+    const svgElement = document.querySelector("svg");
+    if (svgElement) {
+      const DEVICE_AUTHENTICATION_QR_CODE = svgElement.outerHTML;
+
+      res.status(200).json({
+        status: "success",
+        message: 'QR Code generated successfully.',
+        deviceAuthQRCode: DEVICE_AUTHENTICATION_QR_CODE,
+        sessionRequest: savedSessionRequest,
+        role: role,
+      });
+    } else {
+      // Log error and respond
+      logEvent({
+        event: 'PROCESSING QR CODE BASE64',
+        status: 'FAILED ❌',
+        cause: `QR CODE NOT FOUND`,
+        device_id: device_id,
+        ip: req.ip
+      });
+      res.status(502).json({ status: "failed", message: 'QR code not found in the verifier service response.' });
+    }
+
+  } catch (err) {
+    logEvent({
+      event: 'EXTRACTING QR CODE BASE64',
+      status: 'FAILED ❌',
+      cause: `AN ERROR OCCURRED DURING EXTRACTING QR CODE BASE64: ${err.stack}`,
+      device_id: req.body?.device_id || 'UNKNOWN',
+      ip: req.ip
+    });
+
+    res.status(500).json({ status: "failed", message: 'Failed to extract QR code due to an internal server error.' });
+  }
+};
     
-
-
     // Define the certificate path
     // const certPath = '/usr/local/share/ca-certificates/ca.crt';
     // let cert;
@@ -913,62 +964,7 @@ exports.beginSession = async (req, res) => {
       
     //   return res.status(200).json({ status: "failed", message: 'Error reading the certificate.' });
     // }
-    // Create an HTTPS agent with the certificate for secure communication
-    const httpsAgent = new https.Agent({
-      //ca: cert, // Use the custom CA certificate
-      rejectUnauthorized: false // Ensure SSL verification is enabled
-    });
-
-    // Fetch the page content from the login QR URL
-    const response = await axios.get(loginQRUrl, { httpsAgent });
-
-    // Parse the response HTML using JSDOM
-    const dom = new JSDOM(response.data);
-    const document = dom.window.document;
-
-    const htmlElement = document.querySelector("html");
-    console.log(htmlElement.outerHTML);
-
-    // Locate the <img> tag inside the <main> element (where the QR code is expected to be)
-    const svgElement = document.querySelector("svg");
-
-    // Check if the <img> element was found
-    if (svgElement) {
-      const DEVICE_AUTHENTICATION_QR_CODE = svgElement.outerHTML;
-
-      // Send the extracted QR code as a response to the client
-      res.status(200).json({
-        status: "success",
-        message: 'QR Code generated successfully.',
-        deviceAuthQRCode: DEVICE_AUTHENTICATION_QR_CODE, // Include the extracted QR code
-        sessionRequest: savedSessionRequest,
-        role: role,
-      });
-    } else {
-      // Log an error message if no QR code image was found
-      logEvent({
-        event: 'PROCESSING QR CODE BASE64',
-        status: 'FAILED ❌',
-        cause: `QR CODE NOT FOUND`,
-        device_id: device_id,
-        ip: req.ip
-      });
-      res.status(502).json({ status: "failed", message: 'QR code not found in the verifier service response.' });
-    }
-  } catch (err) {
-    // Handle errors, such as network failures or parsing issues
-    logEvent({
-      event: 'EXTRACTING QR CODE BASE64',
-      status: 'FAILED ❌',
-      cause: `AN ERROR OCCURRED DURING EXTRACTING QR CODE BASE64: ${err.stack}`,
-      device_id: req.body?.device_id || 'UNKNOWN',
-      ip: req.ip
-    });
     
-    res.status(500).json({ status: "failed", message: 'Failed to extract QR code due to an internal server error.' });
-  }
-};
-
 
 
 /** [14]
