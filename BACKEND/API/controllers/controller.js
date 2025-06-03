@@ -888,7 +888,7 @@ exports.beginSession = async (req, res) => {
     let loginQRUrl;
 
     if (role === 'customer' || role === 'employee') {
-      loginQRUrl = `${baseQrUrl}?t=${role}&state=${state}&client_callback=${encodeURIComponent(clientCallbackUrl)}`;
+      loginQRUrl = `${baseQrUrl}?t=${role}&state=${qr_scanner_state_request}&client_callback=${encodeURIComponent(clientCallbackUrl)}`;
     } else {
       return res.status(400).json({ status: 'failed', message: 'Invalid role provided.' });
     }
