@@ -902,8 +902,7 @@ exports.beginSession = async (req, res) => {
     });
     const page = await browser.newPage();
     await page.goto(loginQRUrl, { waitUntil: 'networkidle2' });
-    //await page.waitFor(2000);
-    await delay(2000);
+    await delay(1000);
 
     const html = await page.content();
     await browser.close();
@@ -918,6 +917,7 @@ exports.beginSession = async (req, res) => {
 
     const svgElement = document.querySelector("svg");
     if (svgElement) {
+      console.log(svgElement)
       const DEVICE_AUTHENTICATION_QR_CODE = svgElement.outerHTML;
 
       res.status(200).json({
