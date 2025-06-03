@@ -889,6 +889,7 @@ exports.beginSession = async (req, res) => {
 
     if (role === 'customer' || role === 'employee') {
       loginQRUrl = `${baseQrUrl}?t=${role}&state=${qr_scanner_state_request}&client_callback=${encodeURIComponent(clientCallbackUrl)}`;
+      console.log(loginQRUrl)
     } else {
       return res.status(400).json({ status: 'failed', message: 'Invalid role provided.' });
     }
@@ -926,12 +927,11 @@ exports.beginSession = async (req, res) => {
     const document = dom.window.document;
 
     // Locate the <img> tag inside the <main> element (where the QR code is expected to be)
-    const imgElement = document.querySelector("main img");
+    const svgElement = document.querySelector("svg");
 
     // Check if the <img> element was found
-    if (imgElement) {
-      // Extract the QR code image source (assumed to be in base64 format)
-      const DEVICE_AUTHENTICATION_QR_CODE = imgElement.getAttribute("src");
+    if (svgElement) {
+      const DEVICE_AUTHENTICATION_QR_CODE = svgElement.outerHTML;
 
       // Send the extracted QR code as a response to the client
       res.status(200).json({
