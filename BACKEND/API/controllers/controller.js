@@ -510,6 +510,8 @@ exports.handleAuthTokenValidation = async (req, res) => {
   const ip = req.ip;
   const deviceID = req.query.device_id;
 
+  
+
 
   // 1. Check missing or malformed Authorization header
   if (!authHeader) {
@@ -996,6 +998,7 @@ function delay(time) {
 exports.handleAuthCallback = async (req, res) => {
   const { code, state } = req.query;
   //console.log(code, state)
+  console.log(req.query)
 
   // Check if required parameters (code, state) are missing
   if (!code || !state) {
