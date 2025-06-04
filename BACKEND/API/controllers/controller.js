@@ -21,7 +21,8 @@ const yellow = '\x1b[33m';    /* Yellow color                        */
 const lightBlue = '\x1b[34m'; /* Light Blue color                    */
 const magenta = '\x1b[35m';   /* Magenta color                       */
 const reset = '\x1b[0m';      /* Reset color to default              */
-
+const MAX_WAIT_TIME = 5000; // 5 seconds
+const POLL_INTERVAL = 500;  // check every 0.5 seconds
 // Import necessary libraries
 const path = require('path');                      // Import Path module for file path operations
 //const moment = require('moment');                  // For handling timestamps
@@ -902,22 +903,29 @@ exports.beginSession = async (req, res) => {
     });
     const page = await browser.newPage();
     await page.goto(loginQRUrl, { waitUntil: 'networkidle2' });
-    await delay(1000);
 
-    const html = await page.content();
-    await browser.close();
-
-    // Debug: log entire HTML to console (or save to file)
-    console.log("📄 Rendered HTML:", html);
-
+    let svgElement = null;
+    const startTime = Date.now();
+    // await delay(1000);
+    // const html = await page.content();
     // Use JSDOM on rendered HTML
-    const { JSDOM } = require('jsdom');
-    const dom = new JSDOM(html);
-    const document = dom.window.document;
+    // const { JSDOM } = require('jsdom');
+    // const dom = new JSDOM(html);
+    // const document = dom.window.document;
+    while (Date.now() - startTime < MAX_WAIT_TIME) {
+      const html = await page.content();
+      const { JSDOM } = require('jsdom');
+      const dom = new JSDOM(html);
+      const document = dom.window.document;
 
-    const svgElement = document.querySelector("svg");
+      svgElement = document.querySelector("svg");
+
+      if (svgElement) break;
+
+      await delay(POLL_INTERVAL);
+    }
+    await browser.close();
     if (svgElement) {
-      console.log(svgElement.outerHTML)
       const DEVICE_AUTHENTICATION_QR_CODE = svgElement.outerHTML;
 
       res.status(200).json({
