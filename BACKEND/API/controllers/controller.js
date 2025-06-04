@@ -859,6 +859,7 @@ exports.beginSession = async (req, res) => {
           device_id,
           qr_scanner_state_request,
           log_file_uri,
+          role,
           timestamp: moment().tz("Europe/Athens").toDate()
           // any other required/default fields
         },

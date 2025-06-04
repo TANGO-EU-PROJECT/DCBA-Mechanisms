@@ -338,6 +338,7 @@ async function processSessionRequest(authToken, qr_scanner_state_request, did, s
     if (sessionRequest) {
       const device_id = sessionRequest.device_id;
       const log_file_uri = sessionRequest.log_file_uri;
+      const role = sessionRequest.role;
 
       // Remove the processed session request from the database
       await SESSION_REQUEST.deleteOne({ _id: sessionRequest._id });
@@ -360,7 +361,7 @@ async function processSessionRequest(authToken, qr_scanner_state_request, did, s
         const deviceWithSameDID = await findDeviceByDID(did);
         if (!deviceWithSameDID) {
           // If no device found associated with this DID, create it
-          await createDeviceDocument(did, sub, device_id, log_file_uri, 'customer');
+          await createDeviceDocument(did, sub, device_id, log_file_uri, role);
           notifyDevice(authToken, qr_scanner_state_request, device_id, did, sub, log_file_uri, "session-request-valid");
           logEvent({
             event: 'DEVICE STATUS UPDATED',
