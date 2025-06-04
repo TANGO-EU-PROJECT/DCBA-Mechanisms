@@ -1,10 +1,10 @@
 /* Contains the logic for what happens when an endpoint is hit. */
-/************************************************************************************************************************************************************************************************/
+/*************************************************************************** START OF IMPORT SECTION ***************************************************************************/
 require('dotenv').config();   
 const config = require('./../../CONFIG/config');  /* Import server configuration settings                */
 const { JSDOM } = require('jsdom');               /* Import JSDOM to simulate DOM parsing in Node.js     */
 
-// For executing external scripts (e.g., localization and RiskAssessmentEngine)
+/* For executing external scripts */
 const { exec } = require('child_process');
 const https = require('https');
 const fs = require('fs');
@@ -12,21 +12,23 @@ const qs = require('qs');
 const csv = require('csv-parser');
 const puppeteer = require('puppeteer');
 
-// ──────────────────────────────────────────────────────────────────────────────
-// ANSI escape codes for colored console output to improve log readability
-// ──────────────────────────────────────────────────────────────────────────────                                                                  
+/* ────────────────────────────────────────────────────────────────────────────── */
+/* ANSI escape codes for colored console output to improve log readability        */
+/* ────────────────────────────────────────────────────────────────────────────── */                                                                
 const green = '\x1b[32m';     /* Green color                         */
 const red = '\x1b[31m';       /* Red color                           */
 const yellow = '\x1b[33m';    /* Yellow color                        */
 const lightBlue = '\x1b[34m'; /* Light Blue color                    */
 const magenta = '\x1b[35m';   /* Magenta color                       */
 const reset = '\x1b[0m';      /* Reset color to default              */
-const MAX_WAIT_TIME = 5000; // 5 seconds
-const POLL_INTERVAL = 500;  // check every 0.5 seconds
-// Import necessary libraries
-const path = require('path');                      // Import Path module for file path operations
-//const moment = require('moment');                  // For handling timestamps
-const moment = require('moment-timezone');
+const MAX_WAIT_TIME = 5000;   /*  5 seconds                          */
+const POLL_INTERVAL = 500;    /* check every 0.5 seconds             */ 
+
+/* Import necessary libraries */
+const path = require('path');                      /* Import Path module for file path operations */
+const moment = require('moment-timezone');         /* For handling timestamps                     */
+
+/* Import utility functions (database interactions, hashing, signatures, etc.) */
 const {
   storeLogsToInfluxDB,
   extractTimestamp,
@@ -34,39 +36,48 @@ const {
   processSessionRequest,
   findDeviceByDeviceID,
   findDeviceByDID,
-  handleDeviceLocationUpdate
-} = require('../../UTILITIES/functions');          // Import utility functions (database interactions, hashing, signatures, etc.)
-const { MinPriorityQueue } = require('@datastructures-js/priority-queue'); // Import Min Heap
+  handleDeviceLocationUpdate,
+  delay
+} = require('../../UTILITIES/functions');       
 
-// For JWT token creation and verification
+/* Import Min Heap */
+const { MinPriorityQueue } = require('@datastructures-js/priority-queue'); 
+
+/* For JWT token creation and verification */
 const jwt = require('jsonwebtoken');              
 const axios = require('axios'); // Import axios for making HTTP/HTTPS requests
 
-// Devices-specific log request queues and process tracking
-const devicesQueues = {};                          // Stores separate queues for each device's log requests
-let processingQueue = false;                       // Flag to check if a queue is being processed
-const mutexes = {};                                // Stores mutexes for handling concurrent requests for each device
+/* Devices-specific log request queues and process tracking */
+const devicesQueues = {};               /* Stores separate queues for each device's log requests           */
+let processingQueue = false;            /* Flag to check if a queue is being processed                     */
+const mutexes = {};                     /* Stores mutexes for handling concurrent requests for each device */
 
-// Import and configure localization algorithm mode
+/* Import and configure localization algorithm mode */
 const LOCALIZATION_ALGORITHM_APPLIED = process.env.LOCALIZATION_ALGORITHM_APPLIED;
 const LOCALIZATION_ALGORITHM_SCRIPT_PATH = process.env.LOCALIZATION_ALGORITHM_SCRIPT_PATH;
 
 
-// Retrieve the paths to MongoDB schema models from the environment variables
+/* Retrieve the paths to MongoDB schema models from the environment variables */
 const deviceModelPath = process.env.MONGO_DB_DEVICE_SCHEME_PATH;
 const sessionRequestModelPath = process.env.MONGO_DB_SESSION_REQUEST_SCHEME_PATH;
 const deviceAlertModelPath = process.env.MONGO_DB_DEVICE_ALERT_SCHEME_PATH;
 
-// Dynamically load the MongoDB schema models based on the paths specified in .env
+/* Dynamically load the MongoDB schema models based on the paths specified in .env */
 const DEVICE = require(path.resolve(deviceModelPath));
 const SESSION_REQUEST = require(path.resolve(sessionRequestModelPath));
 const ALERT = require(path.resolve(deviceAlertModelPath));
-/************************************************************************************************************************************************************************************************/
+/*************************************************************************** END OF IMPORT SECTION ***************************************************************************/
 
 
 
 
 
+
+
+
+
+
+/*************************************************************************** START OF API ENDPOINTS IMPLEMENTATION ***************************************************************************/
 /** [1] 
  * Fetches all device data from the MongoDB database and returns it as a JSON response.
  * Endpoint: GET /devices
@@ -76,10 +87,10 @@ const ALERT = require(path.resolve(deviceAlertModelPath));
  */
 exports.fetchDevices = async (req, res) => {
   try {
-    // Retrieve only selected fields from all device records
+    /* Retrieve only selected fields from all device records */
     const devices = await DEVICE.find({}, 'device_id did sub -_id');
 
-    // Send the selected device data as a JSON response
+    /* Send the selected device data as a JSON response (200 OK) */
     res.status(200).json({
       status: "success",
       message: "Devices fetched successfully.",
@@ -87,8 +98,7 @@ exports.fetchDevices = async (req, res) => {
     });
 
   } catch (error) {
-
-    // Return a 500 error response if something goes wrong
+    /* Return a (500 ERROR) response if something goes wrong */
     res.status(500).json({
       status: "failed",
       message: "Error fetching device data.",
@@ -104,11 +114,15 @@ exports.fetchDevices = async (req, res) => {
  * @param {Object} res - The response object.
 */
 exports.handlePostLogs = async (req, res) => {
+
+  /* Destructure the req.body information */
   const did = req.body.did;
   const deviceID = req.body.deviceID;
   const logData = req.body.log;
   const authToken = req.body.authToken;
 
+
+  /* First check: if req.body.log is missing */
   if (!logData) {
     logEvent({
       event: 'ANDROID LOG CAPTURE',
@@ -121,6 +135,7 @@ exports.handlePostLogs = async (req, res) => {
     return res.status(200).json({ status: "failed", message: 'Log data cannot be empty.' });
   }
 
+  /* Second check: if req.body.log is malformed */
   if (malformedLogsExaminator(logData) === 0) {
     logEvent({
       event: 'ANDROID LOG CAPTURE',
@@ -134,6 +149,8 @@ exports.handlePostLogs = async (req, res) => {
     return res.status(200).json({ status: "failed", message: "Malformed log detected." });
   }
 
+
+  /* Third check: if req.body.authToken is missing */
   if (!authToken) {
     logEvent({
       event: 'ANDROID LOG CAPTURE',
@@ -148,6 +165,8 @@ exports.handlePostLogs = async (req, res) => {
 
   let decodedToken;
   try {
+
+    /* Fourth check: if req.body.authToken is valid */
     decodedToken = jwt.decode(authToken, { complete: true });
   } catch (error) {
     logEvent({
@@ -174,6 +193,7 @@ exports.handlePostLogs = async (req, res) => {
     return res.status(200).json({ status: "failed", message: 'Failed to decode authentication token.' });
   }
 
+  /* Fifth check: if req.body.authToken is not expired */
   const currentTime = Math.floor(Date.now() / 1000);
   if (decodedToken.exp && decodedToken.exp < currentTime) {
     logEvent({
@@ -187,6 +207,7 @@ exports.handlePostLogs = async (req, res) => {
     return res.status(200).json({ status: "failed", message: 'Authentication token has expired.' });
   }
 
+  /* Sixth check: if req.body.authToken is not associated with this device */
   if (decodedToken.payload?.verifiableCredential?.id !== did) {
     logEvent({
       event: 'ANDROID LOG CAPTURE',
@@ -199,6 +220,7 @@ exports.handlePostLogs = async (req, res) => {
     return res.status(200).json({ status: "failed", message: 'Authentication token did does not match the provided did.' });
   }
 
+  /* Extract the timestamp of the log */
   const timestamp = extractTimestamp(logData);
   if (!timestamp) {
     logEvent({
@@ -212,6 +234,7 @@ exports.handlePostLogs = async (req, res) => {
     return res.status(200).json({ status: "failed", message: 'Invalid log data. Missing timestamp.' });
   }
 
+  /* Append the log for examination, associated with the queue of this specific device */
   const deviceQueue = getDeviceQueue(deviceID);
   deviceQueue.enqueue({ req, res, timestamp, did, deviceID});
   processDeviceQueue(deviceID);
@@ -225,17 +248,16 @@ exports.handlePostLogs = async (req, res) => {
  * If the queue does not exist, it initializes a MinPriorityQueue
  * that orders logs based on their timestamps (earliest first).
  *
- * @param {string} deviceID - The unique identifier for the device.
+ * @param {string} deviceID    - The unique identifier for the device.
  * @returns {MinPriorityQueue} - The priority queue for the given device.
  */
 const getDeviceQueue = (deviceID) => {
-  // Check if this device based on its did already has a queue; if not, create one
+  /* Check if this device based on its did already has a queue; if not, create one */
   if (!devicesQueues[deviceID]) {
-    // Initialize a MinPriorityQueue where logs are prioritized by timestamp (smallest first)
+    /* Initialize a MinPriorityQueue where logs are prioritized by timestamp (smallest first) */
     devicesQueues[deviceID] = new MinPriorityQueue((log) => log.timestamp);
   }
-
-  // Return the device's queue
+  /* Return the device's queue */
   return devicesQueues[deviceID];
 };
 
@@ -243,43 +265,39 @@ const getDeviceQueue = (deviceID) => {
 /** [4]
  * Retrieves the mutex (lock) object for a specific device.
  * If the mutex does not exist, it initializes one with `locked: false`.
- * 
  * This ensures that each device has a separate lock mechanism 
  * to control concurrent log processing.
- *
  * @param {string} deviceID - The unique identifier for the device.
- * @returns {Object} - The mutex object containing the `locked` status.
+ * @returns {Object}        - The mutex object containing the `locked` status.
  */
 const getMutex = (deviceID) => {
-  // Check if a mutex exists for the device; if not, create one
+  /* Check if a mutex exists for the device; if not, create one */
   if (!mutexes[deviceID]) {
-    // Initialize the mutex with `locked: false` to indicate it's available
+    /* Initialize the mutex with `locked: false` to indicate it's available */
     mutexes[deviceID] = { locked: false };
   }
-  // Return the device's mutex object
+  /* Return the device's mutex object */
   return mutexes[deviceID];
 };
 
 
 /** [5]
  * Acquires a mutex (lock) for a specific device to ensure sequential log processing.
- * 
  * This function prevents multiple concurrent processes from handling logs 
  * for the same device at the same time. If the mutex is already locked, 
  * it waits in a loop until the lock is released.
- * 
  * @param {string} deviceID - The unique identifier for the device.
  * @returns {Promise<void>} - Resolves once the lock is acquired.
  */
 const acquireMutex = async (deviceID) => {
   const mutex = getMutex(deviceID);
 
-  // Wait until the mutex is available (not locked)
+  /* Wait until the mutex is available (not locked) */
   while (mutex.locked) {
-    await new Promise(resolve => setTimeout(resolve, 10)); // Small delay to avoid busy-waiting
+    /* Small delay to avoid busy-waiting */
+    await new Promise(resolve => setTimeout(resolve, 10)); 
   }
-
-  // Lock the mutex to indicate this device is being processed
+  /* Lock the mutex to indicate this device is being processed */
   mutex.locked = true;
 };
 
@@ -288,44 +306,44 @@ const acquireMutex = async (deviceID) => {
  * Releases the mutex (lock) for a specific device, allowing the next process to proceed.
  * This function marks the mutex as unlocked, indicating that log processing 
  * for the device is complete and another process can acquire the lock.
- * 
  * @param {string} deviceID - The unique identifier for the device.
  */
 const releaseMutex = (deviceID) => {
-  getMutex(deviceID).locked = false; // Unlock the mutex for the device
+  /* Unlock the mutex for the device */
+  getMutex(deviceID).locked = false; 
 };
 
 
 /** [7]
  * Processes log requests sequentially for a specific device in timestamp order.
- *
  * This function ensures that logs are processed in chronological order
  * by dequeuing the earliest log first. It also prevents concurrent processing
  * for the same device by using a mutex lock.
- *
  * @param {string} deviceID - The unique identifier for the device.
  */
 const processDeviceQueue = async (deviceID) => {
-  // If there's already an ongoing processing for this device, exit early
-  if (processingQueue[deviceID]) return;
-
-  // Acquire a mutex lock to prevent concurrent processing for the same device
+  /* If there's already an ongoing processing for this device, exit early */
+  if (processingQueue[deviceID]) {  
+    return;
+  }
+  /* Acquire a mutex lock to prevent concurrent processing for the same device */
   await acquireMutex(deviceID);
-  processingQueue[deviceID] = true; // Mark this device as being processed
+  /* Mark this device as being processed */
+  processingQueue[deviceID] = true; 
 
   try {
-    // Retrieve the device's queue that holds pending log capture requests
+    /* Retrieve the device's queue that holds pending log capture requests */
     const deviceQueue = getDeviceQueue(deviceID);
 
-    // Process all requests in the queue, one at a time
+    /* Process all requests in the queue, one at a time */
     while (!deviceQueue.isEmpty()) {  
-      // Dequeue the next request; it includes the request, response, and did token and the deviceID
+      /* Dequeue the next request; it includes the request, response, and did token and the deviceID */
       const { req, res, timestamp, did, deviceID } = deviceQueue.dequeue();
       try {
-        // Process the request with the previously verified token
+        /* Process the request with the previously verified token */
         await processRequest(req, res, did, deviceID);
       } catch (error) {
-        // Handle any errors during request processing and return a 500 response
+        /* Handle any errors during request processing and return a 200 response to the Authenticator, but indicating the failure in the "message" field */
         logEvent({
           event: 'PROCESSING SESSION REQUEST',
           status: 'FAILED ❌',
@@ -333,12 +351,11 @@ const processDeviceQueue = async (deviceID) => {
           did: did,
           device_id: deviceID
         });
-        
         return res.status(200).json({ status: "failed", message: "Internal server error while processing session request." });
       }
     }
   } finally {
-    // Ensuring that the processing flag is reset and mutex is released, even if an error occurs
+    /* Ensuring that the processing flag is reset and mutex is released, even if an error occurs */
     processingQueue[deviceID] = false;
     releaseMutex(deviceID);
   }
@@ -349,10 +366,8 @@ const processDeviceQueue = async (deviceID) => {
 
 /** [8]
  * Handles the log capture and processing for a single request.
- *
  * This function takes the log data from the request body, stores it in the InfluxDB,
  * and then processes each log line for localization or anomaly detection.
- *
  * @param {Object} req - The Express request object containing log data.
  * @param {Object} res - The Express response object used to send a response.
  * @param {Object} decodedToken - The decoded authentication token containing device details.
@@ -360,6 +375,7 @@ const processDeviceQueue = async (deviceID) => {
 const processRequest = async (req, res, did, deviceID) => {
   const logData = req.body.log;
 
+  /* Store the log to the influx, associate with the deviceID and the did */
   try {
     await storeLogsToInfluxDB(deviceID, did, logData, () => {});
   } catch (error) {
@@ -374,13 +390,16 @@ const processRequest = async (req, res, did, deviceID) => {
   for (const line of logLines) {
     if (line.trim() === '') continue;
 
+    /* Prompt log for localization */
     if (line.includes("WifiNetworkScannerN")) {
       try {
-        console.log("------------------------ NEARBY ACCESS POINTS ------------------------");
-        console.log(line);
-        console.log("------------------------ NEARBY ACCESS POINTS ------------------------");
+        // console.log("------------------------ NEARBY ACCESS POINTS ------------------------");
+        // console.log(line);
+        // console.log("------------------------ NEARBY ACCESS POINTS ------------------------");
 
+        /* Execute the localization script for this specific deviceID and did */
         const stdout = await runLocalizationEuclideanDistance(deviceID, did, line);
+        /* Parse the result */
         const result = JSON.parse(stdout);
 
         logEvent({
@@ -438,7 +457,7 @@ const processRequest = async (req, res, did, deviceID) => {
               message: "Failed to perform localization."
             });
           }
-          // update location history and alert based on the device.role
+          /* update location history and alert based on the device.role */
           await handleDeviceLocationUpdate(device, currentLocation, now, req);
         }
          else {
@@ -482,7 +501,7 @@ const processRequest = async (req, res, did, deviceID) => {
 
 
 /* [9]
- * Function to run the localization ED(ED)
+ * Function to execute the localization ED-RIA
 */
 const runLocalizationEuclideanDistance= (deviceID, did, log) => {
   return new Promise((resolve, reject) => {
@@ -493,7 +512,8 @@ const runLocalizationEuclideanDistance= (deviceID, did, log) => {
       if (stderr) {
         reject(`Script stderr: ${stderr}`);
       }
-      resolve(stdout); // Resolve with stdout
+      /* Resolve with stdout */
+      resolve(stdout);
     });
   });
 };
@@ -511,9 +531,7 @@ exports.handleAuthTokenValidation = async (req, res) => {
   const deviceID = req.query.device_id;
 
   
-
-
-  // 1. Check missing or malformed Authorization header
+  /* 1. Check missing Authorization header */
   if (!authHeader) {
     logEvent({
       event: 'RE-AUTHENTICATION ATTEMPT WITH AUTH-TOKEN',
@@ -525,6 +543,7 @@ exports.handleAuthTokenValidation = async (req, res) => {
     return res.status(401).json({ status: 'failed', message: 'Authentication token is missing.' });
   }
 
+  /* 2. Check malformed Authorization header */
   if (!authHeader.startsWith('Bearer ')) {
     logEvent({
       event: 'RE-AUTHENTICATION ATTEMPT WITH AUTH-TOKEN',
@@ -536,13 +555,14 @@ exports.handleAuthTokenValidation = async (req, res) => {
     return res.status(400).json({ status: 'failed', message: "Authentication token is malformed. It should start with 'Bearer '." });
   }
 
-  // If we reach there, it means that the auth header was valid
+  /* If the code reaches there, means authorization token is provided and not malformed */
   const authToken = authHeader.split(' ')[1];
 
   try {
+    /* Decode it */
     const decoded = jwt.decode(authToken, { complete: true });
 
-    // Invalid Token Format
+    /* Invalid Token Format */
     if (!decoded) {
       logEvent({
         event: 'RE-AUTHENTICATION ATTEMPT WITH AUTH-TOKEN',
@@ -554,16 +574,20 @@ exports.handleAuthTokenValidation = async (req, res) => {
       return res.status(400).json({ status: "failed", message: 'Invalid authentication token format.' });
     }
 
+    /* Valid Token Format. Extract its payload */
     const { exp, sub, verifiableCredential } = decoded.payload;
     const did = verifiableCredential?.id;
     const currentTime = Math.floor(Date.now() / 1000);
 
-    // 2. Check if token expired
+    /* 2. Check if the token is expired */
     if (exp && currentTime > exp) {
       if (did) {
+        /* Search for a device associated with this device ID */
         const device = await findDeviceByDID(did);
 
         if (device) {
+          /* Device found */
+          /* Mark it as offline */
           device.status = 'offline';
           await device.save();
 
@@ -576,6 +600,7 @@ exports.handleAuthTokenValidation = async (req, res) => {
             ip,
           });
         } else {
+          /* Device not found */
           logEvent({
             event: 'RE-AUTHENTICATION ATTEMPT WITH AUTH-TOKEN',
             status: 'FAILED ❌',
@@ -597,7 +622,7 @@ exports.handleAuthTokenValidation = async (req, res) => {
       });
     }
 
-    // 3. Valid token
+    /* 3. Token is not expired */
     if (did) {
       const device = await findDeviceByDID(did);
 
@@ -618,7 +643,7 @@ exports.handleAuthTokenValidation = async (req, res) => {
       });
     }
 
-    // 4. Device ID not found in payload
+    /* 4. Device ID not found in payload */
     logEvent({
       event: 'RE-AUTHENTICATION ATTEMPT WITH AUTH-TOKEN',
       status: 'FAILED ❌',
@@ -628,7 +653,6 @@ exports.handleAuthTokenValidation = async (req, res) => {
     });
 
     return res.status(400).json({ status: "failed", message: 'Device ID missing from authentication token.' });
-
   } catch (err) {
     logEvent({
       event: 'RE-AUTHENTICATION ATTEMPT WITH AUTH-TOKEN',
@@ -637,7 +661,6 @@ exports.handleAuthTokenValidation = async (req, res) => {
       device_id: deviceID,
       ip,
     });
-
     return res.status(500).json({
       status: "failed",
       message: 'Internal server error while validating authentication token.'
@@ -655,10 +678,10 @@ exports.handleAuthTokenValidation = async (req, res) => {
 */
 exports.handleLogout = async (req, res) => {
   try {
-    // Extract the auth token and did from the request body
+    /* Extract the auth token and did from the request body */
     const { authToken, did: clientDid, deviceID: deviceID } = req.body;
 
-    // Check if the authToken exists
+    /* Check if the authToken exists */
     if (!authToken) {
       return res.status(400).json({
         status: "failed",
@@ -666,7 +689,7 @@ exports.handleLogout = async (req, res) => {
       });
     }
 
-    // Check if the did exists (it is sent from the client)
+    /* Check if the did exists (it is sent from the client) */
     if (!clientDid) {
       return res.status(400).json({
         status: "failed",
@@ -674,7 +697,7 @@ exports.handleLogout = async (req, res) => {
       });
     }
 
-    // Check if the did exists (it is sent from the client)
+    /* Check if the did exists (it is sent from the client) */
     if (!deviceID) {
       return res.status(400).json({
         status: "failed",
@@ -683,9 +706,10 @@ exports.handleLogout = async (req, res) => {
     }
 
     try {
-    const decoded = jwt.decode(authToken, { complete: true });
+      /* Decode the token */
+      const decoded = jwt.decode(authToken, { complete: true });
 
-      // Invalid Token Format
+      /* Invalid Token Format */
       if (!decoded) {
         logEvent({
           event: 'RE-AUTHENTICATION ATTEMPT WITH AUTH-TOKEN',
@@ -701,7 +725,7 @@ exports.handleLogout = async (req, res) => {
         event: 'LOGOUT ATTEMPT',
         status: 'FAILED ❌',
         cause: 'DEVICE ATTEMPTED TO LOG OUT',
-        did: clientDid, // Log the provided did
+        did: clientDid,
         device_id: deviceID,
         ip: req.ip
       });
@@ -711,33 +735,35 @@ exports.handleLogout = async (req, res) => {
       });
     }
 
-    // Log a message indicating that the device is logging out (with the provided 'did')
+    /* Log a message indicating that the device is logging out (with the provided 'did') */
     logEvent({
       event: 'LOGOUT ATTEMPT',
       status: 'SUCCESS ✅',
       cause: 'DEVICE ATTEMPTED TO LOG OUT',
-      did: clientDid, // Log the provided did
+      did: clientDid, 
       device_id: deviceID,
       ip: req.ip
     });
 
-    // After successfully logging out, update the device's status to "offline" in the database
+    /* After successfully logging out, update the device's status to "offline" in the database */
     const device = await findDeviceByDeviceID(deviceID);
 
     if (device) {
+      /* Device Found */
+      /* Mark it as offline */
       device.status = 'offline';
       if (device.location_history && device.location_history.length > 0) {
         const lastLocationEntry = device.location_history[0];
         if (device.login_timestamp && device.login_timestamp <= lastLocationEntry.last_seen_at) {
-          // UPDATE HISTORY
+          /* Update Location History of the Device */
           const nowUtc = moment().utc();
           lastLocationEntry.last_seen_at = nowUtc.toDate();
-          // Calculate duration in seconds between first_seen_at and last_seen_at
+          /* Calculate duration in seconds between first_seen_at and last_seen_at */
           const firstSeen = moment(lastLocationEntry.first_seen_at);
           const durationSeconds = nowUtc.diff(firstSeen, 'seconds');
-          lastLocationEntry.duration_s = durationSeconds >= 0 ? durationSeconds : 0; // guard against negatives
+          lastLocationEntry.duration_s = durationSeconds >= 0 ? durationSeconds : 0; 
 
-          // UPDATE THE LATEST ALERT RELATED TO THIS LOCATION AND DEVICE (IF EXISTS)
+          /* Update Alert History of the Device */
           if (lastLocationEntry != "PERMITTED_AREA") {
             const latestAlert = await ALERT.findOne({
               device_id: device.device_id,
@@ -751,8 +777,9 @@ exports.handleLogout = async (req, res) => {
             }
           }
         }
-      }           
-      await device.save();  // Save the updated device document to mark them as offline
+      }
+      /* Save the updated device document */      
+      await device.save();  
       logEvent({
         event: 'DEVICE STATUS UPDATED',
         status: 'SUCCESS ✅',
@@ -776,14 +803,14 @@ exports.handleLogout = async (req, res) => {
       });
     }
 
-    // Proceed with logout and return a success message
+    /* Proceed with logout and return a success message */
     return res.status(200).json({
       status: "success",
       message: 'Device logged out successfully.'
     });
 
   } catch (error) {
-    // Handle any other errors that occur during the logout process
+    /* Handle any other errors that occur during the logout process */
     logEvent({
       event: 'LOGOUT ATTEMPT',
       status: 'FAILED ❌',
@@ -793,7 +820,7 @@ exports.handleLogout = async (req, res) => {
       ip: req.ip
     });
 
-    // Return a 200 OK response but indicate failure within the response body
+    /* Return a 200 OK response but indicate failure within the response body */
     return res.status(500).json({
       status: "failed",
       message: 'Internal server error while handling logout.'
@@ -818,12 +845,15 @@ exports.getServerStatus = (req, res) => {
  */
 exports.beginSession = async (req, res) => {
   try {
+    /* Extract the device_id, the qr_scanner_state_request, the log_file_uri and the role of the device's employee */
     const { device_id, qr_scanner_state_request, log_file_uri, role } = req.body;
     let savedSessionRequest;
 
+    /* Device ID not provided */
     if (!device_id) {
       return res.status(400).json({ status: "failed", message: 'Device ID is missing, session request failed.' });
     }
+    /* Qr Scanner state request not provided */
     if (!qr_scanner_state_request) {
       return res.status(400).json({ status: "failed", message: 'QR scanner state request is missing, session request failed.' });
     }
@@ -855,6 +885,8 @@ exports.beginSession = async (req, res) => {
 
       // // Save to the database
       // savedSessionRequest = await sessionRequest.save();
+
+      /* Append or replace (if already exists a session request associated with this device_id) */
       savedSessionRequest = await SESSION_REQUEST.replaceOne(
         { device_id: device_id },
         {
@@ -863,7 +895,6 @@ exports.beginSession = async (req, res) => {
           log_file_uri,
           role,
           timestamp: moment().tz("Europe/Athens").toDate()
-          // any other required/default fields
         },
         { upsert: true }
       );
@@ -885,50 +916,43 @@ exports.beginSession = async (req, res) => {
       return res.status(500).json({ status: "failed", message: 'Error handling session request.' });
     }
 
-    // Construct the login QR URL with the device_id and other required parameters
-    //const loginQRUrl = `https://ips-verifier.tango.io/api/v1/loginQR?state=${qr_scanner_state_request}&client_callback=http%3A%2F%2F${process.env.HOSTNAME_STATIC_IP_CALLBACK_TANGO_VERIFIER}%3A${process.env.SERVER_EXTERNAL_BIND_PORT}%2Fauthenticator%2Fauth-callback&client_id=`;
+    /* Construct the Client Callback endpoint URL */
     const clientCallbackUrl = `https://${process.env.HOSTNAME_DNS_INTRASOFT_DCBA_BACKEND_SERVICE}/development/dcba-backend/authenticator/auth-callback`;
     //const loginQRUrl = `https://ips-verifier.k8s-cluster.tango.rid-intrasoft.eu/api/v1/loginQR?state=${qr_scanner_state_request}&client_callback=${encodeURIComponent(clientCallbackUrl)}&client_id=`;
+
+    /* Construct the login QR URL with the device_id and other required parameters */
     const baseQrUrl = `https://${process.env.HOSTNAME_FRONT_UI_TANGO_LOGIN}/auth/login/qrcode`;
     let loginQRUrl;
-
     if (role === 'customer' || role === 'employee') {
-      loginQRUrl = `${baseQrUrl}?t=${role}&state=${qr_scanner_state_request}&client_callback=${encodeURIComponent(clientCallbackUrl)}&client_id=`;
+      loginQRUrl = `${baseQrUrl}?t=${role}&state=${qr_scanner_state_request}&client_callback=${encodeURIComponent(clientCallbackUrl)}`;
       console.log(loginQRUrl)
     } else {
       return res.status(400).json({ status: 'failed', message: 'Invalid role provided.' });
     }
 
-    // Launch Puppeteer and get rendered HTML
+
+    /* Launch Puppeteer and get rendered HTML, in order to get the QR */
     const browser = await puppeteer.launch({
       args: ['--no-sandbox', '--disable-setuid-sandbox'],
       headless: true,
     });
     const page = await browser.newPage();
     await page.goto(loginQRUrl, { waitUntil: 'networkidle2' });
-
     let svgElement = null;
     const startTime = Date.now();
-    // await delay(1000);
-    // const html = await page.content();
-    // Use JSDOM on rendered HTML
-    // const { JSDOM } = require('jsdom');
-    // const dom = new JSDOM(html);
-    // const document = dom.window.document;
     while (Date.now() - startTime < MAX_WAIT_TIME) {
+      /* Dont exit the while until the QR (svg html element) found , otherwise exit after MAX_WAIT_TIME */
       const html = await page.content();
       const { JSDOM } = require('jsdom');
       const dom = new JSDOM(html);
       const document = dom.window.document;
-
       svgElement = document.querySelector("svg");
-
       if (svgElement) break;
-
       await delay(POLL_INTERVAL);
     }
     await browser.close();
     if (svgElement) {
+      /* Entire svg component sent to the client */
       const DEVICE_AUTHENTICATION_QR_CODE = svgElement.outerHTML;
 
       res.status(200).json({
@@ -939,7 +963,7 @@ exports.beginSession = async (req, res) => {
         role: role,
       });
     } else {
-      // Log error and respond
+      /* Log error if QR is not found in the html page */
       logEvent({
         event: 'PROCESSING QR CODE BASE64',
         status: 'FAILED ❌',
@@ -963,29 +987,7 @@ exports.beginSession = async (req, res) => {
   }
 };
 
-function delay(time) {
-  return new Promise(function(resolve) { 
-      setTimeout(resolve, time)
-  });
-}
-    
-    // Define the certificate path
-    // const certPath = '/usr/local/share/ca-certificates/ca.crt';
-    // let cert;
-    // try {
-    //   // Read the certificate file from the specified path
-    //   cert = fs.readFileSync(certPath);
-    // } catch (err) {
-    //   logEvent({
-    //     event: 'READING CERTIFICATE FILE',
-    //     status: 'FAILED ❌',
-    //     cause: `AN ERROR OCCURRED DURING READING CERTIFICATE FILE: ${err}`,
-    //     device_id: device_id,
-    //     ip: req.ip
-    //   });
-      
-    //   return res.status(200).json({ status: "failed", message: 'Error reading the certificate.' });
-    // }
+
     
 
 
@@ -1000,7 +1002,7 @@ exports.handleAuthCallback = async (req, res) => {
   //console.log(code, state)
   console.log(req.query)
 
-  // Check if required parameters (code, state) are missing
+  /* Check if required parameters (code, state) are missing */
   if (!code || !state) {
     return res.status(400).json({
       status: "failed",
@@ -1009,8 +1011,8 @@ exports.handleAuthCallback = async (req, res) => {
     
   }
  
-  //const url = 'https://ips-verifier.tango.io/token';
-  const url = `https://ips-verifier.k8s-cluster.tango.rid-intrasoft.eu/token`
+  //const url = `https://ips-verifier.k8s-cluster.tango.rid-intrasoft.eu/token`
+  const url = `ips-verifier.tango.nadiaplatform.com`;
   const headers = {
     'accept': 'application/json',
     'Content-Type': 'application/x-www-form-urlencoded'
@@ -1020,7 +1022,6 @@ exports.handleAuthCallback = async (req, res) => {
   const data = qs.stringify({
     'grant_type': 'authorization_code',
     'code': code,
-    //'redirect_uri': `http://${process.env.HOSTNAME_DNS_INTRASOFT_DCBA_BACKEND_SERVICE}:${process.env.SERVER_EXTERNAL_BIND_PORT}/authenticator/auth-callback` // Ensure this matches the web "credential verifier" URL exactly
     redirect_uri: `https://${process.env.HOSTNAME_DNS_INTRASOFT_DCBA_BACKEND_SERVICE}/development/dcba-backend/authenticator/auth-callback`
   });
 
@@ -1040,17 +1041,17 @@ exports.handleAuthCallback = async (req, res) => {
 
   // }
 
-  // Create a custom HTTPS agent with the CA certificate
+  /* Create a custom HTTPS agent with the CA certificate */
   const httpsAgent = new https.Agent({
-    //ca: cert, // Provide the certificate to verify the server's certificate,
-    rejectUnauthorized: false // Ensure SSL verification is enabled
+    //ca: cert,               /* Provide the certificate to verify the server's certificate */
+    rejectUnauthorized: false /* Ensure SSL verification is enabled */
   });
 
   try {
-    // Make the POST request to exchange the authorization code for an access token
+    /* Make the POST request to exchange the authorization code for an access token */
     const response = await axios.post(url, data, { headers, httpsAgent });
 
-    // Check if the response contains the access token
+    /* Check if the response contains the access token */
     const authToken = response.data.access_token;
     if (!authToken) {
       return res.status(401).json({
@@ -1060,11 +1061,11 @@ exports.handleAuthCallback = async (req, res) => {
       
     }
 
-    // Decode the JWT access token to extract information
+    /* Decode the JWT access token to extract information */
     const decodedPayload = jwt.decode(authToken, { complete: true });
 
-    // Extract the 'did' and 'sub' from the decoded payload
-    const did = decodedPayload.payload?.verifiableCredential?.id; // Ensure optional chaining to prevent errors
+    /* Extract the 'did' and 'sub' from the decoded payload */
+    const did = decodedPayload.payload?.verifiableCredential?.id; 
     const sub = decodedPayload.payload?.sub;
 
     if (!did || !sub) {
@@ -1082,10 +1083,10 @@ exports.handleAuthCallback = async (req, res) => {
       ip: req.ip
     });
 
-    // Respond to the AUTHENTICATOR via the web socket
+    /* Respond to the AUTHENTICATOR via the web socket */
     const result = await processSessionRequest(authToken, state, did, sub, req);
 
-    // Response with success only if the response is 200(auth-success)
+    /* Response with success only if the response is 200(auth-success) */
     const ApiResponse = {
       status: result.status === 200 ? "success" : "failed",
       message: result.message
@@ -1100,7 +1101,7 @@ exports.handleAuthCallback = async (req, res) => {
     res.status(result.status).json(ApiResponse);
     
   } catch (err) {
-    // Catch any errors during the request
+    /* Catch any errors during the request */
     logEvent({
       event: 'AUTHENTICATION CALLBACK',
       status: 'FAILED ❌',
@@ -1123,26 +1124,27 @@ exports.handleAuthCallback = async (req, res) => {
  * This route requires a valid JWT authorization token to access.
  * @route   GET /devices/online-shifts
  * @desc    Retrieves a list of devices who are marked as "online" in the database. 
- *          This route requires a valid JWT token for authorization.
+ *          This route requires a valid authorization token.
  * @access  Private (Requires JWT token)
  * @param   req - Request object
  * @param   res - Response object
  */
 exports.fetchOnlineDevices = async (req, res) => {
   try {
-    // Fetch online devices and exclude the _id field
+    /* Fetch online devices and exclude the _id field */
     const onlineDevices = await DEVICE.find({ status: 'online' })
       .lean()
-      .select('device_id did sub -_id');  // Explicitly exclude _id field
+       /* Explicitly exclude _id field */
+      .select('device_id did sub -_id'); 
 
-    // Return the response with the filtered data
+    /* Return the response with the filtered data */
     return res.status(200).json({
       status: "success",
       message: 'Fetched online devices successfully.',
       data: onlineDevices,
     });
   } catch (error) {
-    // Handle any errors
+    /* Handle any errors */
     return res.status(500).json({
       status: "failed",
       message: 'Error fetching online devices.',
@@ -1157,26 +1159,27 @@ exports.fetchOnlineDevices = async (req, res) => {
  * This route requires a valid JWT authorization token to access.
  * @route   GET /devices/offline-shifts
  * @desc    Retrieves a list of devices who are marked as "offline" in the database. 
- *          This route requires a valid JWT token for authorization.
+ *          This route requires a valid authorization token.
  * @access  Private (Requires JWT token)
  * @param   req - Request object
  * @param   res - Response object
  */
 exports.fetchOfflineDevices = async (req, res) => {
   try {
-    // Fetch offline devices and exclude the _id field
+    /* Fetch offline devices and exclude the _id field */
     const offlineDevices = await DEVICE.find({ status: 'offline' })
       .lean()
-      .select('device_id did sub -_id');  // Explicitly exclude _id field
+      /* Explicitly exclude _id field */
+      .select('device_id did sub -_id');  
 
-    // Return the response with the filtered data
+    /* Return the response with the filtered data */
     return res.status(200).json({
       status: "success",
       message: 'Fetched offline devices successfully.',
       data: offlineDevices,
     });
   } catch (error) {
-    // Handle any errors
+    /* Handle any errors */
     return res.status(500).json({
       status: "failed",
       message: 'Error fetching offline devices.',
@@ -1200,7 +1203,7 @@ exports.fetchOfflineDevices = async (req, res) => {
  *          - Database retrieval errors → returns 500 Internal Server Error
  *          - Successful retrieval → returns 200 OK with the behavioural score
  * 
- * @access  Restricted – Requires a valid `jwtAuth` token in the request body.
+ * @access  Restricted – Requires a valid authorization token in header.
  * @param   {Object} req.body - The request payload containing:
  *          - {string} didSP - Service Provider's DID
  *          - {string} didRequester - Device's DID to query
@@ -1272,16 +1275,17 @@ exports.fetchDeviceBehaviouralScore = async (req, res) => {
  *          - Database retrieval errors → returns 500 Internal Server Error
  *          - Successful retrieval → returns 200 OK with the last coordinates
  * 
- * @access  Restricted – Requires a valid `jwtAuth` token in the request body.
+ * @access  Restricted – Requires a valid authorization token in the header.
  * @param   {Object} req.body - The request payload containing:
  *          - {string} didSP - Service Provider's DID
  *          - {string} didRequester - Device's DID to query
- *          - timezone
+ *          - {string} timezone - The timezone specified for the returned timestamps
  * @param   {Object} res - Express response object used to return the result or an error message.
  */
 exports.fetchDeviceLastLocation = async (req, res) => {
   const { didSP, didRequester, timezone } = req.body;
 
+  /* Validate reqeust body is not missing */
   if (!didSP || !didRequester || !timezone) {
     return res.status(400).json({
       status: "failed",
@@ -1289,7 +1293,7 @@ exports.fetchDeviceLastLocation = async (req, res) => {
     });
   }
 
-  // Validate timezone
+  /* Validate timezone */
   if (!moment.tz.zone(timezone)) {
     return res.status(400).json({
       status: "failed",
@@ -1298,6 +1302,7 @@ exports.fetchDeviceLastLocation = async (req, res) => {
   }
 
   try {
+    /* Find device based on DID */
     const device = await findDeviceByDID(didRequester);
 
     if (!device) {
@@ -1307,17 +1312,18 @@ exports.fetchDeviceLastLocation = async (req, res) => {
       });
     }
 
+    /* Retrieve its history location */
     const history = device.location_history;
+    /* Retrieve its most recent location */
     const lastEntry = history.length > 0 ? history[0] : null;
 
+    /* Form the response */
     const firstSeenFormatted = lastEntry?.first_seen_at
       ? moment(lastEntry.first_seen_at).tz(timezone).format('YYYY-MM-DD HH:mm:ss')
       : "unknown";
-
     const lastSeenFormatted = lastEntry?.last_seen_at
       ? moment(lastEntry.last_seen_at).tz(timezone).format('YYYY-MM-DD HH:mm:ss')
       : "unknown";
-
     const durationSeconds = lastEntry?.duration_s ?? 0;
 
     logEvent({
@@ -1328,6 +1334,7 @@ exports.fetchDeviceLastLocation = async (req, res) => {
       cause: 'SUCCESSFULLY RETRIEVED LAST LOCATION.'
     });
 
+    /* Send the response */
     return res.status(200).json({
       status: "success",
       message: "Device found.",
@@ -1370,20 +1377,20 @@ exports.fetchDeviceLastLocation = async (req, res) => {
  *          - Database retrieval errors → returns 500 Internal Server Error
  *          - Successful retrieval → returns 200 OK with location entries in the specified timeframe
  * 
- * @access  Restricted – Requires a valid `jwtAuth` token in the request body.
+ * @access  Restricted – Requires a valid authorization token in the header.
  * @param   {Object} req.body - The request payload containing:
  *          - {string} didSP - Service Provider's DID
  *          - {string} didRequester - Device's DID to query
  *          - {Object} timeframe - Time range to filter location history:
  *              - {string} from - ISO timestamp for the start of the range
  *              - {string} to - ISO timestamp for the end of the range
- *          - timezone
+ *          - {string} timezone - The timezone specified for the returned timestamps
  * @param   {Object} res - Express response object used to return the result or an error message.
  */
 exports.fetchDeviceLocationHistory = async (req, res) => {
   const { didSP, didRequester, from, to, timezone } = req.body;
 
-  // Validate required fields
+  /* Validate required fields are not missing */
   if (!didSP || !didRequester || !from || !to) {
     return res.status(400).json({
       status: "failed",
@@ -1391,6 +1398,7 @@ exports.fetchDeviceLocationHistory = async (req, res) => {
     });
   }
 
+  /* Validate the format of the from/to */
   const localDateTimeRegex = /^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}(?:\.\d{1,3})?$/;
   if (!localDateTimeRegex.test(from) || !localDateTimeRegex.test(to)) {
     return res.status(400).json({
@@ -1399,7 +1407,7 @@ exports.fetchDeviceLocationHistory = async (req, res) => {
     });
   }
 
-  // Validate timezone
+  /* Validate timezone */
   if (!moment.tz.zone(timezone)) {
     return res.status(400).json({
       status: "failed",
@@ -1407,11 +1415,12 @@ exports.fetchDeviceLocationHistory = async (req, res) => {
     });
   }
 
-  // Covenrt local timestamps to UTC
+  /* Covenrt local timestamps to UTC */
   const fromTimestamp = moment.tz(from, timezone).utc().valueOf();
   const toTimestamp = moment.tz(to, timezone).utc().valueOf();
 
   try {
+    /* Search for this device */
     const device = await findDeviceByDID(didRequester);
 
     if (!device) {
@@ -1421,14 +1430,14 @@ exports.fetchDeviceLocationHistory = async (req, res) => {
       });
     }
 
-    // Filter location history by first_seen_at using UTC timestamps
+    /* Filter location history by first_seen_at using UTC timestamps */
     const filteredHistory = device.location_history.filter(entry => {
       const entryTime = new Date(entry.first_seen_at).getTime(); // UTC timestamp
       return entryTime >= fromTimestamp && entryTime <= toTimestamp;
     });
     
 
-    // Convert entries to user-friendly format using requested timezone
+    /* Convert entries to user-friendly format using requested timezone */
     const convertedHistory = filteredHistory.map(entry => {
       const entryObj = entry.toObject ? entry.toObject() : entry;
 
@@ -1491,20 +1500,20 @@ exports.fetchDeviceLocationHistory = async (req, res) => {
  *          - Database retrieval errors → returns 500 Internal Server Error
  *          - Successful retrieval → returns 200 OK with filtered entries
  * 
- * @access  Restricted – Requires a valid `jwtAuth` token in the request body.
+ * @access  Restricted – Requires a valid authorization token in the header.
  * @param   {Object} req.body - The request payload containing:
  *          - {string} didSP - Service Provider's DID
  *          - {string} didRequester - Device's DID to query
  *          - {Object} timeframe - Time range to filter location history:
  *              - {string} from - ISO timestamp for the start of the range
  *              - {string} to - ISO timestamp for the end of the range
- *          - timezone
+ *          - {string} timezone - The timezone specified for the returned timestamps
  * @param   {Object} res - Express response object used to return the result or an error message.
  */
 exports.fetchDevicePermittedLocationHistory = async (req, res) => {
   const { didSP, didRequester, from, to, timezone } = req.body;
 
-  // Validate required fields
+  /* Validate required fields */
   if (!didSP || !didRequester || !from || !to || !timezone) {
     return res.status(400).json({
       status: "failed",
@@ -1512,7 +1521,7 @@ exports.fetchDevicePermittedLocationHistory = async (req, res) => {
     });
   }
 
-  // Validate local datetime format (e.g. 'YYYY-MM-DD HH:mm:ss')
+  /* Validate local datetime format (e.g. 'YYYY-MM-DD HH:mm:ss') */
   const localDateTimeRegex = /^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}(?:\.\d{1,3})?$/;
   if (!localDateTimeRegex.test(from) || !localDateTimeRegex.test(to)) {
     return res.status(400).json({
@@ -1521,7 +1530,7 @@ exports.fetchDevicePermittedLocationHistory = async (req, res) => {
     });
   }
 
-  // Validate timezone
+  /* Validate timezone */
   if (!moment.tz.zone(timezone)) {
     return res.status(400).json({
       status: "failed",
@@ -1529,11 +1538,12 @@ exports.fetchDevicePermittedLocationHistory = async (req, res) => {
     });
   }
 
-  // Convert local timestamps to UTC timestamps
+  /* Convert local timestamps to UTC timestamps */
   const fromTimestamp = moment.tz(from, timezone).utc().valueOf();
   const toTimestamp = moment.tz(to, timezone).utc().valueOf();
 
   try {
+    /* Search for the device */
     const device = await findDeviceByDID(didRequester);
 
     if (!device) {
@@ -1543,7 +1553,7 @@ exports.fetchDevicePermittedLocationHistory = async (req, res) => {
       });
     }
 
-    // Filter permitted entries by timeframe and location using UTC timestamps
+    /* Filter permitted entries by timeframe and location using UTC timestamps */
     const permittedHistory = device.location_history.filter(entry => {
       const entryTime = new Date(entry.first_seen_at).getTime(); // UTC timestamp
       return (
@@ -1553,7 +1563,7 @@ exports.fetchDevicePermittedLocationHistory = async (req, res) => {
       );
     });
 
-    // Convert entries to user-friendly format using requested timezone (not fixed 'Europe/Athens')
+    /* Convert entries to user-friendly format using requested timezone */
     const convertedPermittedHistory = permittedHistory.map(entry => {
       const entryObj = entry.toObject ? entry.toObject() : entry;
 
@@ -1607,20 +1617,20 @@ exports.fetchDevicePermittedLocationHistory = async (req, res) => {
  *          - Database retrieval errors → returns 500 Internal Server Error
  *          - Successful retrieval → returns 200 OK with filtered entries
  * 
- * @access  Restricted – Requires a valid `jwtAuth` token in the request body.
+ * @access  Restricted – Requires a valid authorization token in the header.
  * @param   {Object} req.body - The request payload containing:
  *          - {string} didSP - Service Provider's DID
  *          - {string} didRequester - Device's DID to query
  *          - {Object} timeframe - Time range to filter location history:
  *              - {string} from - ISO timestamp for the start of the range
  *              - {string} to - ISO timestamp for the end of the range
- *          - timezone
+ *          - {string} timezone - The timezone specified for the returned timestamps
  * @param   {Object} res - Express response object used to return the result or an error message.
  */
 exports.fetchDeviceRestrictedLocationHistory = async (req, res) => {
   const { didSP, didRequester, from, to, timezone } = req.body;
 
-  // Validate required fields
+  /* Validate required fields are not missing */
   if (!didSP || !didRequester || !from || !to || !timezone) {
     return res.status(400).json({
       status: "failed",
@@ -1628,7 +1638,7 @@ exports.fetchDeviceRestrictedLocationHistory = async (req, res) => {
     });
   }
 
-  // Validate local datetime format: 'YYYY-MM-DD HH:mm:ss' (optional milliseconds)
+  /* Validate local datetime format: 'YYYY-MM-DD HH:mm:ss' (optional milliseconds) */
   const localDateTimeRegex = /^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}(?:\.\d{1,3})?$/;
   if (!localDateTimeRegex.test(from) || !localDateTimeRegex.test(to)) {
     return res.status(400).json({
@@ -1637,7 +1647,7 @@ exports.fetchDeviceRestrictedLocationHistory = async (req, res) => {
     });
   }
 
-  // Validate timezone
+  /* Validate timezone */
   if (!moment.tz.zone(timezone)) {
     return res.status(400).json({
       status: "failed",
@@ -1645,7 +1655,7 @@ exports.fetchDeviceRestrictedLocationHistory = async (req, res) => {
     });
   }
 
-  // Convert local times to UTC timestamps (milliseconds)
+  /* Convert local times to UTC timestamps (milliseconds) */
   const fromTimestamp = moment.tz(from, timezone).utc().valueOf();
   const toTimestamp = moment.tz(to, timezone).utc().valueOf();
 
@@ -1659,9 +1669,9 @@ exports.fetchDeviceRestrictedLocationHistory = async (req, res) => {
       });
     }
 
-    // Filter entries by UTC timestamp and estimated_location !== 'PERMITTED_AREA'
+    /* Filter entries by UTC timestamp and estimated_location !== 'PERMITTED_AREA' */
     const restrictedHistory = device.location_history.filter(entry => {
-      const entryTime = new Date(entry.first_seen_at).getTime(); // UTC timestamp
+      const entryTime = new Date(entry.first_seen_at).getTime(); 
       return (
         entryTime >= fromTimestamp &&
         entryTime <= toTimestamp &&
@@ -1669,7 +1679,7 @@ exports.fetchDeviceRestrictedLocationHistory = async (req, res) => {
       );
     });
 
-    // Convert filtered entries to requested timezone and format
+    /* Convert filtered entries to requested timezone and format */
     const convertedRestrictedHistory = restrictedHistory.map(entry => {
       const entryObj = entry.toObject ? entry.toObject() : entry;
 
@@ -1728,15 +1738,15 @@ exports.fetchDeviceRestrictedLocationHistory = async (req, res) => {
  *          - Database retrieval errors → returns 500 Internal Server Error
  *          - Successful retrieval → returns 200 OK alert history
  * 
- * @access  Restricted – Requires a valid `jwtAuth` token.
- * @param   - timezone
+ * @access  Restricted – Requires a valid authorization token in the header.
+ * @param   - {string} timezone - The timezone specified for the returned timestamps
  * @param   {Object} res - Express response object used to return the result or an error message.
  */
 exports.fetchDevicesAlerts = async (req, res) => {
   try {
     const timezone = req.query.timezone;
     
-    // Validate timezone
+    /* Validate timezone */
     if (!moment.tz.zone(timezone)) {
       return res.status(400).json({
         status: "failed",
@@ -1744,12 +1754,12 @@ exports.fetchDevicesAlerts = async (req, res) => {
       });
     }
 
-    // Fetch alerts excluding unwanted fields
+    /* Fetch alerts excluding unwanted fields */
     const alerts = await ALERT.find({})
       .select('-_id -createdAt -updatedAt -__v')
       .exec();
 
-    // Convert timestamps inside each alert to requested timezone
+    /* Convert timestamps inside each alert to requested timezone */
     const alertsWithTimezone = alerts.map(alert => {
       const alertObj = alert.toObject();
 
@@ -1777,55 +1787,56 @@ exports.fetchDevicesAlerts = async (req, res) => {
 };
 
 
+/*************************************************************************** START OF API ENDPOINTS IMPLEMENTATION ***************************************************************************/
 
 
 
 
 
 
-/********* BACKEND SERVER EVENT LOGGING MECHANISM *********/
+/*************************************************************************** BACKEND SERVER EVENT LOGGING MECHANISM ***************************************************************************/
 const logEvent = (eventDetails) => {
-  // Define unique delimiters for the start and end of each log event
+  /* Define unique delimiters for the start and end of each log event */
   const logStart = `${magenta}[----------------------- START OF LOG EVENT -----------------------]${reset}\n`;
   const logEnd = `${magenta}[------------------------ END OF LOG EVENT ------------------------]${reset}\n`;
 
-  // Log event details with formatted colors, timestamp, and delimiters
+  /* Log event details with formatted colors, timestamp, and delimiters */
   console.log(
-    // Add log start delimiter
+    /* Add log start delimiter */
     `\n${logStart}` +
     
-    // Opening curly brace
+    /* Opening curly brace */
     `${green}{${reset}\n` +
     
-    // EVENT
+    /* EVENT */
     `  ${green}EVENT:${reset} ${yellow}${eventDetails.event || 'UNKNOWN'}${reset},\n` +
     
-    // STATUS
+    /* STATUS */
     `  ${green}STATUS:${reset} ${yellow}${eventDetails.status || 'UNKNOWN'}${reset},\n` +  
     
-    // CAUSE
+    /* CAUSE */
     `  ${green}CAUSE:${reset} ${yellow}${eventDetails.cause || 'UNKNOWN'}${reset},\n` +  
     
-    // did
+    /* DID */
     `  ${green}DID:${reset} ${yellow}${eventDetails.did || 'UNKNOWN'}${reset},\n` + 
     
-    // DEVICE ID
+    /* DEVICE ID */
     `  ${green}DEVICE ID:${reset} ${yellow}${eventDetails.device_id || 'UNKNOWN'}${reset},\n` +  
     
-    // DEVICE'S IP
+    /* DEVICE'S IP */
     `  ${green}IP DEVICE ADDRESS:${reset} ${yellow}${eventDetails.ip || 'UNKNOWN'}${reset},\n` + 
     
-    // TIMESTAMP
+    /* TIMESTAMP */
     `  ${green}TIMESTAMP:${reset} ${yellow}${moment().tz("Europe/Athens").format('YYYY-MM-DD HH:mm:ss')}${reset}\n` +
     
-    // Closing curly brace
+    /* Closing curly brace */
     `${green}}${reset}` +
     
-    // Add log end delimiter
+    /* Add log end delimiter */
     `\n${logEnd}\n`
   );
 };
-/********* BACKEND SERVER EVENT LOGGING MECHANISM *********/
+/*************************************************************************** BACKEND SERVER EVENT LOGGING MECHANISM ***************************************************************************/
 
 
 

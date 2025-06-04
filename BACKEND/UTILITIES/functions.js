@@ -3,37 +3,37 @@
  * reading/writing files, password encryption, cryptographic operations, 
  * database interactions. 
  */
-    
-require("dotenv").config();         // Load environment variables from the .env file
+/*************************************************************************** START OF IMPORT SECTION ***************************************************************************/
+require("dotenv").config();                                          /* Load environment variables from the .env file                         */
+const fs = require('fs');                                            /* File System module for handling file operations                       */
+const bcrypt = require('bcrypt');                                    /* Library for securely hashing and verifying passwords                  */
+const crypto = require('crypto');                                    /* Cryptography module for secure hashing, signing, and encryption tasks */
+const { InfluxDB, Point } = require('@influxdata/influxdb-client');  /* InfluxDB Client for logging and storing time-series data              */
+const csv = require('csv-parser');                                   /* CSV parser module for reading and processing .csv files               */
+const path = require('path');                                        /* Path module for handling and resolving file paths                     */
+const WebSocket = require('ws');                                     /* WebSocket                                                             */
+const moment = require('moment-timezone');                           /* For handling timestamps                                               */
 
-const fs = require('fs');           // File System module for handling file operations
-const bcrypt = require('bcrypt');   // Library for securely hashing and verifying passwords
-const crypto = require('crypto');   // Cryptography module for secure hashing, signing, and encryption tasks
-const { InfluxDB, Point } = require('@influxdata/influxdb-client');  // InfluxDB Client for logging and storing time-series data
-const csv = require('csv-parser');  // CSV parser module for reading and processing .csv files
-const path = require('path');       // Path module for handling and resolving file paths
-const WebSocket = require('ws');
-//const moment = require('moment');
-const moment = require('moment-timezone');
+/* ─────────────────────────────────────────────────────────────────────────────────── */
+/* Import the MongoDB schema models dynamically using paths from environment variables */
+/* ─────────────────────────────────────────────────────────────────────────────────── */
 
-// ──────────────────────────────────────────────────────────────────────────────
-// Import the MongoDB schema models dynamically using paths from environment variables
-// ──────────────────────────────────────────────────────────────────────────────
-
-// Retrieve the paths to MongoDB schema models from the environment variables
+/* Retrieve the paths to MongoDB schema models from the environment variables */
 const deviceModelPath = process.env.MONGO_DB_DEVICE_SCHEME_PATH;
 const sessionRequestModelPath = process.env.MONGO_DB_SESSION_REQUEST_SCHEME_PATH;
 
-// Dynamically load the MongoDB schema models based on the paths specified in .env
+/* Dynamically load the MongoDB schema models based on the paths specified in .env */
 const DEVICE = require(path.resolve(deviceModelPath));
 const SESSION_REQUEST = require(path.resolve(sessionRequestModelPath));
-const WSS_CONNECTIONS_FROM_QR_SCANNER_REQUESTS = new Map(); // returns the wss connections associated with their qr_state_requests
+
+/* Returns the wss connections associated with their qr_state_requests */
+const WSS_CONNECTIONS_FROM_QR_SCANNER_REQUESTS = new Map(); 
 const deviceAlertModelPath = process.env.MONGO_DB_DEVICE_ALERT_SCHEME_PATH;
 const ALERT = require(path.resolve(deviceAlertModelPath));
 
-// ──────────────────────────────────────────────────────────────────────────────
-// ANSI escape codes for colored console output to improve log readability
-// ──────────────────────────────────────────────────────────────────────────────                                                                  
+/* ────────────────────────────────────────────────────────────────────────────── */
+/* ANSI escape codes for colored console output to improve log readability        */
+/* ────────────────────────────────────────────────────────────────────────────── */                                                                   
 const green = '\x1b[32m';     /* Green color                         */
 const red = '\x1b[31m';       /* Red color                           */
 const yellow = '\x1b[33m';    /* Yellow color                        */
@@ -41,32 +41,40 @@ const lightBlue = '\x1b[34m'; /* Light Blue color                    */
 const magenta = '\x1b[35m';   /* Magenta color                       */
 const reset = '\x1b[0m';      /* Reset color to default              */
 
-/************************************************************************************************************************************************************************************************/
+/*************************************************************************** END OF IMPORT SECTION ***************************************************************************/
 
 
+
+
+
+
+
+
+
+
+/*************************************************************************** START OF API ENDPOINTS HELPER FUNCTIONS IMPLEMENTATION ***************************************************************************/
 /** [1]
  * Retrieves the URI of a device based on its DID.
  * This function queries the "DEVICE" collection to find the devices's details.
  *
- * @param {string} did - The DID (Decentralized Identifier) of the device which URI is to be retrieved.
+ * @param {string} did                             - The DID (Decentralized Identifier) of the device which URI is to be retrieved.
  * @returns {Promise<{uriContent: string} | null>} - A promise that resolves to an object containing the URI if found, otherwise null.
  */
 const getDeviceURI = async (did) => {
   try {
-    // Attempt to retrieve the device's details from the database using the 'findDeviceByDID' function
+    /* Attempt to retrieve the device's details from the database using the 'findDeviceByDID' function */
     const device = await findDeviceByDID(did);
 
-    // If an device record is found, return an object containing the URI. Otherwise, return null.
+    /* If a device record is found, return an object containing the URI. Otherwise, return null. */
     return device ? { uriContent: device.URI } : null;
   } catch (error) {
-    // Log any errors that occur during the process
+    /* Log any errors that occur during the process */
     logEvent({
       event: 'RETRIEVING DEVICE URI',
       status: 'FAILED ❌',
       did: did,
       cause: `AN ERROR OCCURRED WHILE RETRIEVING THE DEVICE URI: ${error.stack}`
     });
-    
     return null;
   }
 };
@@ -80,10 +88,12 @@ const getDeviceURI = async (did) => {
  * Each device is uniquely identified by their DID (Decentralized Identifier) and is associated 
  * with a sub claim, a device ID for authentication, and other relevant details.
  *
- * @param {string} did - The Decentralized Identifier (DID) uniquely identifying the device.
- * @param {string} sub - The sub claim associated with the device, used for authentication.
- * @param {string} device_id - The device ID associated with the device.
- * @returns {Promise<void>} - A promise that resolves once the device has been successfully stored to the database.
+ * @param {string} did          - The Decentralized Identifier (DID) uniquely identifying the device.
+ * @param {string} sub          - The sub claim associated with the device, used for authentication.
+ * @param {string} device_id    - The device ID associated with the device.
+ * @param {string} log_file_uri - The log file uri which offline logs will be stored internally/locally on the device.
+ * @param {string} role         - The device's employee role (employee or customer).
+ * @returns {Promise<void>}     - A promise that resolves once the device has been successfully stored to the database.
  */
 const createDeviceDocument = async (did, sub, device_id, log_file_uri, role) => {
   try {
@@ -99,17 +109,20 @@ const createDeviceDocument = async (did, sub, device_id, log_file_uri, role) => 
     const possibleLocations = getPossibleLocations(locationsDir);
 
 
-    // Determine restricted areas based on role
+    /* Determine restricted areas based on role */
     let restricted_areas = [];
     if (role === 'employee') {
+      /* EMPLOYEE */
       restricted_areas = possibleLocations.filter(loc => loc === 'UNKNOWN');
     } else if (role === 'customer') {
+      /* CUSTOMER */
       restricted_areas = possibleLocations.filter(loc => loc !== 'PERMITTED_AREA');
     } else {
+      /* INVALID ROLE PROVIDED */
       throw new Error(`Invalid role provided: ${role}`);
     }
 
-
+    /* Create the new device */
     const newDevice = new DEVICE({
       did,
       sub,
@@ -122,6 +135,7 @@ const createDeviceDocument = async (did, sub, device_id, log_file_uri, role) => 
       restricted_areas
     });
 
+    /* Save it as document */
     await newDevice.save();
 
     logEvent({
@@ -153,17 +167,17 @@ const createDeviceDocument = async (did, sub, device_id, log_file_uri, role) => 
  * This function queries the "DEVICE" collection to retrieve a device document 
  * that matches the provided DID.
  *
- * @param {string} did - The DID of the device to be searched.
+ * @param {string} did             - The DID of the device to be searched.
  * @returns {Promise<Object|null>} - Returns the device document if found, otherwise returns `null`.
- * @throws {Error} - Throws an error if the database query fails.
+ * @throws {Error}                 - Throws an error if the database query fails.
  */
 const findDeviceByDID = async (did) => {
   try {
-    // Query the "DEVICE" collection to find a device by the specified DID
+    /* Query the "DEVICE" collection to find a device by the specified DID */
     const device = await DEVICE.findOne({ did: did });
 
     if (!device) {
-      // Log a message if the device does not exist in the database
+      /* Log a message if the device does not exist in the database */
       logEvent({
         event: 'SEARCH FOR DEVICE',
         status: 'FAILED ❌',
@@ -173,7 +187,6 @@ const findDeviceByDID = async (did) => {
       return null;
     }
 
-    
     logEvent({
       event: 'SEARCH FOR DEVICE',
       status: 'SUCCESS ✅',
@@ -181,10 +194,10 @@ const findDeviceByDID = async (did) => {
       cause: `DEVICE ASSOCIATED WITH DID ${did} FOUND`,
       device_id: device.device_id
     });
-    // Return the device document if found
+    /* Return the device document if found */
     return device;
   } catch (error) {
-    // Log any errors encountered during the database query
+    /* Log any errors encountered during the database query */
     logEvent({
       event: 'SEARCH FOR DEVICE',
       status: 'FAILED ❌',
@@ -193,7 +206,7 @@ const findDeviceByDID = async (did) => {
     });
     
 
-    // Throw an error indicating the failure of the database query
+    /* Throw an error indicating the failure of the database query */
     throw new Error('Database query failed');
   }
 };
@@ -206,39 +219,42 @@ const findDeviceByDID = async (did) => {
  * Logs are stored in the specified bucket, tagged by the DID (Decentralized Identifier).
  * This function allows logging device actions and provides an optional callback after storage.
  *
- * @param {string} did - The DID (Decentralized Identifier) associated with the log.
- * @param {string} log - The log message to be stored in the database.
+ * @param {string} device_id      - The device_id associated with the employees/customers devices.
+ * @param {string} did            - The DID (Decentralized Identifier) associated with the log.
+ * @param {string} log            - The log message to be stored in the database.
  * @param {Function} [onComplete] - Optional callback function that executes once the log is stored.
  */
 async function storeLogsToInfluxDB(device_id, did, log, onComplete) {
 
 
   try {
-    // Initialize InfluxDB client using credentials from environment variables
+    /* Initialize InfluxDB client using credentials from environment variables */
     const influxDB = new InfluxDB({
       url: process.env.INFLUX_DB_URI,
       token: process.env.INFLUX_INITDB_AUTH_TOKEN
     });
 
-    // Create a write API instance for the specified organization and bucket
+    /* Create a write API instance for the specified organization and bucket */
     const writeApi = influxDB.getWriteApi(
       process.env.INFLUX_INITDB_ORG,
       process.env.INFLUX_INITDB_BUCKET,
-      'ns' // Write precision in nanoseconds
+      /* Write precision in nanoseconds */
+      'ns' 
     );
 
-    // Create a new data point for InfluxDB
+    /* Create a new data point for InfluxDB */
     const point = new Point('ANDROID_LOGS_MEASUREMENT')
-      .tag('device_id', device_id)     // Tag the data point by device's ID
-      .stringField('LOG_MESSAGE', log) // Store the log message as a string field
-      .timestamp(new Date());          // Use the extracted timestamp for the data point
+      .tag('device_id', device_id)     /* Tag the data point by device's ID              */
+      .stringField('LOG_MESSAGE', log) /* Store the log message as a string field        */
+      .timestamp(new Date());          /* Use the extracted timestamp for the data point */
 
-    // Write the point to InfluxDB
+    /* Write the point to InfluxDB */
     writeApi.writePoint(point);
     
-    // Ensure the data is flushed and written to the database
+    /* Ensure the data is flushed and written to the database */
     await writeApi.flush();
-    await writeApi.close(); // Properly close the write API to ensure the data is written
+    /* Properly close the write API to ensure the data is written */
+    await writeApi.close(); 
 
     logEvent({
       event: '📥 ANDROID LOG STORED TO INFLUX DATABASE',
@@ -248,7 +264,7 @@ async function storeLogsToInfluxDB(device_id, did, log, onComplete) {
       cause: 'DEVICE DEVICE UPLOADING LOGS -- ACTIVE SESSION'
     });
 
-    // Invoke the callback if provided
+    /* Invoke the callback if provided */
     if (onComplete) onComplete();
   } catch (error) {
     logEvent({
@@ -259,7 +275,7 @@ async function storeLogsToInfluxDB(device_id, did, log, onComplete) {
       cause: `AN ERROR OCCURRED WHILE STORING THE ANDROID LOG TO THE INFLUXDB DATABASE: ${error.stack}`
     });
 
-    // Ensure the callback is invoked even in case of error to prevent blocking execution
+    /* Ensure the callback is invoked even in case of error to prevent blocking execution */
     if (onComplete) onComplete();
   }
 }
@@ -270,15 +286,15 @@ async function storeLogsToInfluxDB(device_id, did, log, onComplete) {
 /** [5]
  * Extracts the timestamp from a log string.
  * 
- * @param {string} log - The log string containing a timestamp.
+ * @param {string} log    - The log string containing a timestamp.
  * @returns {string|null} - The extracted timestamp in "MM-DD HH:mm:ss.SSS" format or null if not found.
  */
 function extractTimestamp(log) {
-  // Regular expression to match timestamp format: MM-DD HH:mm:ss.SSS
+  /* Regular expression to match timestamp format: MM-DD HH:mm:ss.SSS */
   const timestampRegex = /(\d{2}-\d{2} \d{2}:\d{2}:\d{2}\.\d{3})/;
   const match = log.match(timestampRegex);
-  
-  return match ? match[1] : null; // Return timestamp or null if not found
+  /* Return timestamp or null if not found */
+  return match ? match[1] : null; 
 }
 
 
@@ -288,51 +304,55 @@ function extractTimestamp(log) {
  * Expected format: "MM-DD HH:mm:ss.SSS PID TID LEVEL TAG: MESSAGE"
  * 
  * @param {string} log - The log string to validate.
- * @returns {boolean} - Returns `true` if the log is valid, otherwise `false`.
+ * @returns {boolean}  - Returns `true` if the log is valid, otherwise `false`.
  */
 function malformedLogsExaminator(log) {
-  // Regular expression for expected log format
+  /* Regular expression for expected log format */
   const logRegex = /^(\d{2}-\d{2}) (\d{2}:\d{2}:\d{2}\.\d{3})\s+(\d+)\s+(\d+)\s+([DIWE])\s+([\w\d]+):\s+(.*)$/;
 
   const match = log.match(logRegex);
-  if (!match) return false; // Log does not match expected format
+  if (!match) {
+    /* Log does not match expected format */
+    return false; 
+  }
 
-  // Extracted log components
+  /* Extracted log components */
   const [ , date, time, pid, tid, level, tag, message ] = match;
 
-  // Validate process ID (PID) and thread ID (TID)
+  /* Validate process ID (PID) and thread ID (TID) */
   if (isNaN(Number(pid)) || isNaN(Number(tid))) return false;
 
-  // Validate log level (should be one of D, I, W, E)
+  /* Validate log level (should be one of D, I, W, E) */
   const validLevels = new Set(["D", "I", "W", "E"]);
   if (!validLevels.has(level)) return false;
 
-  // Validate tag (should be at least 2 characters)
+  /* Validate tag (should be at least 2 characters) */
   if (!tag || tag.length < 2) return false;
 
-  // Validate message (should not be empty or just spaces)
+  /* Validate message (should not be empty or just spaces) */
   if (!message || message.trim().length === 0) return false;
 
-  return true; // Log is valid
+  /* Log is valid */
+  return true; 
 }
 
 
 
 
-/** [10]
+/** [7]
  * Handles the session request lookup and notification process.
  * This function searches for a session request in the database using the provided qr state(state), 
  * notifies the relevant device, and creates a new device record if necessary.
- *
+ * @param {string} authToken                - The authorization JWT Token
  * @param {string} qr_scanner_state_request - The qr_scanner_state_request
- * @param {string} did - The DID (unique identifier) associated with the device.
- * @param {string} sub - The subject identifier associated with the device.
- * @returns {Promise<void>} - Resolves once the session request is processed and necessary actions are taken.
+ * @param {string} did                      - The DID (unique identifier) associated with the device.
+ * @param {string} sub                      - The subject identifier associated with the device.
+ * @returns {Promise<void>}                 - Resolves once the session request is processed and necessary actions are taken.
  */
 async function processSessionRequest(authToken, qr_scanner_state_request, did, sub, req) {
 
   try {
-    // Search for the session request in MongoDB based on the state
+    /* Search for the session request in MongoDB based on the state */
     const sessionRequest = await SESSION_REQUEST.findOne({ qr_scanner_state_request: qr_scanner_state_request });
 
     if (sessionRequest) {
@@ -340,7 +360,7 @@ async function processSessionRequest(authToken, qr_scanner_state_request, did, s
       const log_file_uri = sessionRequest.log_file_uri;
       const role = sessionRequest.role;
 
-      // Remove the processed session request from the database
+      /* Remove the processed session request from the database */
       await SESSION_REQUEST.deleteOne({ _id: sessionRequest._id });
 
       logEvent({
@@ -352,16 +372,17 @@ async function processSessionRequest(authToken, qr_scanner_state_request, did, s
         ip: req.ip
       });
 
-      // Look for the device in the DEVICE collection using the findDeviceByDeviceID function
+      /* Look for the device in the DEVICE collection using the findDeviceByDeviceID function */
       const existingDevice = await findDeviceByDeviceID(device_id);
 
       if (!existingDevice) {
-        // Device not found 
-        // Search in the Mongo for a device with this did
+        /* Device associated with device_id not found */ 
+        /* Search in the Mongo for a device with its did */
         const deviceWithSameDID = await findDeviceByDID(did);
         if (!deviceWithSameDID) {
-          // If no device found associated with this DID, create it
+          /* Device associated with did not found to. So, create it */
           await createDeviceDocument(did, sub, device_id, log_file_uri, role);
+          /* Notify the device via WebSocket */
           notifyDevice(authToken, qr_scanner_state_request, device_id, did, sub, log_file_uri, "session-request-valid");
           logEvent({
             event: 'DEVICE STATUS UPDATED',
@@ -371,9 +392,11 @@ async function processSessionRequest(authToken, qr_scanner_state_request, did, s
             device_id: device_id,
             ip: req.ip
           });
+          /* Authentication Success */
           return { status: 200, message: "Authentication success. Device status updated to online." };
         } else {
-          // Someone tried to log in from his/her device, using an existing DID
+          /* Someone tried to log in from his/her device, using an existing DID */
+          /* Notify the device via WebSocket */
           notifyDevice(authToken, qr_scanner_state_request, device_id, did, sub, log_file_uri, "potential-credential-sharing");
           logEvent({
             event: 'UNAUTHORIZED ATTEMPT FROM USING CREDENTIALS FROM ANOTHER DEVICE',
@@ -382,17 +405,18 @@ async function processSessionRequest(authToken, qr_scanner_state_request, did, s
             device_id: device_id,
             ip: req.ip
           });
+          /* Authentication Failed */
           return { status: 401, message: "Credentials don't match this device." };
         }
       } else {
-        // This device already exists. Need to ensure that its did matches the did request
+        /* This device already exists. Need to ensure that its did matches the did request */
         if (existingDevice.did === did) {
-          // The device associated with this did already exists
-          // 1. Check if the device is already online
+          /* The device associated with this did already exists */
+          /* 1. Check if the device is already online */
           if (existingDevice.status === 'offline') {
-            existingDevice.status = 'online';
-            existingDevice.login_timestamp = new Date();
-            await existingDevice.save();  // Save the updated device document
+            existingDevice.status = 'online';             /* Modify the status                */ 
+            existingDevice.login_timestamp = new Date();  /* Modify the login_timestamp       */ 
+            await existingDevice.save();                  /* Save the updated device document */
             logEvent({
               event: 'DEVICE ALREADY REGISTERED IN THE DATABASE',
               status: 'SUCCESS ✅',
@@ -400,6 +424,7 @@ async function processSessionRequest(authToken, qr_scanner_state_request, did, s
               device_id: device_id,
               ip: req.ip
             });
+            /* Notify the device via WebSocket */
             notifyDevice(authToken, qr_scanner_state_request, device_id, did, sub, log_file_uri, "session-request-valid");
             logEvent({
               event: 'DEVICE STATUS UPDATED',
@@ -409,9 +434,10 @@ async function processSessionRequest(authToken, qr_scanner_state_request, did, s
               device_id: device_id,
               ip: req.ip
             });
+            /* Authentication Success */
             return { status: 200, message: "Authentication success. Device status updated to online." };
           } else {
-            // The specific device is already online
+            /* The specific device is already online */
             logEvent({
               event: 'DEVICE ALREADY ONLINE',
               status: 'FAILED ❌',
@@ -420,11 +446,12 @@ async function processSessionRequest(authToken, qr_scanner_state_request, did, s
               ip: req.ip
             });
             notifyDevice(authToken, qr_scanner_state_request, device_id, did, sub, log_file_uri, "device-already-online");
+            /* Authentication Failed */
             return { status: 409, message: "Device already online." };
           }
           
         } else {
-          // Someone tried to log in to their device using another employee's credentials
+          /* Someone tried to log in to their device using another employee's credentials */
           notifyDevice(authToken, qr_scanner_state_request, device_id, did, sub, log_file_uri, "potential-credential-sharing");
           logEvent({
             event: 'UNAUTHORIZED ATTEMPT USING CREDENTIALS FROM ANOTHER DEVICE',
@@ -433,11 +460,12 @@ async function processSessionRequest(authToken, qr_scanner_state_request, did, s
             device_id: device_id,
             ip: req.ip
           });
+          /* Authentication Failed */
           return { status: 401, message: "Credentials don't match this device." };
         }
       }
     } else {
-      // Notify the device that the session request is expired, in order to re-generate a new unique QR
+      /* Notify the device that the session request is expired, in order to re-generate a new unique QR */
       notifyDevice(authToken, qr_scanner_state_request, "unknown", did, sub, "unknown", "session-request-expired");
       logEvent({
         event: 'SEARCH FOR SESSION REQUEST FOR DEVICE',
@@ -446,10 +474,11 @@ async function processSessionRequest(authToken, qr_scanner_state_request, did, s
         cause: 'THE SESSION REQUEST HAS EXPIRED',
         ip: req.ip
       });
+      /* Authentication Failed */
       return { status: 410, message: "Session request expired." };
     }
   } catch (error) {
-    // Handle any errors that occur during the session request processing
+    /* Handle any errors that occur during the session request processing */
     logEvent({
       event: 'PROCESSING SESSION REQUEST',
       status: 'FAILED ❌',
@@ -458,13 +487,14 @@ async function processSessionRequest(authToken, qr_scanner_state_request, did, s
       ip: req.ip
 
     });    
+    /* Authentication Failed */
     return { status: 500, message: "Internal server error. Authentication failed." };
   }
 }
 
 
 
-/** [11]
+/** [8]
  * Initializes a WebSocket server and handles client connections.
  * The function listens for WebSocket connections, associates qr_scanner_state_request with their WebSocket instances,
  * and manages disconnections.
@@ -473,13 +503,15 @@ async function processSessionRequest(authToken, qr_scanner_state_request, did, s
  */
 function initializeWebSocketServer(wss) {
   try {
-    // When a new WebSocket connection is established
+    /* When a new WebSocket connection is established */
     wss.on('connection', (ws, req) => {
-      const urlParams = new URLSearchParams(req.url.split('?')[1]);  // Split to get the query part after "?"
+      /* Split to get the query part after "?" */
+      const urlParams = new URLSearchParams(req.url.split('?')[1]);  
       const qr_scanner_state_request = urlParams.get('qr_scanner_state_request');
-      const device_id = urlParams.get('device_id'); // Extract device_id
+      /* Extract device_id */
+      const device_id = urlParams.get('device_id'); 
 
-      // Handle device connections
+      /* Handle device connections */
       if (qr_scanner_state_request && device_id) {
         WSS_CONNECTIONS_FROM_QR_SCANNER_REQUESTS.set(qr_scanner_state_request, ws);
         logEvent({
@@ -490,12 +522,12 @@ function initializeWebSocketServer(wss) {
         });
       }
 
-      // Handle WebSocket messages from both device devices
+      /* Handle WebSocket messages from devices */
       ws.on('message', (message) => {
         console.log(`Received message:`, message);
       });
 
-      // Handle WebSocket disconnection for both devices
+      /* Handle WebSocket disconnection for devices */
       ws.on('close', () => {
         if (qr_scanner_state_request && device_id) {
           WSS_CONNECTIONS_FROM_QR_SCANNER_REQUESTS.delete(qr_scanner_state_request);
@@ -515,7 +547,7 @@ function initializeWebSocketServer(wss) {
     });
 
   } catch (error) {
-    // If an error occurs during initialization, log the error message
+    /* If an error occurs during initialization, log the error message */
     logEvent({
       event: `WEBSOCKET SERVER FAILED TO INITIALIZE AT ${moment().tz("Europe/Athens").format('YYYY-MM-DD HH:mm:ss')}`,
       status: 'FAILED ❌',
@@ -525,37 +557,40 @@ function initializeWebSocketServer(wss) {
 
 
 
-/** [12]
+/** [9]
  * Notifies a specific client (device) via WebSocket when certain events occur.
  * This function checks if the WebSocket connection for the given device_id is open,
  * and if so, sends the message with the relevant data.
  * 
+ * @param {string} authToken                - The authorization token prompt for validation.
  * @param {string} qr_scanner_state_request - The current state of the session (e.g., 'auth_success').
- * @param {string} device_id - The device identifier.
- * @param {string} did - The Decentralized Identifier (DID) associated with the device.
- * @param {string} sub - Subscription or other relevant information.
- * @param {string} message - Based on this message, the Authenticator app decides which alert to display.
+ * @param {string} device_id                - The device identifier.
+ * @param {string} did                      - The Decentralized Identifier (DID) associated with the device.
+ * @param {string} sub                      - Subscription or other relevant information.
+ * @param {string} log_file_uri             - The device local filepath in which the offline logs will be stored temporarily.
+ * @param {string} message                  - Based on this message, the Authenticator app decides which alert to display.
  */
 function notifyDevice(authToken, qr_scanner_state_request, device_id, did, sub, log_file_uri, message) {
-  // Retrieve the WebSocket connection associated with the device_id
+  /* Retrieve the WebSocket connection associated with the device_id */
   const ws_connection_associated_with_qr_scanner_state_request = WSS_CONNECTIONS_FROM_QR_SCANNER_REQUESTS.get(qr_scanner_state_request);
 
-  // Check if the device's WebSocket connection exists and is open
+  /* Check if the device's WebSocket connection exists and is open */
   if (ws_connection_associated_with_qr_scanner_state_request && ws_connection_associated_with_qr_scanner_state_request.readyState === WebSocket.OPEN) {
-    // Prepare the data to be sent to the device
+    /* SCENARIO 1: Session request has been expired */
+    /* Prepare the data to be sent to the device */
     if (message === "session-request-expired") {
       const data = {
-        status: "auth-failed",                                          // Status message indicating the result (e.g., 'auth_success')
-        qr_scanner_state_request: qr_scanner_state_request,             // The current state (e.g., 'authenticated', 'pending')
-        device_id: device_id,                                           // The device ID
-        did: did,                                                       // The Decentralized Identifier (DID) associated with the device
-        sub: sub,                                                       // The subscription or other relevant information
-        logFileURI: log_file_uri,
-        authToken: authToken,
-        message: message                                                // message: session-request-expired
+        status: "auth-failed",                                          /* Status message indicating the result (e.g., 'auth_success')   */
+        qr_scanner_state_request: qr_scanner_state_request,             /* The current state (e.g., 'authenticated', 'pending')          */
+        device_id: device_id,                                           /* The device ID                                                 */
+        did: did,                                                       /* The Decentralized Identifier (DID) associated with the device */
+        sub: sub,                                                       /* The subscription or other relevant information                */
+        logFileURI: log_file_uri,                                       /* The log file uri                                              */
+        authToken: authToken,                                           /* The auth token                                                */
+        message: message                                                /* message: session-request-expired                              */
       };
   
-      // Send the data to the device as a JSON string
+      /* Send the data to the device as a JSON string */
       ws_connection_associated_with_qr_scanner_state_request.send(JSON.stringify(data));
   
       logEvent({
@@ -565,19 +600,21 @@ function notifyDevice(authToken, qr_scanner_state_request, device_id, did, sub, 
         device_id: device_id,
         did: did,
       });
-    } else if (message === "session-request-valid") {
+    }
+    /* SCENARIO 2: Session request is valid */ 
+    else if (message === "session-request-valid") {
       const data = {
-        status: "auth-success",                                         // Status message indicating the result (e.g., 'auth_success')
-        qr_scanner_state_request: qr_scanner_state_request,             // The current state (e.g., 'authenticated', 'pending')
-        device_id: device_id,                                           // The device ID
-        did: did,                                                       // The Decentralized Identifier (DID) associated with the device
-        sub: sub,                                                       // The subscription or other relevant information
-        logFileURI: log_file_uri,
-        authToken: authToken,
-        message: message                                                // message: session-request-valid
+        status: "auth-success",                                         /* Status message indicating the result (e.g., 'auth_success')   */
+        qr_scanner_state_request: qr_scanner_state_request,             /* The current state (e.g., 'authenticated', 'pending')          */
+        device_id: device_id,                                           /* The device ID                                                 */
+        did: did,                                                       /* The Decentralized Identifier (DID) associated with the device */
+        sub: sub,                                                       /* The subscription or other relevant information                */
+        logFileURI: log_file_uri,                                       /* The log file uri                                              */
+        authToken: authToken,                                           /* The auth token                                                */
+        message: message                                                /* message: session-request-valid                                */
       };
   
-      // Send the data to the device as a JSON string
+      /* Send the data to the device as a JSON string */
       ws_connection_associated_with_qr_scanner_state_request.send(JSON.stringify(data));
       logEvent({
         event: `NOTIFIED DEVICE WITH QR STATE "${qr_scanner_state_request}"`,
@@ -588,19 +625,21 @@ function notifyDevice(authToken, qr_scanner_state_request, device_id, did, sub, 
       });
 
 
-    } else if (message === "device-already-online") {
+    } 
+    /* SCENARIO 3: Device is already online */ 
+    else if (message === "device-already-online") {
       const data = {
-        status: "auth-failed",                                          // Status message indicating the result (e.g., 'auth_success')
-        qr_scanner_state_request: qr_scanner_state_request,             // The current state (e.g., 'authenticated', 'pending')
-        device_id: device_id,                                           // The device ID
-        did: did,                                                       // The Decentralized Identifier (DID) associated with the device
-        sub: sub,                                                       // The subscription or other relevant information
-        logFileURI: log_file_uri,
-        authToken: authToken,
-        message: message                                                // message: device-already-online
+        status: "auth-failed",                                          /* Status message indicating the result (e.g., 'auth_success')   */
+        qr_scanner_state_request: qr_scanner_state_request,             /* The current state (e.g., 'authenticated', 'pending')          */
+        device_id: device_id,                                           /* The device ID                                                 */
+        did: did,                                                       /* The Decentralized Identifier (DID) associated with the device */
+        sub: sub,                                                       /* The subscription or other relevant information                */
+        logFileURI: log_file_uri,                                       /* The log file uri                                              */
+        authToken: authToken,                                           /* The auth token                                                */
+        message: message                                                /* message: device-already-online                                */
       };
   
-      // Send the data to the device as a JSON string
+      /* Send the data to the device as a JSON string */
       ws_connection_associated_with_qr_scanner_state_request.send(JSON.stringify(data));
       logEvent({
         event: `NOTIFIED DEVICE WITH QR STATE "${qr_scanner_state_request}"`,
@@ -610,19 +649,21 @@ function notifyDevice(authToken, qr_scanner_state_request, device_id, did, sub, 
         did: did,
       });
 
-    } else if (message === "potential-credential-sharing") {
+    } 
+    /* SCENARIO 4: Potential Credential Sharing */ 
+    else if (message === "potential-credential-sharing") {
       const data = {
-        status: "auth-failed",                                          // Status message indicating the result (e.g., 'auth_success')
-        qr_scanner_state_request: qr_scanner_state_request,             // The current state (e.g., 'authenticated', 'pending')
-        device_id: device_id,                                           // The device ID
-        did: did,                                                       // The Decentralized Identifier (DID) associated with the device
-        sub: sub,                                                       // The subscription or other relevant information
-        logFileURI: log_file_uri,
-        authToken: authToken,
-        message: message                                                // message: potential-credential-sharing
+        status: "auth-failed",                                          /* Status message indicating the result (e.g., 'auth_success')   */
+        qr_scanner_state_request: qr_scanner_state_request,             /* The current state (e.g., 'authenticated', 'pending')          */     
+        device_id: device_id,                                           /* The device ID                                                 */
+        did: did,                                                       /* The Decentralized Identifier (DID) associated with the device */
+        sub: sub,                                                       /* The subscription or other relevant information                */ 
+        logFileURI: log_file_uri,                                       /* The log file uri                                              */
+        authToken: authToken,                                           /* The auth token                                                */
+        message: message                                                /* message: potential-credential-sharing                         */
       };
   
-      // Send the data to the device as a JSON string
+      /* Send the data to the device as a JSON string */
       ws_connection_associated_with_qr_scanner_state_request.send(JSON.stringify(data));
       logEvent({
         event: `NOTIFIED DEVICE WITH QR STATE "${qr_scanner_state_request}"`,
@@ -634,7 +675,7 @@ function notifyDevice(authToken, qr_scanner_state_request, device_id, did, sub, 
     }
     
   } else {
-    // Log if the WebSocket connection is not open or the device was not found
+    /* Log if the WebSocket connection is not open or the device was not found */
     logEvent({
       event: `UNABLE TO NOTIFY DEVICE WITH QR STATE "${qr_scanner_state_request}"`,
       status: 'FAILED ❌',
@@ -646,22 +687,22 @@ function notifyDevice(authToken, qr_scanner_state_request, device_id, did, sub, 
 }
 
 
-/** [16]
+/** [10]
  * Finds a device in the MongoDB database by their Device ID .
  * This function queries the "DEVICE" collection to retrieve a device document 
  * that matches the provided device id.
  *
- * @param {string} device_id - The id of the device to be searched.
+ * @param {string} device_id       - The id of the device to be searched.
  * @returns {Promise<Object|null>} - Returns the device document if found, otherwise returns `null`.
- * @throws {Error} - Throws an error if the database query fails.
+ * @throws {Error}                 - Throws an error if the database query fails.
  */
 const findDeviceByDeviceID = async (device_id) => {
   try {
-    // Query the "DEVICE" collection to find a device by the specified device id
+    /* Query the "DEVICE" collection to find a device by the specified device id */
     const device = await DEVICE.findOne({ device_id: device_id });
 
     if (!device) {
-      // Log a message if the device does not exist in the database
+      /* Log a message if the device does not exist in the database */
       logEvent({
         event: 'SEARCH FOR DEVICE',
         status: 'FAILED ❌',
@@ -671,10 +712,10 @@ const findDeviceByDeviceID = async (device_id) => {
       return null;
     }
 
-    // Return the device document if found
+    /* Return the device document if found */
     return device;
   } catch (error) {
-    // Log any errors encountered during the database query
+    /* Log any errors encountered during the database query */
     logEvent({
       event: 'SEARCH FOR DEVICE',
       status: 'FAILED ❌',
@@ -682,49 +723,46 @@ const findDeviceByDeviceID = async (device_id) => {
       cause: `AN ERROR OCCURRED DURING DEVICE SEARCH IN THE DATABASE: ${error.stack}`
     });
     
-
-    // Throw an error indicating the failure of the database query
+    /* Throw an error indicating the failure of the database query */
     throw new Error('Database query failed');
   }
 };
 
-/** [17]
+/** [11]
  * Handles updating a device's location history and alerts based on its current location.
  *
  * This function checks if the device is detected in the same location as its last recorded
  * location or a different location. It updates the location history duration and timestamps,
  * and manages alerts if the device enters or remains in restricted areas.
  *
- * @param {Object} params - Parameters object
- * @param {Object} params.device - The device document containing current state and history
- * @param {string} params.currentLocation - The newly estimated location of the device
- * @param {Date} params.now - The current timestamp (Date object)
- * @param {Object} params.req - Express request object for logging IP
+ * @param {Object} device          - The device document containing current state and history
+ * @param {string} currentLocation - The newly estimated location of the device
+ * @param {Date} now               - The current timestamp (Date object)
+ * @param {Object} req             - Express request object for logging IP
  *
- * @returns {Promise<string>} - The access status after the location update ('ACCESS_PERMITTED' or 'ACCESS_RESTRICTED')
+ * @returns {Promise<string>}             - The access status after the location update ('ACCESS_PERMITTED' or 'ACCESS_RESTRICTED')
  */
 async function handleDeviceLocationUpdate(device, currentLocation, now, req) {
-  console.log("DUMMY ESTIMATED LOCATION: ", currentLocation);
   try {
-    // Default access status is permitted unless proven otherwise
+    /* Default access status is permitted unless proven otherwise */
     let accessStatus = 'ACCESS_PERMITTED';
 
-    // Get the last known location entry from the device's location history (most recent entry)
+    /* Get the last known location entry from the device's location history (most recent entry) */
     const lastLocationEntry = device.location_history[0] || null;
 
-    // SCENARIO #1: Device detected in the SAME location as last entry
+    /* Scenario 1: Device detected in the SAME location as last entry */
     if (
       lastLocationEntry &&
       lastLocationEntry.estimated_location === currentLocation &&
       device.login_timestamp &&
       device.login_timestamp <= lastLocationEntry.last_seen_at
     ) {
-      // Calculate the updated duration the device has spent in the current location
+      /* Calculate the updated duration the device has spent in the current location */
       const updatedDurationSeconds = Math.floor(
         (now - new Date(lastLocationEntry.first_seen_at)) / 1000
       );
 
-      // Update the last_seen_at and duration_s fields for the latest location entry in DB
+      /* Update the last_seen_at and duration_s fields for the latest location entry in DB */
       await DEVICE.updateOne(
         { device_id: device.device_id, "location_history.0.estimated_location": currentLocation },
         {
@@ -735,15 +773,15 @@ async function handleDeviceLocationUpdate(device, currentLocation, now, req) {
         }
       );
 
-      // If this location is restricted, update the latest alert accordingly
+      /* If this location is restricted, update the latest alert accordingly */
       if (device.restricted_areas.includes(currentLocation)) {
         accessStatus = 'ACCESS_RESTRICTED';
 
-        // Retrieve the latest alert for this device and did, sorted by most recent first_seen_at
+        /* Retrieve the latest alert for this device and did, sorted by most recent first_seen_at */
         const latestAlert = await ALERT.findOne({ device_id: device.device_id, did: device.did }).sort({ 'alert_info.first_seen_at': -1 });
 
         if (latestAlert) {
-          // Update the last_seen_at and duration_s on the latest alert document
+          /* Update the last_seen_at and duration_s on the latest alert document */
           await ALERT.updateOne(
             { _id: latestAlert._id },
             {
@@ -754,7 +792,7 @@ async function handleDeviceLocationUpdate(device, currentLocation, now, req) {
             }
           );
 
-          // Log success event for alert update
+          /* Log success event for alert update */
           logEvent({
             event: 'ALERT UPDATED (RIA)',
             status: 'SUCCESS ✅',
@@ -766,10 +804,10 @@ async function handleDeviceLocationUpdate(device, currentLocation, now, req) {
       }
 
     } else {
-      // SCENARIO #2: Device detected in a DIFFERENT location than last entry
+      /* Scenario 2: Device detected in a DIFFERENT location than last entry */
 
       if (device.location_history.length > 0) {
-        // Update duration and last_seen_at of the previous location entry if applicable
+        /* Update duration and last_seen_at of the previous location entry if applicable */
         if (device.login_timestamp && device.login_timestamp <= lastLocationEntry.last_seen_at) {
           const updatedDurationSeconds = Math.floor(
             (now - new Date(lastLocationEntry.first_seen_at)) / 1000
@@ -785,11 +823,11 @@ async function handleDeviceLocationUpdate(device, currentLocation, now, req) {
             }
           );
 
-          // If the current location is restricted, handle alert updates and creation
+          /* If the current location is restricted, handle alert updates and creation */
           if (device.restricted_areas.includes(currentLocation)) {
             accessStatus = 'ACCESS_RESTRICTED';
 
-            // If the previous location was also restricted, update its latest alert
+            /* If the previous location was also restricted, update its latest alert */
             if (device.restricted_areas.includes(lastLocationEntry.estimated_location)) {
               const latestAlert = await ALERT.findOne({ device_id: device.device_id, did: device.did }).sort({ 'alert_info.first_seen_at': -1 });
 
@@ -814,7 +852,7 @@ async function handleDeviceLocationUpdate(device, currentLocation, now, req) {
               }
             }
 
-            // Generate a new alert document for the new restricted location
+            /* Generate a new alert document for the new restricted location */
             const alertDoc = new ALERT({
               device_id: device.device_id,
               did: device.did,
@@ -837,7 +875,7 @@ async function handleDeviceLocationUpdate(device, currentLocation, now, req) {
             });
 
           } else {
-            // Current location is permitted — update latest alert duration if exists
+            /* Current location is permitted — update latest alert duration if exists */
             accessStatus = 'ACCESS_PERMITTED';
 
             const latestAlert = await ALERT.findOne({ device_id: device.device_id, did: device.did }).sort({ 'alert_info.first_seen_at': -1 });
@@ -865,7 +903,7 @@ async function handleDeviceLocationUpdate(device, currentLocation, now, req) {
         }
       }
 
-      // Add the new location entry to the front of the device's location history array
+      /* Add the new location entry to the front of the device's location history array */
       await DEVICE.updateOne(
         { device_id: device.device_id },
         {
@@ -884,11 +922,9 @@ async function handleDeviceLocationUpdate(device, currentLocation, now, req) {
       );
     }
 
-    // If we reach this point without exceptions, return success
+    /* If we reach this point without exceptions, return success */
 
   } catch (error) {
-    // Optionally log the error somewhere here if you want
-    // console.error('handleDeviceLocationUpdate error:', error);
     logEvent({
       event: 'SOMETHING UNEXPECTED HAPPENED DURING LOCATION/ALERT UPDATES',
       status: 'FAILED ❌',
@@ -902,7 +938,17 @@ async function handleDeviceLocationUpdate(device, currentLocation, now, req) {
 
 
 
-/** [17] **/
+/** [12]
+ * Retrieves a list of possible locations from a directory of CSV files.
+ *
+ * This function reads all files in the specified directory, filters for `.csv` files,
+ * and extracts the base names (excluding extensions), converting them to uppercase
+ * to represent possible location identifiers.
+ *
+ * @param {string} directoryPath - The absolute or relative path to the directory containing CSV files
+ *
+ * @returns {string[]}           - An array of uppercase location names derived from CSV file names
+ */
 const getPossibleLocations = (directoryPath) => {
   const files = fs.readdirSync(directoryPath);
   return files
@@ -911,55 +957,72 @@ const getPossibleLocations = (directoryPath) => {
 };
 
 
+/** [13]
+ * Creates a delay for a specified amount of time.
+ *
+ * This function returns a Promise that resolves after the given time in milliseconds.
+ * It is useful for introducing pauses in asynchronous workflows using `await`.
+ *
+ * @param {number} time     - The duration to wait in milliseconds
+ *
+ * @returns {Promise<void>} - A Promise that resolves after the specified delay
+ */
+function delay(time) {
+  return new Promise(function(resolve) { 
+      setTimeout(resolve, time);
+  });
+}
+/*************************************************************************** END OF API ENDPOINTS HELPER FUNCTIONS IMPLEMENTATION ***************************************************************************/
 
 
 
 
 
-/********* BACKEND SERVER EVENT LOGGING MECHANISM *********/
+
+
+/*************************************************************************** BACKEND SERVER EVENT LOGGING MECHANISM ***************************************************************************/
 const logEvent = (eventDetails) => {
-  // Define unique delimiters for the start and end of each log event
+  /* Define unique delimiters for the start and end of each log event */
   const logStart = `${magenta}[----------------------- START OF LOG EVENT -----------------------]${reset}\n`;
   const logEnd = `${magenta}[------------------------ END OF LOG EVENT ------------------------]${reset}\n`;
 
-  // Log event details with formatted colors, timestamp, and delimiters
+  /* Log event details with formatted colors, timestamp, and delimiters */
   console.log(
-    // Add log start delimiter
+    /* Add log start delimiter */
     `\n${logStart}` +
     
-    // Opening curly brace
+    /* Opening curly brace */
     `${green}{${reset}\n` +
     
-    // EVENT
+    /* EVENT */
     `  ${green}EVENT:${reset} ${yellow}${eventDetails.event || 'UNKNOWN'}${reset},\n` +
     
-    // STATUS
+    /* STATUS */
     `  ${green}STATUS:${reset} ${yellow}${eventDetails.status || 'UNKNOWN'}${reset},\n` +  
     
-    // CAUSE
+    /* CAUSE */
     `  ${green}CAUSE:${reset} ${yellow}${eventDetails.cause || 'UNKNOWN'}${reset},\n` +  
     
-    // did
+    /* DID */
     `  ${green}DID:${reset} ${yellow}${eventDetails.did || 'UNKNOWN'}${reset},\n` + 
     
-    // DEVICE ID
+    /* DEVICE ID */
     `  ${green}DEVICE ID:${reset} ${yellow}${eventDetails.device_id || 'UNKNOWN'}${reset},\n` +  
     
-    // DEVICE'S IP
+    /* DEVICE'S IP */
     `  ${green}IP DEVICE ADDRESS:${reset} ${yellow}${eventDetails.ip || 'UNKNOWN'}${reset},\n` + 
     
-    // TIMESTAMP
+    /* TIMESTAMP */
     `  ${green}TIMESTAMP:${reset} ${yellow}${moment().tz("Europe/Athens").format('YYYY-MM-DD HH:mm:ss')}${reset}\n` +
     
-    // Closing curly brace
+    /* Closing curly brace */
     `${green}}${reset}` +
     
-    // Add log end delimiter
+    /* Add log end delimiter */
     `\n${logEnd}\n`
   );
 };
-/********* BACKEND SERVER EVENT LOGGING MECHANISM *********/
-/************************************************************************************************************************************************************************************************/
+/*************************************************************************** BACKEND SERVER EVENT LOGGING MECHANISM ***************************************************************************/
 
 
 
@@ -976,5 +1039,6 @@ module.exports = {
   notifyDevice,                   // Notify the devices using the web socket connection
   initializeWebSocketServer,      // Initialize the web socket server connection
   handleDeviceLocationUpdate,
+  delay
 };
 
