@@ -843,150 +843,191 @@ exports.getServerStatus = (req, res) => {
  * The QR code is extracted from an external authentication service (tango.io).  
  * * @route   POST /devices/begin-session
  */
+// exports.beginSession = async (req, res) => {
+//   try {
+//     /* Extract the device_id, the qr_scanner_state_request, the log_file_uri and the role of the device's employee */
+//     const { device_id, qr_scanner_state_request, log_file_uri, role } = req.body;
+//     let savedSessionRequest;
+
+//     /* Device ID not provided */
+//     if (!device_id) {
+//       return res.status(400).json({ status: "failed", message: 'Device ID is missing, session request failed.' });
+//     }
+//     /* Qr Scanner state request not provided */
+//     if (!qr_scanner_state_request) {
+//       return res.status(400).json({ status: "failed", message: 'QR scanner state request is missing, session request failed.' });
+//     }
+
+//     try {
+//       // // Check if a session request already exists for this device_id
+//       // const existingSessionRequest = await SESSION_REQUEST.findOne({
+//       //   device_id: device_id,
+//       //   qr_scanner_state_request: qr_scanner_state_request
+//       // });
+      
+//       // if (existingSessionRequest) {
+//       //   // If found, delete the existing session request
+//       //   await SESSION_REQUEST.deleteOne({ device_id });
+//       //   logEvent({
+//       //     event: 'DELETED EXISTED SESSION REQUEST',
+//       //     status: 'SUCCESS ✅',
+//       //     device_id: device_id,
+//       //     ip: req.ip
+//       //   });
+//       // }
+
+//       // // Create a new SESSION_REQUEST instance
+//       // const sessionRequest = new SESSION_REQUEST({
+//       //   device_id,
+//       //   qr_scanner_state_request,
+//       //   log_file_uri
+//       // });
+
+//       // // Save to the database
+//       // savedSessionRequest = await sessionRequest.save();
+
+//       /* Append or replace (if already exists a session request associated with this device_id) */
+//       savedSessionRequest = await SESSION_REQUEST.replaceOne(
+//         { device_id: device_id },
+//         {
+//           device_id,
+//           qr_scanner_state_request,
+//           log_file_uri,
+//           role,
+//           timestamp: moment().tz("Europe/Athens").toDate()
+//         },
+//         { upsert: true }
+//       );
+      
+//       logEvent({
+//         event: 'CREATED NEW SESSION REQUEST',
+//         status: 'SUCCESS ✅',
+//         device_id: device_id,
+//         ip: req.ip
+//       });
+//     } catch (error) {
+//       logEvent({
+//         event: 'HANDLING SESSION REQUEST',
+//         status: 'FAILED ❌',
+//         cause: `AN ERROR OCCURRED DURING HANDLING SESSION REQUEST: ${error.stack}`,
+//         device_id: device_id,
+//         ip: req.ip
+//       });      
+//       return res.status(500).json({ status: "failed", message: 'Error handling session request.' });
+//     }
+
+//     /* Construct the Client Callback endpoint URL */
+//     //const clientCallbackUrl = `https://${process.env.HOSTNAME_DNS_INTRASOFT_DCBA_BACKEND_SERVICE}/development/dcba-backend/authenticator/auth-callback`;
+//     //const loginQRUrl = `https://ips-verifier.k8s-cluster.tango.rid-intrasoft.eu/api/v1/loginQR?state=${qr_scanner_state_request}&client_callback=${encodeURIComponent(clientCallbackUrl)}&client_id=`;
+
+//     /* Construct the login QR URL with the device_id and other required parameters */
+//     //const baseQrUrl = `https://${process.env.HOSTNAME_FRONT_UI_TANGO_LOGIN}/auth/login/qrcode`;
+//     const NadiaPlatformVerifierbaseQrUrl = `${process.env.HOSTNAME_TANGO_NADIAPLATFORM_LOGIN}`;
+
+//     let loginQRUrl;
+//     if (role === 'customer' || role === 'employee') {
+//       loginQRUrl = `${NadiaPlatformVerifierbaseQrUrl}?state=${qr_scanner_state_request}&client_callback=${encodeURIComponent(clientCallbackUrl)}&t=${role}`;
+//       console.log(loginQRUrl)
+//     } else {
+//       return res.status(400).json({ status: 'failed', message: 'Invalid role provided.' });
+//     }
+
+
+//     /* Launch Puppeteer and get rendered HTML, in order to get the QR */
+//     const browser = await puppeteer.launch({
+//       args: ['--no-sandbox', '--disable-setuid-sandbox'],
+//       headless: true,
+//     });
+//     const page = await browser.newPage();
+//     await page.goto(loginQRUrl, { waitUntil: 'networkidle2' });
+//     let svgElement = null;
+//     const startTime = Date.now();
+//     while (Date.now() - startTime < MAX_WAIT_TIME) {
+//       /* Dont exit the while until the QR (svg html element) found , otherwise exit after MAX_WAIT_TIME */
+//       const html = await page.content();
+//       const { JSDOM } = require('jsdom');
+//       const dom = new JSDOM(html);
+//       const document = dom.window.document;
+//       svgElement = document.querySelector("svg");
+//       if (svgElement) break;
+//       await delay(POLL_INTERVAL);
+//     }
+//     await browser.close();
+//     if (svgElement) {
+//       /* Entire svg component sent to the client */
+//       const DEVICE_AUTHENTICATION_QR_CODE = svgElement.outerHTML;
+
+//       res.status(200).json({
+//         status: "success",
+//         message: 'QR Code generated successfully.',
+//         deviceAuthQRCode: DEVICE_AUTHENTICATION_QR_CODE,
+//         sessionRequest: savedSessionRequest,
+//         role: role,
+//       });
+//     } else {
+//       /* Log error if QR is not found in the html page */
+//       logEvent({
+//         event: 'PROCESSING QR CODE BASE64',
+//         status: 'FAILED ❌',
+//         cause: `QR CODE NOT FOUND`,
+//         device_id: device_id,
+//         ip: req.ip
+//       });
+//       res.status(502).json({ status: "failed", message: 'QR code not found in the verifier service response.' });
+//     }
+
+//   } catch (err) {
+//     logEvent({
+//       event: 'EXTRACTING QR CODE BASE64',
+//       status: 'FAILED ❌',
+//       cause: `AN ERROR OCCURRED DURING EXTRACTING QR CODE BASE64: ${err.stack}`,
+//       device_id: req.body?.device_id || 'UNKNOWN',
+//       ip: req.ip
+//     });
+
+//     res.status(500).json({ status: "failed", message: 'Failed to extract QR code due to an internal server error.' });
+//   }
+// };
 exports.beginSession = async (req, res) => {
   try {
-    /* Extract the device_id, the qr_scanner_state_request, the log_file_uri and the role of the device's employee */
     const { device_id, qr_scanner_state_request, log_file_uri, role } = req.body;
-    let savedSessionRequest;
 
-    /* Device ID not provided */
-    if (!device_id) {
-      return res.status(400).json({ status: "failed", message: 'Device ID is missing, session request failed.' });
-    }
-    /* Qr Scanner state request not provided */
-    if (!qr_scanner_state_request) {
-      return res.status(400).json({ status: "failed", message: 'QR scanner state request is missing, session request failed.' });
-    }
-
-    try {
-      // // Check if a session request already exists for this device_id
-      // const existingSessionRequest = await SESSION_REQUEST.findOne({
-      //   device_id: device_id,
-      //   qr_scanner_state_request: qr_scanner_state_request
-      // });
-      
-      // if (existingSessionRequest) {
-      //   // If found, delete the existing session request
-      //   await SESSION_REQUEST.deleteOne({ device_id });
-      //   logEvent({
-      //     event: 'DELETED EXISTED SESSION REQUEST',
-      //     status: 'SUCCESS ✅',
-      //     device_id: device_id,
-      //     ip: req.ip
-      //   });
-      // }
-
-      // // Create a new SESSION_REQUEST instance
-      // const sessionRequest = new SESSION_REQUEST({
-      //   device_id,
-      //   qr_scanner_state_request,
-      //   log_file_uri
-      // });
-
-      // // Save to the database
-      // savedSessionRequest = await sessionRequest.save();
-
-      /* Append or replace (if already exists a session request associated with this device_id) */
-      savedSessionRequest = await SESSION_REQUEST.replaceOne(
-        { device_id: device_id },
-        {
-          device_id,
-          qr_scanner_state_request,
-          log_file_uri,
-          role,
-          timestamp: moment().tz("Europe/Athens").toDate()
-        },
-        { upsert: true }
-      );
-      
-      logEvent({
-        event: 'CREATED NEW SESSION REQUEST',
-        status: 'SUCCESS ✅',
-        device_id: device_id,
-        ip: req.ip
-      });
-    } catch (error) {
-      logEvent({
-        event: 'HANDLING SESSION REQUEST',
-        status: 'FAILED ❌',
-        cause: `AN ERROR OCCURRED DURING HANDLING SESSION REQUEST: ${error.stack}`,
-        device_id: device_id,
-        ip: req.ip
-      });      
-      return res.status(500).json({ status: "failed", message: 'Error handling session request.' });
-    }
-
-    /* Construct the Client Callback endpoint URL */
-    const clientCallbackUrl = `https://${process.env.HOSTNAME_DNS_INTRASOFT_DCBA_BACKEND_SERVICE}/development/dcba-backend/authenticator/auth-callback`;
-    //const loginQRUrl = `https://ips-verifier.k8s-cluster.tango.rid-intrasoft.eu/api/v1/loginQR?state=${qr_scanner_state_request}&client_callback=${encodeURIComponent(clientCallbackUrl)}&client_id=`;
-
-    /* Construct the login QR URL with the device_id and other required parameters */
-    const baseQrUrl = `https://${process.env.HOSTNAME_FRONT_UI_TANGO_LOGIN}/auth/login/qrcode`;
-    let loginQRUrl;
-    if (role === 'customer' || role === 'employee') {
-      loginQRUrl = `${baseQrUrl}?t=${role}&state=${qr_scanner_state_request}&client_callback=${encodeURIComponent(clientCallbackUrl)}`;
-      console.log(loginQRUrl)
-    } else {
+    if (!['employee', 'customer'].includes(role)) {
       return res.status(400).json({ status: 'failed', message: 'Invalid role provided.' });
     }
 
+    // Pick the right client_id
+    const clientId =
+      role === 'customer'
+        ? 'smart-hospitality-customer-service'
+        : 'smart-hospitality-employee-service';
 
-    /* Launch Puppeteer and get rendered HTML, in order to get the QR */
-    const browser = await puppeteer.launch({
-      args: ['--no-sandbox', '--disable-setuid-sandbox'],
-      headless: true,
-    });
-    const page = await browser.newPage();
-    await page.goto(loginQRUrl, { waitUntil: 'networkidle2' });
-    let svgElement = null;
-    const startTime = Date.now();
-    while (Date.now() - startTime < MAX_WAIT_TIME) {
-      /* Dont exit the while until the QR (svg html element) found , otherwise exit after MAX_WAIT_TIME */
-      const html = await page.content();
-      const { JSDOM } = require('jsdom');
-      const dom = new JSDOM(html);
-      const document = dom.window.document;
-      svgElement = document.querySelector("svg");
-      if (svgElement) break;
-      await delay(POLL_INTERVAL);
-    }
-    await browser.close();
-    if (svgElement) {
-      /* Entire svg component sent to the client */
-      const DEVICE_AUTHENTICATION_QR_CODE = svgElement.outerHTML;
+    // Call the correct auth_init endpoint
+    const response = await axios.get(
+      `https://ui-backend.tango.nadiaplatform.com/auth_init?client_id=${clientId}`
+    );
 
-      res.status(200).json({
-        status: "success",
-        message: 'QR Code generated successfully.',
-        deviceAuthQRCode: DEVICE_AUTHENTICATION_QR_CODE,
-        sessionRequest: savedSessionRequest,
-        role: role,
-      });
-    } else {
-      /* Log error if QR is not found in the html page */
-      logEvent({
-        event: 'PROCESSING QR CODE BASE64',
-        status: 'FAILED ❌',
-        cause: `QR CODE NOT FOUND`,
-        device_id: device_id,
-        ip: req.ip
-      });
-      res.status(502).json({ status: "failed", message: 'QR code not found in the verifier service response.' });
+    if (response.data.status !== 'OK' || !response.data.sessionId || !response.data.response) {
+      return res.status(500).json({ status: 'failed', message: 'Failed to initialize session.', details: response.data });
     }
 
-  } catch (err) {
-    logEvent({
-      event: 'EXTRACTING QR CODE BASE64',
-      status: 'FAILED ❌',
-      cause: `AN ERROR OCCURRED DURING EXTRACTING QR CODE BASE64: ${err.stack}`,
-      device_id: req.body?.device_id || 'UNKNOWN',
-      ip: req.ip
+    console.log(response.data)
+
+    // OPTIONAL: Save session info to DB for tracking (e.g., sessionId, state, etc.)
+    // await db.saveSession({ sessionId: data.sessionId, device_id, log_file_uri, role });
+
+    // Return it to the frontend
+    return res.status(200).json({
+      status: 'success',
+      sessionId: data.sessionId,
+      openid_url: data.response // this is what you'll turn into a QR code
     });
 
-    res.status(500).json({ status: "failed", message: 'Failed to extract QR code due to an internal server error.' });
+  } catch (error) {
+    console.error('Error starting session:', error);
+    return res.status(500).json({ status: 'failed', message: 'Internal server error.', error: error.message });
   }
 };
-
 
     
 
@@ -1012,7 +1053,7 @@ exports.handleAuthCallback = async (req, res) => {
   }
  
   //const url = `https://ips-verifier.k8s-cluster.tango.rid-intrasoft.eu/token`
-  const url = `ips-verifier.tango.nadiaplatform.com`;
+  const url = `https://ips-verifier.tango.nadiaplatform.com/api/v1/token`;
   const headers = {
     'accept': 'application/json',
     'Content-Type': 'application/x-www-form-urlencoded'
