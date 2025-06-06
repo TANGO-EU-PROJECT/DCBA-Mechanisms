@@ -1009,6 +1009,7 @@ exports.beginSession = async (req, res) => {
       return res.status(500).json({ status: 'failed', message: 'Failed to initialize session.', details: response.data });
     }
 
+    const sessionId=response.data.sessionId;
     const originalUrl = response.data.response;
     const customRedirectUri = `https://${process.env.HOSTNAME_DNS_INTRASOFT_DCBA_BACKEND_SERVICE}/development/dcba-backend/authenticator/auth-callback`;
 
@@ -1018,21 +1019,26 @@ exports.beginSession = async (req, res) => {
     );
 
     // Save or update session request in MongoDB: -------------------- PREPEI NA TO KANW FIX NA GINETAI REPLACE
-    const newSessionRequest = new SESSION_REQUEST({
-      device_id,
-      sessionId: response.data.sessionId,
-      role,
-      log_file_uri,
-      createdAt: new Date(),
-    });
-    await newSessionRequest.save();
+    /* Append or replace (if already exists a session request associated with this device_id) */
+    let savedSessionRequest;
+    savedSessionRequest = await SESSION_REQUEST.replaceOne(
+      { device_id: device_id },
+      {
+        device_id,
+        sessionId,
+        role,
+        log_file_uri,
+        timestamp: moment().tz("Europe/Athens").toDate()
+      },
+      { upsert: true }
+    );
 
 
     // Return session info
     return res.status(200).json({
       status: 'success',
       message: 'QR Code generated successfully.',
-      sessionId: response.data.sessionId,
+      sessionId: sessionId,
       openid_url: updatedUrl,
     });
 
