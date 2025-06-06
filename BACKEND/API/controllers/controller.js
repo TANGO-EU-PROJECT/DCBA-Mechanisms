@@ -1056,22 +1056,26 @@ exports.handleAuthCallback = async (req, res) => {
     console.log('Received POST /auth-callback');
     console.log('Request Body:', req.body);
 
-    const fixedState = "aaaaaaaaaaa";
+    const fixedState = 'aaaaaaaaaaa';
+
+    // Prepare form data
+    const params = new URLSearchParams({
+      vp_token: req.body.vp_token,
+      presentation_submission: req.body.presentation_submission,
+      state: fixedState,  // use fixed state or req.body.state if needed
+    });
 
     const response = await axios.post(
       `https://ips-verifier.tango.nadiaplatform.com/api/v1/authentication_response?state=${fixedState}`,
-      req.body,
-      { headers: { 'Content-Type': 'application/json' } }
+      params.toString(),
+      { headers: { 'Content-Type': 'application/x-www-form-urlencoded' } }
     );
 
-
-    // Forward the response from the verification service
     return res.status(response.status).json(response.data);
 
   } catch (error) {
     console.error('Error in auth callback:', error);
 
-    // If the error is from the remote request, try to return that response status & data
     if (error.response) {
       return res.status(error.response.status).json(error.response.data);
     }
@@ -1083,7 +1087,6 @@ exports.handleAuthCallback = async (req, res) => {
     });
   }
 };
-
 // exports.handleAuthCallback = async (req, res) => {
 //   const { code, state } = req.query;
 //   //console.log(code, state)
