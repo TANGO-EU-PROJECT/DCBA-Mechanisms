@@ -1033,6 +1033,8 @@ exports.beginSession = async (req, res) => {
       { upsert: true }
     );
 
+    console.log("SavedSessionRequst: ", device_id, sessionId)
+
 
     // Return session info
     return res.status(200).json({
@@ -1070,6 +1072,9 @@ exports.handleAuthCallback = async (req, res) => {
       presentation_submission: req.body.presentation_submission,
       state: state,
     });
+
+    console.log("Received state from auth-callback: ", state)
+
 
     const response = await axios.post(
       `https://ips-verifier.tango.nadiaplatform.com/api/v1/authentication_response?state=${encodeURIComponent(state)}`,
