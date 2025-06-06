@@ -208,7 +208,7 @@ exports.handlePostLogs = async (req, res) => {
   }
 
   /* Sixth check: if req.body.authToken is not associated with this device */
-  if (decodedToken.payload?.verifiableCredential?.id !== did) {
+  if (decodedToken.payload.iss !== did) {
     logEvent({
       event: 'ANDROID LOG CAPTURE',
       status: 'FAILED ❌',
