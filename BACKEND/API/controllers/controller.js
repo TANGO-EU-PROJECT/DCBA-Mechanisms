@@ -1078,6 +1078,9 @@ exports.handleAuthCallback = async (req, res) => {
       try {
         const decoded = jwt.decode(vp_token, { complete: true });
         console.log('Decoded vp_token payload:', decoded);
+        const did = decoded.payload.iss;
+        const sub = decoded.payload.sub;
+        const result = await processSessionRequest(vp_token, state, did, sub, req);
       } catch (decodeError) {
         console.error('Failed to decode vp_token:', decodeError);
       }
