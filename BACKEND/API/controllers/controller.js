@@ -1056,15 +1056,23 @@ exports.handleAuthCallback = async (req, res) => {
     console.log('Received POST /auth-callback');
     console.log('Request Body:', req.body);
 
-    // Optionally respond with what was received
-    return res.status(200).json({
-      status: 'success',
-      message: 'Callback received.',
-      received: req.body
-    });
+    const response = await axios.post(
+      'http://ips-verifier.tango.nadiaplatform.com/api/v1/authentication_response',
+      req.body,
+      { headers: { 'Content-Type': 'application/json' } }
+    );
+
+    // Forward the response from the verification service
+    return res.status(response.status).json(response.data);
 
   } catch (error) {
     console.error('Error in auth callback:', error);
+
+    // If the error is from the remote request, try to return that response status & data
+    if (error.response) {
+      return res.status(error.response.status).json(error.response.data);
+    }
+
     return res.status(500).json({
       status: 'failed',
       message: 'Internal server error.',
