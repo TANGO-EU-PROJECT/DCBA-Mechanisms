@@ -1067,7 +1067,7 @@ exports.handleAuthCallback = async (req, res) => {
       state: state,  // use the real state from request body
     });
 
-    console.log(vp_token, presentation_submission, state)
+    console.log(req.body.vp_token, req.body.presentation_submission, state)
 
     // Send POST with form-url-encoded and state as query parameter
     const response = await axios.post(
