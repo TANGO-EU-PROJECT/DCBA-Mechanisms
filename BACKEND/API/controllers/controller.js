@@ -1076,7 +1076,7 @@ exports.handleAuthCallback = async (req, res) => {
       { headers: { 'Content-Type': 'application/x-www-form-urlencoded' } }
     );
 
-    //console.log('Response from verification service:', response);
+    console.log('Response from verification service:', response);
 
     // Forward the response
     return res.status(response.status).json(response.data);
