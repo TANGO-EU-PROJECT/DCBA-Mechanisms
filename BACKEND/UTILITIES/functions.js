@@ -503,43 +503,38 @@ async function processSessionRequest(authToken, sessionId, did, sub, req) {
  */
 function initializeWebSocketServer(wss) {
   try {
+    /* When a new WebSocket connection is established */
     wss.on('connection', (ws, req) => {
-      const urlParams = new URLSearchParams(req.url.split('?')[1]);
-      const device_id = urlParams.get('device_id');
-      console.log(device_id)
+      /* Split to get the query part after "?" */
+      const urlParams = new URLSearchParams(req.url.split('?')[1]);  
+      const qr_scanner_state_request = urlParams.get('qr_scanner_state_request');
+      /* Extract device_id */
+      const device_id = urlParams.get('device_id'); 
 
-      if (device_id) {
-        // Store the connection by device_id
-        WSS_CONNECTIONS_FROM_DEVICE_ID.set(device_id, ws);
-
+      /* Handle device connections */
+      if (qr_scanner_state_request && device_id) {
+        WSS_CONNECTIONS_FROM_QR_SCANNER_REQUESTS.set(device_id, ws);
         logEvent({
-          event: `DEVICE WITH device_id "${device_id}" CONNECTED VIA WEBSOCKET`,
+          event: `DEVICE WITH QR STATE "${device_id}" CONNECTED VIA WEBSOCKET`,
           status: 'SUCCESS ✅',
           cause: 'INITIATING SESSION',
           device_id: device_id
         });
-      } else {
-        logEvent({
-          event: 'WebSocket connection attempt without device_id',
-          status: 'FAILED ❌',
-          cause: 'Missing device_id in URL query',
-        });
-        // Optionally, you can close the connection immediately if device_id is mandatory
-        ws.close(1008, 'Missing device_id');
-        return;
       }
 
+      /* Handle WebSocket messages from devices */
       ws.on('message', (message) => {
-        console.log(`Received message from device_id=${device_id}:`, message);
+        console.log(`Received message:`, message);
       });
 
+      /* Handle WebSocket disconnection for devices */
       ws.on('close', () => {
-        if (device_id) {
-          WSS_CONNECTIONS_FROM_DEVICE_ID.delete(device_id);
+        if (qr_scanner_state_request && device_id) {
+          WSS_CONNECTIONS_FROM_QR_SCANNER_REQUESTS.delete(device_id);
           logEvent({
-            event: `DEVICE WITH device_id "${device_id}" DISCONNECTED FROM WEBSOCKET`,
+            event: `DEVICE WITH QR STATE "${qr_scanner_state_request}" DISCONNECTED FROM WEBSOCKET`,
             status: 'SUCCESS ✅',
-            cause: 'SESSION TERMINATED',
+            cause: 'SESSION INITIATED',
             device_id: device_id
           });
         }
@@ -552,14 +547,13 @@ function initializeWebSocketServer(wss) {
     });
 
   } catch (error) {
+    /* If an error occurs during initialization, log the error message */
     logEvent({
       event: `WEBSOCKET SERVER FAILED TO INITIALIZE AT ${moment().tz("Europe/Athens").format('YYYY-MM-DD HH:mm:ss')}`,
       status: 'FAILED ❌',
-      error: error.message,
     });
   }
 }
-
 
 
 
