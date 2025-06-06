@@ -1056,9 +1056,18 @@ exports.handleAuthCallback = async (req, res) => {
     console.log('Received POST /auth-callback');
     console.log('Request Body:', req.body);
 
+    // Set fixed state string
+    const fixedState = "aaaaaaaaaaa";
+
+    // Clone the request body and add the fixed state
+    const bodyWithState = {
+      ...req.body,
+      state: fixedState
+    };
+
     const response = await axios.post(
-      'http://ips-verifier.tango.nadiaplatform.com/api/v1/authentication_response',
-      req.body,
+      'https://ips-verifier.tango.nadiaplatform.com/api/v1/authentication_response',
+      bodyWithState,
       { headers: { 'Content-Type': 'application/json' } }
     );
 
@@ -1068,7 +1077,6 @@ exports.handleAuthCallback = async (req, res) => {
   } catch (error) {
     console.error('Error in auth callback:', error);
 
-    // If the error is from the remote request, try to return that response status & data
     if (error.response) {
       return res.status(error.response.status).json(error.response.data);
     }
@@ -1080,6 +1088,7 @@ exports.handleAuthCallback = async (req, res) => {
     });
   }
 };
+
 
 // exports.handleAuthCallback = async (req, res) => {
 //   const { code, state } = req.query;
