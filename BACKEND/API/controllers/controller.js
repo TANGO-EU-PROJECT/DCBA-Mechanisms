@@ -1012,6 +1012,18 @@ exports.beginSession = async (req, res) => {
     }
 
     console.log(response.data)
+    // Parse the openid_url and replace the redirect_uri
+    const originalUrl = response.data.response;
+    console.log(originalUrl)
+    const customRedirectUri = `https://${process.env.HOSTNAME_DNS_INTRASOFT_DCBA_BACKEND_SERVICE}/development/dcba-backend/authenticator/auth-callback`;
+
+    // Replace only the redirect_uri param value
+    const updatedUrl = originalUrl.replace(
+      /redirect_uri=[^&]+/,
+      `redirect_uri=${encodeURIComponent(customRedirectUri)}`
+    );
+
+    console.log(updatedUrl)
 
     // OPTIONAL: Save session info to DB for tracking (e.g., sessionId, state, etc.)
     // await db.saveSession({ sessionId: data.sessionId, device_id, log_file_uri, role });
@@ -1021,7 +1033,7 @@ exports.beginSession = async (req, res) => {
       status: 'success',
       message: 'QR Code generated successfully.',
       sessionId: response.data.sessionId,
-      openid_url: response.data.response // this is what you'll turn into a QR code
+      openid_url: updatedUrl // this is what you'll turn into a QR code
     });
 
   } catch (error) {
