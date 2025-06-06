@@ -1067,6 +1067,8 @@ exports.handleAuthCallback = async (req, res) => {
       state: state,  // use the real state from request body
     });
 
+    console.log(vp_token, presentation_submission, state)
+
     // Send POST with form-url-encoded and state as query parameter
     const response = await axios.post(
       `https://ips-verifier.tango.nadiaplatform.com/api/v1/authentication_response?state=${encodeURIComponent(state)}`,
@@ -1074,7 +1076,7 @@ exports.handleAuthCallback = async (req, res) => {
       { headers: { 'Content-Type': 'application/x-www-form-urlencoded' } }
     );
 
-    console.log('Response from verification service:', response);
+    //console.log('Response from verification service:', response);
 
     // Forward the response
     return res.status(response.status).json(response.data);
