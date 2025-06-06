@@ -1017,17 +1017,16 @@ exports.beginSession = async (req, res) => {
       `redirect_uri=${encodeURIComponent(customRedirectUri)}`
     );
 
-    // Save or update session request in MongoDB:
-    const filter = { device_id };
-    const update = {
+    // Save or update session request in MongoDB: -------------------- PREPEI NA TO KANW FIX NA GINETAI REPLACE
+    const newSessionRequest = new SESSION_REQUEST({
+      device_id,
       sessionId: response.data.sessionId,
       role,
       log_file_uri,
-      createdAt: new Date(),  // optionally override for TTL to work correctly
-    };
-    const options = { upsert: true, new: true, setDefaultsOnInsert: true };
+      createdAt: new Date(),
+    });
+    await newSessionRequest.save();
 
-    await SESSION_REQUEST.findOneAndUpdate(filter, update, options);
 
     // Return session info
     return res.status(200).json({
