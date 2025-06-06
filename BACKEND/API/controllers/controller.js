@@ -1019,8 +1019,9 @@ exports.beginSession = async (req, res) => {
     // Return it to the frontend
     return res.status(200).json({
       status: 'success',
-      sessionId: data.sessionId,
-      openid_url: data.response // this is what you'll turn into a QR code
+      message: 'QR Code generated successfully.',
+      sessionId: response.data.sessionId,
+      openid_url: response.data.response // this is what you'll turn into a QR code
     });
 
   } catch (error) {
