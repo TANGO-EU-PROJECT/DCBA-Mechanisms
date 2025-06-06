@@ -1057,29 +1057,32 @@ exports.handleAuthCallback = async (req, res) => {
     console.log('Received POST /auth-callback');
     console.log('Request Body:', req.body);
 
-    // Extract state from the incoming request body
     const state = req.body.state;
+    const vp_token = req.body.vp_token;
 
-    // Prepare form data with the extracted state
     const params = new URLSearchParams({
-      vp_token: req.body.vp_token,
+      vp_token: vp_token,
       presentation_submission: req.body.presentation_submission,
-      state: state,  // use the real state from request body
+      state: state,
     });
 
-    console.log(req.body.vp_token, req.body.presentation_submission, state)
-
-    // Send POST with form-url-encoded and state as query parameter
     const response = await axios.post(
       `https://ips-verifier.tango.nadiaplatform.com/api/v1/authentication_response?state=${encodeURIComponent(state)}`,
       params.toString(),
       { headers: { 'Content-Type': 'application/x-www-form-urlencoded' } }
     );
 
-    
-    console.log('Response from verification service:', response);
+    console.log('Response from verification service:', response.status, response.statusText);
 
-    // Forward the response
+    if (response.status === 200 && response.statusText === 'OK') {
+      try {
+        const decoded = jwt.decode(vp_token, { complete: true });
+        console.log('Decoded vp_token payload:', decoded);
+      } catch (decodeError) {
+        console.error('Failed to decode vp_token:', decodeError);
+      }
+    }
+
     return res.status(response.status).json(response.data);
 
   } catch (error) {
