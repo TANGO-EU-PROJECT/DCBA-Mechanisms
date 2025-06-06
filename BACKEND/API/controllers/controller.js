@@ -1010,6 +1010,16 @@ exports.beginSession = async (req, res) => {
     }
 
     console.log(response)
+    const responseString = response.data.response; // your full response string
+
+    // Remove the `openid://?` prefix to parse as query string
+    const queryString = responseString.replace('openid://?', '');
+
+    // Use URLSearchParams to parse the query string
+    const params = new URLSearchParams(queryString);
+
+    // Get the value of the `state` parameter
+    const state = params.get('state');
     const sessionId=response.data.sessionId;
     const originalUrl = response.data.response;
     const customRedirectUri = `https://${process.env.HOSTNAME_DNS_INTRASOFT_DCBA_BACKEND_SERVICE}/development/dcba-backend/authenticator/auth-callback`;
@@ -1026,7 +1036,7 @@ exports.beginSession = async (req, res) => {
       { device_id: device_id },
       {
         device_id,
-        sessionId,
+        state,
         role,
         log_file_uri,
         timestamp: moment().tz("Europe/Athens").toDate()
@@ -1034,14 +1044,14 @@ exports.beginSession = async (req, res) => {
       { upsert: true }
     );
 
-    console.log("SavedSessionRequst: ", device_id, sessionId)
+    console.log("SavedSessionRequst: ", device_id, state)
 
 
     // Return session info
     return res.status(200).json({
       status: 'success',
       message: 'QR Code generated successfully.',
-      sessionId: sessionId,
+      sessionId: state,
       openid_url: updatedUrl,
     });
 
