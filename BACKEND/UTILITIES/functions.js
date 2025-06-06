@@ -344,16 +344,16 @@ function malformedLogsExaminator(log) {
  * This function searches for a session request in the database using the provided qr state(state), 
  * notifies the relevant device, and creates a new device record if necessary.
  * @param {string} authToken                - The authorization JWT Token
- * @param {string} sessionId                - The unique ID of the state request
+ * @param {string} state                    - The unique ID of the QR state request
  * @param {string} did                      - The DID (unique identifier) associated with the device.
  * @param {string} sub                      - The subject identifier associated with the device.
  * @returns {Promise<void>}                 - Resolves once the session request is processed and necessary actions are taken.
  */
-async function processSessionRequest(authToken, sessionId, did, sub, req) {
+async function processSessionRequest(authToken, state, did, sub, req) {
 
   try {
     /* Search for the session request in MongoDB based on the state */
-    const sessionRequest = await SESSION_REQUEST.findOne({ sessionId: sessionId });
+    const sessionRequest = await SESSION_REQUEST.findOne({ state: state });
 
     if (sessionRequest) {
       const device_id = sessionRequest.device_id;
@@ -383,7 +383,7 @@ async function processSessionRequest(authToken, sessionId, did, sub, req) {
           /* Device associated with did not found to. So, create it */
           await createDeviceDocument(did, sub, device_id, log_file_uri, role);
           /* Notify the device via WebSocket */
-          notifyDevice(authToken, sessionId, device_id, did, sub, log_file_uri, "session-request-valid");
+          notifyDevice(authToken, state, device_id, did, sub, log_file_uri, "session-request-valid");
           logEvent({
             event: 'DEVICE STATUS UPDATED',
             status: 'SUCCESS ✅',
@@ -397,7 +397,7 @@ async function processSessionRequest(authToken, sessionId, did, sub, req) {
         } else {
           /* Someone tried to log in from his/her device, using an existing DID */
           /* Notify the device via WebSocket */
-          notifyDevice(authToken, sessionId, device_id, did, sub, log_file_uri, "potential-credential-sharing");
+          notifyDevice(authToken, state, device_id, did, sub, log_file_uri, "potential-credential-sharing");
           logEvent({
             event: 'UNAUTHORIZED ATTEMPT FROM USING CREDENTIALS FROM ANOTHER DEVICE',
             status: 'FAILED ❌',
@@ -425,7 +425,7 @@ async function processSessionRequest(authToken, sessionId, did, sub, req) {
               ip: req.ip
             });
             /* Notify the device via WebSocket */
-            notifyDevice(authToken, sessionId, device_id, did, sub, log_file_uri, "session-request-valid");
+            notifyDevice(authToken, state, device_id, did, sub, log_file_uri, "session-request-valid");
             logEvent({
               event: 'DEVICE STATUS UPDATED',
               status: 'SUCCESS ✅',
@@ -445,14 +445,14 @@ async function processSessionRequest(authToken, sessionId, did, sub, req) {
               device_id: device_id,
               ip: req.ip
             });
-            notifyDevice(authToken, sessionId, device_id, did, sub, log_file_uri, "device-already-online");
+            notifyDevice(authToken, state, device_id, did, sub, log_file_uri, "device-already-online");
             /* Authentication Failed */
             return { status: 409, message: "Device already online." };
           }
           
         } else {
           /* Someone tried to log in to their device using another employee's credentials */
-          notifyDevice(authToken, sessionId, device_id, did, sub, log_file_uri, "potential-credential-sharing");
+          notifyDevice(authToken, state, device_id, did, sub, log_file_uri, "potential-credential-sharing");
           logEvent({
             event: 'UNAUTHORIZED ATTEMPT USING CREDENTIALS FROM ANOTHER DEVICE',
             status: 'FAILED ❌',
@@ -466,7 +466,7 @@ async function processSessionRequest(authToken, sessionId, did, sub, req) {
       }
     } else {
       /* Notify the device that the session request is expired, in order to re-generate a new unique QR */
-      notifyDevice(authToken, sessionId, "unknown", did, sub, "unknown", "session-request-expired");
+      notifyDevice(authToken, state, "unknown", did, sub, "unknown", "session-request-expired");
       logEvent({
         event: 'SEARCH FOR SESSION REQUEST FOR DEVICE',
         status: 'FAILED ❌',
