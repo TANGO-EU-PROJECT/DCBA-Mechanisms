@@ -12,9 +12,9 @@ const sessionRequestSchema = new mongoose.Schema({
     required: true, // Ensure device_id is provided
     unique: true,   // Ensure device_id is unique
   },
-  qr_scanner_state_request: {
-    type: String,   // Store qr_scanner_state_request as a string
-    required: true, // Ensure qr_scanner_state_request is provided
+  sessionId: {
+    type: String,   // Store sessionId as a string
+    required: true, // Ensure sessionId is provided
   },
   role: {
     type: String,

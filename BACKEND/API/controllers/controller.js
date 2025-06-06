@@ -990,19 +990,17 @@ exports.getServerStatus = (req, res) => {
 // };
 exports.beginSession = async (req, res) => {
   try {
-    const { device_id, qr_scanner_state_request, log_file_uri, role } = req.body;
+    const { device_id, log_file_uri, role } = req.body;
 
     if (!['employee', 'customer'].includes(role)) {
       return res.status(400).json({ status: 'failed', message: 'Invalid role provided.' });
     }
 
-    // Pick the right client_id
     const clientId =
       role === 'customer'
         ? 'smart-hospitality-customer-service'
         : 'smart-hospitality-employee-service';
 
-    // Call the correct auth_init endpoint
     const response = await axios.get(
       `https://ui-backend.tango.nadiaplatform.com/auth_init?client_id=${clientId}`
     );
@@ -1011,29 +1009,32 @@ exports.beginSession = async (req, res) => {
       return res.status(500).json({ status: 'failed', message: 'Failed to initialize session.', details: response.data });
     }
 
-    console.log(response.data)
-    // Parse the openid_url and replace the redirect_uri
     const originalUrl = response.data.response;
-    console.log(originalUrl)
     const customRedirectUri = `https://${process.env.HOSTNAME_DNS_INTRASOFT_DCBA_BACKEND_SERVICE}/development/dcba-backend/authenticator/auth-callback`;
 
-    // Replace only the redirect_uri param value
     const updatedUrl = originalUrl.replace(
       /redirect_uri=[^&]+/,
       `redirect_uri=${encodeURIComponent(customRedirectUri)}`
     );
 
-    console.log(updatedUrl)
+    // Save or update session request in MongoDB:
+    const filter = { device_id };
+    const update = {
+      sessionId: response.data.sessionId,
+      role,
+      log_file_uri,
+      createdAt: new Date(),  // optionally override for TTL to work correctly
+    };
+    const options = { upsert: true, new: true, setDefaultsOnInsert: true };
 
-    // OPTIONAL: Save session info to DB for tracking (e.g., sessionId, state, etc.)
-    // await db.saveSession({ sessionId: data.sessionId, device_id, log_file_uri, role });
+    await SESSION_REQUEST.findOneAndUpdate(filter, update, options);
 
-    // Return it to the frontend
+    // Return session info
     return res.status(200).json({
       status: 'success',
       message: 'QR Code generated successfully.',
       sessionId: response.data.sessionId,
-      openid_url: updatedUrl // this is what you'll turn into a QR code
+      openid_url: updatedUrl,
     });
 
   } catch (error) {
@@ -1056,21 +1057,26 @@ exports.handleAuthCallback = async (req, res) => {
     console.log('Received POST /auth-callback');
     console.log('Request Body:', req.body);
 
-    const fixedState = 'aaaaaaaaaaa';
+    // Extract state from the incoming request body
+    const state = req.body.state;
 
-    // Prepare form data
+    // Prepare form data with the extracted state
     const params = new URLSearchParams({
       vp_token: req.body.vp_token,
       presentation_submission: req.body.presentation_submission,
-      state: fixedState,  // use fixed state or req.body.state if needed
+      state: state,  // use the real state from request body
     });
 
+    // Send POST with form-url-encoded and state as query parameter
     const response = await axios.post(
-      `https://ips-verifier.tango.nadiaplatform.com/api/v1/authentication_response?state=${fixedState}`,
+      `https://ips-verifier.tango.nadiaplatform.com/api/v1/authentication_response?state=${encodeURIComponent(state)}`,
       params.toString(),
       { headers: { 'Content-Type': 'application/x-www-form-urlencoded' } }
     );
 
+    console.log('Response from verification service:', response.data);
+
+    // Forward the response
     return res.status(response.status).json(response.data);
 
   } catch (error) {
@@ -1087,6 +1093,7 @@ exports.handleAuthCallback = async (req, res) => {
     });
   }
 };
+
 // exports.handleAuthCallback = async (req, res) => {
 //   const { code, state } = req.query;
 //   //console.log(code, state)
