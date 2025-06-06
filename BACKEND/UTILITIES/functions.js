@@ -506,6 +506,7 @@ function initializeWebSocketServer(wss) {
     wss.on('connection', (ws, req) => {
       const urlParams = new URLSearchParams(req.url.split('?')[1]);
       const device_id = urlParams.get('device_id');
+      console.log(device_id)
 
       if (device_id) {
         // Store the connection by device_id
