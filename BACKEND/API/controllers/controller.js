@@ -1009,6 +1009,7 @@ exports.beginSession = async (req, res) => {
       return res.status(500).json({ status: 'failed', message: 'Failed to initialize session.', details: response.data });
     }
 
+    console.log(response)
     const sessionId=response.data.sessionId;
     const originalUrl = response.data.response;
     const customRedirectUri = `https://${process.env.HOSTNAME_DNS_INTRASOFT_DCBA_BACKEND_SERVICE}/development/dcba-backend/authenticator/auth-callback`;
