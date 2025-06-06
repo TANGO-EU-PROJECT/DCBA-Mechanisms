@@ -1052,125 +1052,147 @@ exports.beginSession = async (req, res) => {
  * @param res - Response object
  */
 exports.handleAuthCallback = async (req, res) => {
-  const { code, state } = req.query;
-  //console.log(code, state)
-  console.log(req.query)
-
-  /* Check if required parameters (code, state) are missing */
-  if (!code || !state) {
-    return res.status(400).json({
-      status: "failed",
-      message: 'Missing required parameters: code or state.'
-    });
-    
-  }
- 
-  //const url = `https://ips-verifier.k8s-cluster.tango.rid-intrasoft.eu/token`
-  const url = `https://ips-verifier.tango.nadiaplatform.com/api/v1/token`;
-  const headers = {
-    'accept': 'application/json',
-    'Content-Type': 'application/x-www-form-urlencoded'
-  };
-
-  // Prepare the request data
-  const data = qs.stringify({
-    'grant_type': 'authorization_code',
-    'code': code,
-    redirect_uri: `https://${process.env.HOSTNAME_DNS_INTRASOFT_DCBA_BACKEND_SERVICE}/development/dcba-backend/authenticator/auth-callback`
-  });
-
-  // Load the custom CA certificate (ensure the path is correct)
-  // const certPath = '/usr/local/share/ca-certificates/ca.crt';
-  // let cert;
-  // try {
-  //   cert = fs.readFileSync(certPath); // Read the certificate file
-  // } catch (err) {
-  //   logEvent({
-  //     event: 'READING CERTIFICATE FILE',
-  //     status: 'FAILED ❌',
-  //     cause: `AN ERROR OCCURRED DURING READING CERTIFICATE FILE: ${err}`,
-  //     ip: req.ip
-  //   });
-  //   return res.status(200).json({ status: "failed", message: 'Error reading the certificate.' });
-
-  // }
-
-  /* Create a custom HTTPS agent with the CA certificate */
-  const httpsAgent = new https.Agent({
-    //ca: cert,               /* Provide the certificate to verify the server's certificate */
-    rejectUnauthorized: false /* Ensure SSL verification is enabled */
-  });
-
   try {
-    /* Make the POST request to exchange the authorization code for an access token */
-    const response = await axios.post(url, data, { headers, httpsAgent });
+    console.log('Received POST /auth-callback');
+    console.log('Request Body:', req.body);
 
-    /* Check if the response contains the access token */
-    const authToken = response.data.access_token;
-    if (!authToken) {
-      return res.status(401).json({
-        status: "failed",
-        message: 'Authentication token not received.'
-      });
-      
-    }
-
-    /* Decode the JWT access token to extract information */
-    const decodedPayload = jwt.decode(authToken, { complete: true });
-
-    /* Extract the 'did' and 'sub' from the decoded payload */
-    const did = decodedPayload.payload?.verifiableCredential?.id; 
-    const sub = decodedPayload.payload?.sub;
-
-    if (!did || !sub) {
-      return res.status(401).json({
-        status: "failed",
-        message: 'Invalid authentication token payload.'
-      });
-      
-    }
-
-    logEvent({
-      event: 'AUTHENTICATION CALLBACK',
-      status: 'SUCCESS ✅',
-      did: did,
-      ip: req.ip
+    // Optionally respond with what was received
+    return res.status(200).json({
+      status: 'success',
+      message: 'Callback received.',
+      received: req.body
     });
 
-    /* Respond to the AUTHENTICATOR via the web socket */
-    const result = await processSessionRequest(authToken, state, did, sub, req);
-
-    /* Response with success only if the response is 200(auth-success) */
-    const ApiResponse = {
-      status: result.status === 200 ? "success" : "failed",
-      message: result.message
-    };
-
-    //console.log(decodedPayload);
-    
-    if (result.status === 200) {
-      ApiResponse.decodedPayload = decodedPayload;
-    }
-    
-    res.status(result.status).json(ApiResponse);
-    
-  } catch (err) {
-    /* Catch any errors during the request */
-    logEvent({
-      event: 'AUTHENTICATION CALLBACK',
-      status: 'FAILED ❌',
-      cause: `AN ERROR OCCURRED DURING AUTHENTICATION CALLBACK: ${err.stack}`,
-      ip: req.ip
-    });
-    
-    if (err.response) {
-    }
+  } catch (error) {
+    console.error('Error in auth callback:', error);
     return res.status(500).json({
-      status: "failed",
-      message: 'Internal server error. Authentication failed.'
+      status: 'failed',
+      message: 'Internal server error.',
+      error: error.message
     });
   }
 };
+
+// exports.handleAuthCallback = async (req, res) => {
+//   const { code, state } = req.query;
+//   //console.log(code, state)
+//   console.log(req.query)
+
+//   /* Check if required parameters (code, state) are missing */
+//   if (!code || !state) {
+//     return res.status(400).json({
+//       status: "failed",
+//       message: 'Missing required parameters: code or state.'
+//     });
+    
+//   }
+ 
+//   //const url = `https://ips-verifier.k8s-cluster.tango.rid-intrasoft.eu/token`
+//   const url = `https://ips-verifier.tango.nadiaplatform.com/api/v1/token`;
+//   const headers = {
+//     'accept': 'application/json',
+//     'Content-Type': 'application/x-www-form-urlencoded'
+//   };
+
+//   // Prepare the request data
+//   const data = qs.stringify({
+//     'grant_type': 'authorization_code',
+//     'code': code,
+//     redirect_uri: `https://${process.env.HOSTNAME_DNS_INTRASOFT_DCBA_BACKEND_SERVICE}/development/dcba-backend/authenticator/auth-callback`
+//   });
+
+//   // Load the custom CA certificate (ensure the path is correct)
+//   // const certPath = '/usr/local/share/ca-certificates/ca.crt';
+//   // let cert;
+//   // try {
+//   //   cert = fs.readFileSync(certPath); // Read the certificate file
+//   // } catch (err) {
+//   //   logEvent({
+//   //     event: 'READING CERTIFICATE FILE',
+//   //     status: 'FAILED ❌',
+//   //     cause: `AN ERROR OCCURRED DURING READING CERTIFICATE FILE: ${err}`,
+//   //     ip: req.ip
+//   //   });
+//   //   return res.status(200).json({ status: "failed", message: 'Error reading the certificate.' });
+
+//   // }
+
+//   /* Create a custom HTTPS agent with the CA certificate */
+//   const httpsAgent = new https.Agent({
+//     //ca: cert,               /* Provide the certificate to verify the server's certificate */
+//     rejectUnauthorized: false /* Ensure SSL verification is enabled */
+//   });
+
+//   try {
+//     /* Make the POST request to exchange the authorization code for an access token */
+//     const response = await axios.post(url, data, { headers, httpsAgent });
+
+//     /* Check if the response contains the access token */
+//     const authToken = response.data.access_token;
+//     if (!authToken) {
+//       return res.status(401).json({
+//         status: "failed",
+//         message: 'Authentication token not received.'
+//       });
+      
+//     }
+
+//     /* Decode the JWT access token to extract information */
+//     const decodedPayload = jwt.decode(authToken, { complete: true });
+
+//     /* Extract the 'did' and 'sub' from the decoded payload */
+//     const did = decodedPayload.payload?.verifiableCredential?.id; 
+//     const sub = decodedPayload.payload?.sub;
+
+//     if (!did || !sub) {
+//       return res.status(401).json({
+//         status: "failed",
+//         message: 'Invalid authentication token payload.'
+//       });
+      
+//     }
+
+//     logEvent({
+//       event: 'AUTHENTICATION CALLBACK',
+//       status: 'SUCCESS ✅',
+//       did: did,
+//       ip: req.ip
+//     });
+
+//     /* Respond to the AUTHENTICATOR via the web socket */
+//     const result = await processSessionRequest(authToken, state, did, sub, req);
+
+//     /* Response with success only if the response is 200(auth-success) */
+//     const ApiResponse = {
+//       status: result.status === 200 ? "success" : "failed",
+//       message: result.message
+//     };
+
+//     //console.log(decodedPayload);
+    
+//     if (result.status === 200) {
+//       ApiResponse.decodedPayload = decodedPayload;
+//     }
+    
+//     res.status(result.status).json(ApiResponse);
+    
+//   } catch (err) {
+//     /* Catch any errors during the request */
+//     logEvent({
+//       event: 'AUTHENTICATION CALLBACK',
+//       status: 'FAILED ❌',
+//       cause: `AN ERROR OCCURRED DURING AUTHENTICATION CALLBACK: ${err.stack}`,
+//       ip: req.ip
+//     });
+    
+//     if (err.response) {
+//     }
+//     return res.status(500).json({
+//       status: "failed",
+//       message: 'Internal server error. Authentication failed.'
+//     });
+//   }
+// };
 
 /** [15]
  * Fetches the list of devices who are currently online and active.
