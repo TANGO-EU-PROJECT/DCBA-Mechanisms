@@ -383,7 +383,7 @@ async function processSessionRequest(authToken, sessionId, did, sub, req) {
           /* Device associated with did not found to. So, create it */
           await createDeviceDocument(did, sub, device_id, log_file_uri, role);
           /* Notify the device via WebSocket */
-          notifyDevice(authToken, qr_scanner_state_request, device_id, did, sub, log_file_uri, "session-request-valid");
+          notifyDevice(authToken, sessionId, device_id, did, sub, log_file_uri, "session-request-valid");
           logEvent({
             event: 'DEVICE STATUS UPDATED',
             status: 'SUCCESS ✅',
@@ -397,7 +397,7 @@ async function processSessionRequest(authToken, sessionId, did, sub, req) {
         } else {
           /* Someone tried to log in from his/her device, using an existing DID */
           /* Notify the device via WebSocket */
-          notifyDevice(authToken, qr_scanner_state_request, device_id, did, sub, log_file_uri, "potential-credential-sharing");
+          notifyDevice(authToken, sessionId, device_id, did, sub, log_file_uri, "potential-credential-sharing");
           logEvent({
             event: 'UNAUTHORIZED ATTEMPT FROM USING CREDENTIALS FROM ANOTHER DEVICE',
             status: 'FAILED ❌',
@@ -425,7 +425,7 @@ async function processSessionRequest(authToken, sessionId, did, sub, req) {
               ip: req.ip
             });
             /* Notify the device via WebSocket */
-            notifyDevice(authToken, qr_scanner_state_request, device_id, did, sub, log_file_uri, "session-request-valid");
+            notifyDevice(authToken, sessionId, device_id, did, sub, log_file_uri, "session-request-valid");
             logEvent({
               event: 'DEVICE STATUS UPDATED',
               status: 'SUCCESS ✅',
@@ -445,14 +445,14 @@ async function processSessionRequest(authToken, sessionId, did, sub, req) {
               device_id: device_id,
               ip: req.ip
             });
-            notifyDevice(authToken, qr_scanner_state_request, device_id, did, sub, log_file_uri, "device-already-online");
+            notifyDevice(authToken, sessionId, device_id, did, sub, log_file_uri, "device-already-online");
             /* Authentication Failed */
             return { status: 409, message: "Device already online." };
           }
           
         } else {
           /* Someone tried to log in to their device using another employee's credentials */
-          notifyDevice(authToken, qr_scanner_state_request, device_id, did, sub, log_file_uri, "potential-credential-sharing");
+          notifyDevice(authToken, sessionId, device_id, did, sub, log_file_uri, "potential-credential-sharing");
           logEvent({
             event: 'UNAUTHORIZED ATTEMPT USING CREDENTIALS FROM ANOTHER DEVICE',
             status: 'FAILED ❌',
@@ -466,7 +466,7 @@ async function processSessionRequest(authToken, sessionId, did, sub, req) {
       }
     } else {
       /* Notify the device that the session request is expired, in order to re-generate a new unique QR */
-      notifyDevice(authToken, qr_scanner_state_request, "unknown", did, sub, "unknown", "session-request-expired");
+      notifyDevice(authToken, sessionId, "unknown", did, sub, "unknown", "session-request-expired");
       logEvent({
         event: 'SEARCH FOR SESSION REQUEST FOR DEVICE',
         status: 'FAILED ❌',
@@ -572,7 +572,7 @@ function initializeWebSocketServer(wss) {
  */
 function notifyDevice(authToken, qr_scanner_state_request, device_id, did, sub, log_file_uri, message) {
   /* Retrieve the WebSocket connection associated with the device_id */
-  const ws_connection_associated_with_qr_scanner_state_request = WSS_CONNECTIONS_FROM_QR_SCANNER_REQUESTS.get(qr_scanner_state_request);
+  const ws_connection_associated_with_qr_scanner_state_request = WSS_CONNECTIONS_FROM_QR_SCANNER_REQUESTS.get(device_id);
 
   /* Check if the device's WebSocket connection exists and is open */
   if (ws_connection_associated_with_qr_scanner_state_request && ws_connection_associated_with_qr_scanner_state_request.readyState === WebSocket.OPEN) {
