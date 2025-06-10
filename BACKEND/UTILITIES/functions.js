@@ -578,7 +578,7 @@ function initializeWebSocketServer(wss) {
  */
 function notifyDevice(authToken, state, device_id, did, sub, log_file_uri, message) {
   /* Retrieve the WebSocket connection associated with the device_id */
-  const device_id_ws_connection = WSS_CONNECTIONS_FROM_QR_SCANNER_REQUESTS.get(device_id);
+  const device_id_ws_connection = WSS_CONNECTIONS_FROM_DEVICE_ID.get(device_id);
 
   /* Check if the device's WebSocket connection exists and is open */
   if (device_id_ws_connection && device_id_ws_connection.readyState === WebSocket.OPEN) {
