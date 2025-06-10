@@ -212,7 +212,7 @@ pipeline {
                     //sh 'kubectl apply -f dcba-mongo-pvc.yml' // Uncomment this ONLY if i deleted the old PVC implementation and start fresh with new storage.
 
                     // Apply new influx PVC first
-                    sh 'kubectl apply -f dcba-influx-pvc.yml' // Uncomment this ONLY if i deleted the old PVC implementation and start fresh with new storage.
+                    //sh 'kubectl apply -f dcba-influx-pvc.yml' // Uncomment this ONLY if i deleted the old PVC implementation and start fresh with new storage.
 
                     // Apply deployment and ingress
                     sh 'kubectl apply -f dcba-deployment.yml'

@@ -27,7 +27,7 @@ const DEVICE = require(path.resolve(deviceModelPath));
 const SESSION_REQUEST = require(path.resolve(sessionRequestModelPath));
 
 /* Returns the wss connections associated with their qr_state_requests */
-const WSS_CONNECTIONS_FROM_QR_SCANNER_REQUESTS = new Map(); 
+const WSS_CONNECTIONS_FROM_DEVICE_ID = new Map(); 
 const deviceAlertModelPath = process.env.MONGO_DB_DEVICE_ALERT_SCHEME_PATH;
 const ALERT = require(path.resolve(deviceAlertModelPath));
 
