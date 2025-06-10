@@ -37,7 +37,8 @@ const {
   findDeviceByDeviceID,
   findDeviceByDID,
   handleDeviceLocationUpdate,
-  delay
+  delay,
+  notifyDevice
 } = require('../../UTILITIES/functions');       
 
 /* Import Min Heap */
@@ -965,8 +966,19 @@ exports.handleAuthCallback = async (req, res) => {
         /* Handle decoding errors */
         console.error('Failed to decode vp_token:', decodeError);
       }
-    } else {
-      console.log("Auth-callback response: ", response)
+    } else if (response.status === 400 && response.statusText === 'Bad Request') {
+      /* Invalid Verifiable Credentials */
+      /* Search for the session request in MongoDB based on the state */
+      const sessionRequest = await SESSION_REQUEST.findOne({ state: state });
+      if (sessionRequest) {
+        const device_id = sessionRequest.device_id;
+        const log_file_uri = sessionRequest.log_file_uri;
+        const role = sessionRequest.role;
+
+        /* Remove the processed session request from the database */
+        await SESSION_REQUEST.deleteOne({ _id: sessionRequest._id });
+        notifyDevice("", state, device_id, "", "", log_file_uri, "invalid-verifiable-credentials");
+      }
     }
 
     /* Return the verifier service's response to the client */
