@@ -393,7 +393,8 @@ async function processSessionRequest(authToken, state, did, sub, req) {
             ip: req.ip
           });
           /* Authentication Success */
-          return { status: 200, message: "Authentication success. Device status updated to online." };
+          /* return { status: 200, message: "Authentication success. Device status updated to online." }; */
+          return;
         } else {
           /* Someone tried to log in from his/her device, using an existing DID */
           /* Notify the device via WebSocket */
@@ -406,7 +407,8 @@ async function processSessionRequest(authToken, state, did, sub, req) {
             ip: req.ip
           });
           /* Authentication Failed */
-          return { status: 401, message: "Credentials don't match this device." };
+          /* return { status: 401, message: "Credentials don't match this device." }; */
+          return;
         }
       } else {
         /* This device already exists. Need to ensure that its did matches the did request */
@@ -435,7 +437,8 @@ async function processSessionRequest(authToken, state, did, sub, req) {
               ip: req.ip
             });
             /* Authentication Success */
-            return { status: 200, message: "Authentication success. Device status updated to online." };
+            /* return { status: 200, message: "Authentication success. Device status updated to online." }; */
+            return;
           } else {
             /* The specific device is already online */
             logEvent({
@@ -447,7 +450,8 @@ async function processSessionRequest(authToken, state, did, sub, req) {
             });
             notifyDevice(authToken, state, device_id, did, sub, log_file_uri, "device-already-online");
             /* Authentication Failed */
-            return { status: 409, message: "Device already online." };
+            /* return { status: 409, message: "Device already online." }; */
+            return;
           }
           
         } else {
@@ -461,7 +465,8 @@ async function processSessionRequest(authToken, state, did, sub, req) {
             ip: req.ip
           });
           /* Authentication Failed */
-          return { status: 401, message: "Credentials don't match this device." };
+          /* return { status: 401, message: "Credentials don't match this device." }; */
+          return;
         }
       }
     } else {
@@ -475,7 +480,8 @@ async function processSessionRequest(authToken, state, did, sub, req) {
         ip: req.ip
       });
       /* Authentication Failed */
-      return { status: 410, message: "Session request expired." };
+      /* return { status: 410, message: "Session request expired." }; */
+      return;
     }
   } catch (error) {
     /* Handle any errors that occur during the session request processing */
@@ -488,7 +494,8 @@ async function processSessionRequest(authToken, state, did, sub, req) {
 
     });    
     /* Authentication Failed */
-    return { status: 500, message: "Internal server error. Authentication failed." };
+    /* return { status: 500, message: "Internal server error. Authentication failed." }; */
+    return;
   }
 }
 
