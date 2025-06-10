@@ -935,8 +935,6 @@ exports.handleAuthCallback = async (req, res) => {
   let vp_token;
   let sessionRequest;
 
-  notifyDevice("", "", "46299a77c27b0d4c", "", "", "", "potential-credential-sharing");
-  return;
   try {
     /* Extract necessary values from the incoming POST request body */
     state = req.body.state;
@@ -979,7 +977,7 @@ exports.handleAuthCallback = async (req, res) => {
           const role = sessionRequest.role;
           /* Remove the processed session request from the database */
           await SESSION_REQUEST.deleteOne({ _id: sessionRequest._id });
-          notifyDevice("", state, device_id, "", "", log_file_uri, "invalid-verifiable-credentials");
+          notifyDevice("", state, device_id, "", "", log_file_uri, "invalid-verifiable-credentials");        
         }
       }
     } else if (response.status === 400 && response.statusText === 'Bad Request') {
@@ -996,7 +994,6 @@ exports.handleAuthCallback = async (req, res) => {
         notifyDevice("", state, device_id, "", "", log_file_uri, "invalid-verifiable-credentials");
       }
     }
-
     /* Return the verifier service's response to the client */
     return res.status(response.status).json(response.data);
 
@@ -1014,16 +1011,15 @@ exports.handleAuthCallback = async (req, res) => {
       notifyDevice("", state, device_id, "", "", log_file_uri, "invalid-verifiable-credentials");
     }
 
-    /* If the external verifier provided an error response, forward it */
+    /* If verifier responded with an error (e.g., 400/500), return its data */
     if (error.response) {
       return res.status(error.response.status).json(error.response.data);
     }
 
-    /* Fallback error handling */
+    /* Otherwise, fallback error handling */
     return res.status(500).json({
       status: 'failed',
-      message: 'Internal server error.',
-      error: error.message
+      message: 'Invalid Verifiable Credentials.',
     });
   }
 };
