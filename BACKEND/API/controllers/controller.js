@@ -988,7 +988,23 @@ exports.handleAuthCallback = async (req, res) => {
 
   } catch (error) {
     /* Catch any unexpected errors and return appropriate HTTP status */
-    //console.error('Error in auth callback:', error);
+    if (response.status === 400 && response.statusText === 'Bad Request') {
+      console.log("THERE")
+      /* Invalid Verifiable Credentials */
+      /* Search for the session request in MongoDB based on the state */
+      const sessionRequest = await SESSION_REQUEST.findOne({ state: state });
+      if (sessionRequest) {
+        console.log("THERE2")
+
+        const device_id = sessionRequest.device_id;
+        const log_file_uri = sessionRequest.log_file_uri;
+        const role = sessionRequest.role;
+
+        /* Remove the processed session request from the database */
+        await SESSION_REQUEST.deleteOne({ _id: sessionRequest._id });
+        notifyDevice("", state, device_id, "", "", log_file_uri, "invalid-verifiable-credentials");
+      }
+    }
 
     /* If the external verifier provided an error response, forward it */
     if (error.response) {
