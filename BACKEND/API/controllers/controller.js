@@ -963,7 +963,7 @@ exports.handleAuthCallback = async (req, res) => {
         const result = await processSessionRequest(vp_token, state, did, sub, req);
       } catch (decodeError) {
         /* Handle decoding errors */
-        console.error('Failed to decode vp_token:', decodeError);
+        //console.error('Failed to decode vp_token:', decodeError);
       }
     } else if (response.status === 400 && response.statusText === 'Bad Request') {
       console.log("THERE")
@@ -988,7 +988,7 @@ exports.handleAuthCallback = async (req, res) => {
 
   } catch (error) {
     /* Catch any unexpected errors and return appropriate HTTP status */
-    console.error('Error in auth callback:', error);
+    //console.error('Error in auth callback:', error);
 
     /* If the external verifier provided an error response, forward it */
     if (error.response) {
