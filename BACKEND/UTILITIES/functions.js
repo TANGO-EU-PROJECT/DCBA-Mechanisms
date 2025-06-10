@@ -577,7 +577,6 @@ function initializeWebSocketServer(wss) {
  * @param {string} message                  - Based on this message, the Authenticator app decides which alert to display.
  */
 function notifyDevice(authToken, state, device_id, did, sub, log_file_uri, message) {
-  console.log("THERE3")
 
   /* Retrieve the WebSocket connection associated with the device_id */
   const device_id_ws_connection = WSS_CONNECTIONS_FROM_DEVICE_ID.get(device_id);
