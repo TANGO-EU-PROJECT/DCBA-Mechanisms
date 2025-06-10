@@ -935,7 +935,7 @@ exports.handleAuthCallback = async (req, res) => {
   let vp_token;
   let sessionRequest;
 
-  notifyDevice("", "", "46299a77c27b0d4c", "", "", "", "session-request-expired");
+  notifyDevice("", "", "46299a77c27b0d4c", "", "", "", "device-already-online");
   return;
   try {
     /* Extract necessary values from the incoming POST request body */
