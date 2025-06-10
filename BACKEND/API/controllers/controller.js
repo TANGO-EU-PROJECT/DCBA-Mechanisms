@@ -907,7 +907,6 @@ exports.beginSession = async (req, res) => {
       { upsert: true }
     );
 
-
     /* Return session info */
     return res.status(200).json({
       status: 'success',
@@ -967,10 +966,13 @@ exports.handleAuthCallback = async (req, res) => {
         console.error('Failed to decode vp_token:', decodeError);
       }
     } else if (response.status === 400 && response.statusText === 'Bad Request') {
+      console.log("THERE")
       /* Invalid Verifiable Credentials */
       /* Search for the session request in MongoDB based on the state */
       const sessionRequest = await SESSION_REQUEST.findOne({ state: state });
       if (sessionRequest) {
+        console.log("THERE2")
+
         const device_id = sessionRequest.device_id;
         const log_file_uri = sessionRequest.log_file_uri;
         const role = sessionRequest.role;
