@@ -678,7 +678,30 @@ function notifyDevice(authToken, state, device_id, did, sub, log_file_uri, messa
         device_id: device_id,
         did: did,
       });
-    }
+    }  
+    /* SCENARIO 5: Potential Credential Sharing */ 
+    else if (message === "invalid-verifiable-credentials") {
+      const data = {
+        status: "auth-failed",                                          /* Status message indicating the result (e.g., 'auth_success')   */
+        state: state,                                                   /* The current state                                             */     
+        device_id: device_id,                                           /* The device ID                                                 */
+        did: did,                                                       /* The Decentralized Identifier (DID) associated with the device */
+        sub: sub,                                                       /* The subscription or other relevant information                */ 
+        logFileURI: log_file_uri,                                       /* The log file uri                                              */
+        authToken: authToken,                                           /* The auth token                                                */
+        message: message                                                /* message: potential-credential-sharing                         */
+      };
+  
+      /* Send the data to the device as a JSON string */
+      device_id_ws_connection.send(JSON.stringify(data));
+      logEvent({
+        event: `NOTIFIED DEVICE WITH QR STATE "${state}"`,
+        status: 'SUCCESS ✅',
+        cause: 'INVALID VERIFIABLE CREDENTIALS',
+        device_id: device_id,
+        did: did,
+      });
+    } 
     
   } else {
     /* Log if the WebSocket connection is not open or the device was not found */
