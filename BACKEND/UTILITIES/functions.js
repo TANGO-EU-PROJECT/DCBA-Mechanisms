@@ -503,38 +503,43 @@ async function processSessionRequest(authToken, state, did, sub, req) {
  */
 function initializeWebSocketServer(wss) {
   try {
-    /* When a new WebSocket connection is established */
     wss.on('connection', (ws, req) => {
-      /* Split to get the query part after "?" */
-      const urlParams = new URLSearchParams(req.url.split('?')[1]);  
-      const qr_scanner_state_request = urlParams.get('qr_scanner_state_request');
-      /* Extract device_id */
-      const device_id = urlParams.get('device_id'); 
 
-      /* Handle device connections */
-      if (qr_scanner_state_request && device_id) {
-        WSS_CONNECTIONS_FROM_QR_SCANNER_REQUESTS.set(device_id, ws);
+      /* Extract the device_id from the parameters */
+      const urlParams = new URLSearchParams(req.url.split('?')[1]);
+      const device_id = urlParams.get('device_id');
+
+      if (device_id) {
+        /* Store the connection using only device_id */
+        WSS_CONNECTIONS_FROM_DEVICE_ID.set(device_id, ws);
+
         logEvent({
-          event: `DEVICE WITH QR STATE "${device_id}" CONNECTED VIA WEBSOCKET`,
+          event: `DEVICE WITH "${device_id}" CONNECTED VIA WEBSOCKET`,
           status: 'SUCCESS ✅',
           cause: 'INITIATING SESSION',
           device_id: device_id
         });
+      } else {
+        logEvent({
+          event: 'WEBSOCKET CONNECTION ATTEMPT WITHOUT DEVICE ID',
+          status: 'FAILED ❌',
+          cause: 'MISSING device_id IN URL QUERY',
+        });
+        ws.close(1008, 'Missing device_id');
+        return;
       }
 
-      /* Handle WebSocket messages from devices */
       ws.on('message', (message) => {
-        console.log(`Received message:`, message);
+        console.log(`Received message from device_id=${device_id}:`, message);
       });
 
-      /* Handle WebSocket disconnection for devices */
       ws.on('close', () => {
-        if (qr_scanner_state_request && device_id) {
-          WSS_CONNECTIONS_FROM_QR_SCANNER_REQUESTS.delete(device_id);
+        if (device_id) {
+          WSS_CONNECTIONS_FROM_DEVICE_ID.delete(device_id);
           logEvent({
-            event: `DEVICE WITH QR STATE "${qr_scanner_state_request}" DISCONNECTED FROM WEBSOCKET`,
+            event: `DEVICE WITH "${device_id}" DISCONNECTED FROM WEBSOCKET`,
             status: 'SUCCESS ✅',
-            cause: 'SESSION INITIATED',
+            cause: 'SESSION TERMINATED',
             device_id: device_id
           });
         }
@@ -542,18 +547,19 @@ function initializeWebSocketServer(wss) {
     });
 
     logEvent({
-      event: `WEBSOCKET SERVER INITIALIZED SUCCESSFULLY AT ${moment().tz("Europe/Athens").format('YYYY-MM-DD HH:mm:ss')}`,
+      event: `WEBSOCKET SERVER INITIALIZED SUCCESSFULLY AT ${moment().utc().format('YYYY-MM-DD HH:mm:ss')} UTC`,
       status: 'SUCCESS ✅',
     });
 
   } catch (error) {
-    /* If an error occurs during initialization, log the error message */
     logEvent({
-      event: `WEBSOCKET SERVER FAILED TO INITIALIZE AT ${moment().tz("Europe/Athens").format('YYYY-MM-DD HH:mm:ss')}`,
+      event: `WEBSOCKET SERVER FAILED TO INITIALIZE`,
       status: 'FAILED ❌',
+      error: error.message,
     });
   }
 }
+
 
 
 
@@ -563,25 +569,25 @@ function initializeWebSocketServer(wss) {
  * and if so, sends the message with the relevant data.
  * 
  * @param {string} authToken                - The authorization token prompt for validation.
- * @param {string} qr_scanner_state_request - The current state of the session (e.g., 'auth_success').
+ * @param {string} state                    - The current state (unique ID) of the session (e.g., 'auth_success').
  * @param {string} device_id                - The device identifier.
  * @param {string} did                      - The Decentralized Identifier (DID) associated with the device.
  * @param {string} sub                      - Subscription or other relevant information.
  * @param {string} log_file_uri             - The device local filepath in which the offline logs will be stored temporarily.
  * @param {string} message                  - Based on this message, the Authenticator app decides which alert to display.
  */
-function notifyDevice(authToken, qr_scanner_state_request, device_id, did, sub, log_file_uri, message) {
+function notifyDevice(authToken, state, device_id, did, sub, log_file_uri, message) {
   /* Retrieve the WebSocket connection associated with the device_id */
-  const ws_connection_associated_with_qr_scanner_state_request = WSS_CONNECTIONS_FROM_QR_SCANNER_REQUESTS.get(device_id);
+  const device_id_ws_connection = WSS_CONNECTIONS_FROM_QR_SCANNER_REQUESTS.get(device_id);
 
   /* Check if the device's WebSocket connection exists and is open */
-  if (ws_connection_associated_with_qr_scanner_state_request && ws_connection_associated_with_qr_scanner_state_request.readyState === WebSocket.OPEN) {
+  if (device_id_ws_connection && device_id_ws_connection.readyState === WebSocket.OPEN) {
     /* SCENARIO 1: Session request has been expired */
     /* Prepare the data to be sent to the device */
     if (message === "session-request-expired") {
       const data = {
         status: "auth-failed",                                          /* Status message indicating the result (e.g., 'auth_success')   */
-        qr_scanner_state_request: qr_scanner_state_request,             /* The current state (e.g., 'authenticated', 'pending')          */
+        state: state,                                                   /* The current state                                             */
         device_id: device_id,                                           /* The device ID                                                 */
         did: did,                                                       /* The Decentralized Identifier (DID) associated with the device */
         sub: sub,                                                       /* The subscription or other relevant information                */
@@ -591,10 +597,10 @@ function notifyDevice(authToken, qr_scanner_state_request, device_id, did, sub, 
       };
   
       /* Send the data to the device as a JSON string */
-      ws_connection_associated_with_qr_scanner_state_request.send(JSON.stringify(data));
+      device_id_ws_connection.send(JSON.stringify(data));
   
       logEvent({
-        event: `NOTIFIED DEVICE WITH QR STATE "${qr_scanner_state_request}"`,
+        event: `NOTIFIED DEVICE WITH QR STATE "${state}"`,
         status: 'SUCCESS ✅',
         cause: 'SESSION REQUEST EXPIRED',
         device_id: device_id,
@@ -605,7 +611,7 @@ function notifyDevice(authToken, qr_scanner_state_request, device_id, did, sub, 
     else if (message === "session-request-valid") {
       const data = {
         status: "auth-success",                                         /* Status message indicating the result (e.g., 'auth_success')   */
-        qr_scanner_state_request: qr_scanner_state_request,             /* The current state (e.g., 'authenticated', 'pending')          */
+        state: state,                                                   /* The current state                                             */
         device_id: device_id,                                           /* The device ID                                                 */
         did: did,                                                       /* The Decentralized Identifier (DID) associated with the device */
         sub: sub,                                                       /* The subscription or other relevant information                */
@@ -615,9 +621,9 @@ function notifyDevice(authToken, qr_scanner_state_request, device_id, did, sub, 
       };
   
       /* Send the data to the device as a JSON string */
-      ws_connection_associated_with_qr_scanner_state_request.send(JSON.stringify(data));
+      device_id_ws_connection.send(JSON.stringify(data));
       logEvent({
-        event: `NOTIFIED DEVICE WITH QR STATE "${qr_scanner_state_request}"`,
+        event: `NOTIFIED DEVICE WITH QR STATE "${state}"`,
         status: 'SUCCESS ✅',
         cause: 'DEVICE AUTHENTICATED',
         device_id: device_id,
@@ -630,7 +636,7 @@ function notifyDevice(authToken, qr_scanner_state_request, device_id, did, sub, 
     else if (message === "device-already-online") {
       const data = {
         status: "auth-failed",                                          /* Status message indicating the result (e.g., 'auth_success')   */
-        qr_scanner_state_request: qr_scanner_state_request,             /* The current state (e.g., 'authenticated', 'pending')          */
+        state: state,                                                   /* The current state                                             */
         device_id: device_id,                                           /* The device ID                                                 */
         did: did,                                                       /* The Decentralized Identifier (DID) associated with the device */
         sub: sub,                                                       /* The subscription or other relevant information                */
@@ -640,9 +646,9 @@ function notifyDevice(authToken, qr_scanner_state_request, device_id, did, sub, 
       };
   
       /* Send the data to the device as a JSON string */
-      ws_connection_associated_with_qr_scanner_state_request.send(JSON.stringify(data));
+      device_id_ws_connection.send(JSON.stringify(data));
       logEvent({
-        event: `NOTIFIED DEVICE WITH QR STATE "${qr_scanner_state_request}"`,
+        event: `NOTIFIED DEVICE WITH QR STATE "${state}"`,
         status: 'SUCCESS ✅',
         cause: 'THIS DID IS ALREADY ONLINE',
         device_id: device_id,
@@ -654,7 +660,7 @@ function notifyDevice(authToken, qr_scanner_state_request, device_id, did, sub, 
     else if (message === "potential-credential-sharing") {
       const data = {
         status: "auth-failed",                                          /* Status message indicating the result (e.g., 'auth_success')   */
-        qr_scanner_state_request: qr_scanner_state_request,             /* The current state (e.g., 'authenticated', 'pending')          */     
+        state: state,                                                   /* The current state                                             */     
         device_id: device_id,                                           /* The device ID                                                 */
         did: did,                                                       /* The Decentralized Identifier (DID) associated with the device */
         sub: sub,                                                       /* The subscription or other relevant information                */ 
@@ -664,9 +670,9 @@ function notifyDevice(authToken, qr_scanner_state_request, device_id, did, sub, 
       };
   
       /* Send the data to the device as a JSON string */
-      ws_connection_associated_with_qr_scanner_state_request.send(JSON.stringify(data));
+      device_id_ws_connection.send(JSON.stringify(data));
       logEvent({
-        event: `NOTIFIED DEVICE WITH QR STATE "${qr_scanner_state_request}"`,
+        event: `NOTIFIED DEVICE WITH QR STATE "${state}"`,
         status: 'SUCCESS ✅',
         cause: 'THIS DID IS NOT ASSOCIATED WITH THIS DEVICE',
         device_id: device_id,
@@ -677,7 +683,7 @@ function notifyDevice(authToken, qr_scanner_state_request, device_id, did, sub, 
   } else {
     /* Log if the WebSocket connection is not open or the device was not found */
     logEvent({
-      event: `UNABLE TO NOTIFY DEVICE WITH QR STATE "${qr_scanner_state_request}"`,
+      event: `UNABLE TO NOTIFY DEVICE WITH QR STATE "${state}"`,
       status: 'FAILED ❌',
       cause: 'DICSONNECTED FROM WEBSOCKET OR THIS QR STATE NOT FOUND',
       did: did,

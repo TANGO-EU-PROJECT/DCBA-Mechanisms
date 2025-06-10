@@ -837,199 +837,61 @@ exports.getServerStatus = (req, res) => {
 };
 
 
+
+
 /** [13] 
- * Handles the initiation of a device session by generating a QR scanner state,  
- * creating a session request, and retrieving an authentication QR code.  
- * The QR code is extracted from an external authentication service (tango.io).  
+ * Handles the initiation of a device session by displayng the a QR Code.  
+ * Creates a session request, and retrieving an authentication QR code.  
+ * The QR code is extracted from an external authentication service (ips-verifier.tango.nadiaplatform.com).  
  * * @route   POST /devices/begin-session
  */
-// exports.beginSession = async (req, res) => {
-//   try {
-//     /* Extract the device_id, the qr_scanner_state_request, the log_file_uri and the role of the device's employee */
-//     const { device_id, qr_scanner_state_request, log_file_uri, role } = req.body;
-//     let savedSessionRequest;
-
-//     /* Device ID not provided */
-//     if (!device_id) {
-//       return res.status(400).json({ status: "failed", message: 'Device ID is missing, session request failed.' });
-//     }
-//     /* Qr Scanner state request not provided */
-//     if (!qr_scanner_state_request) {
-//       return res.status(400).json({ status: "failed", message: 'QR scanner state request is missing, session request failed.' });
-//     }
-
-//     try {
-//       // // Check if a session request already exists for this device_id
-//       // const existingSessionRequest = await SESSION_REQUEST.findOne({
-//       //   device_id: device_id,
-//       //   qr_scanner_state_request: qr_scanner_state_request
-//       // });
-      
-//       // if (existingSessionRequest) {
-//       //   // If found, delete the existing session request
-//       //   await SESSION_REQUEST.deleteOne({ device_id });
-//       //   logEvent({
-//       //     event: 'DELETED EXISTED SESSION REQUEST',
-//       //     status: 'SUCCESS ✅',
-//       //     device_id: device_id,
-//       //     ip: req.ip
-//       //   });
-//       // }
-
-//       // // Create a new SESSION_REQUEST instance
-//       // const sessionRequest = new SESSION_REQUEST({
-//       //   device_id,
-//       //   qr_scanner_state_request,
-//       //   log_file_uri
-//       // });
-
-//       // // Save to the database
-//       // savedSessionRequest = await sessionRequest.save();
-
-//       /* Append or replace (if already exists a session request associated with this device_id) */
-//       savedSessionRequest = await SESSION_REQUEST.replaceOne(
-//         { device_id: device_id },
-//         {
-//           device_id,
-//           qr_scanner_state_request,
-//           log_file_uri,
-//           role,
-//           timestamp: moment().tz("Europe/Athens").toDate()
-//         },
-//         { upsert: true }
-//       );
-      
-//       logEvent({
-//         event: 'CREATED NEW SESSION REQUEST',
-//         status: 'SUCCESS ✅',
-//         device_id: device_id,
-//         ip: req.ip
-//       });
-//     } catch (error) {
-//       logEvent({
-//         event: 'HANDLING SESSION REQUEST',
-//         status: 'FAILED ❌',
-//         cause: `AN ERROR OCCURRED DURING HANDLING SESSION REQUEST: ${error.stack}`,
-//         device_id: device_id,
-//         ip: req.ip
-//       });      
-//       return res.status(500).json({ status: "failed", message: 'Error handling session request.' });
-//     }
-
-//     /* Construct the Client Callback endpoint URL */
-//     //const clientCallbackUrl = `https://${process.env.HOSTNAME_DNS_INTRASOFT_DCBA_BACKEND_SERVICE}/development/dcba-backend/authenticator/auth-callback`;
-//     //const loginQRUrl = `https://ips-verifier.k8s-cluster.tango.rid-intrasoft.eu/api/v1/loginQR?state=${qr_scanner_state_request}&client_callback=${encodeURIComponent(clientCallbackUrl)}&client_id=`;
-
-//     /* Construct the login QR URL with the device_id and other required parameters */
-//     //const baseQrUrl = `https://${process.env.HOSTNAME_FRONT_UI_TANGO_LOGIN}/auth/login/qrcode`;
-//     const NadiaPlatformVerifierbaseQrUrl = `${process.env.HOSTNAME_TANGO_NADIAPLATFORM_LOGIN}`;
-
-//     let loginQRUrl;
-//     if (role === 'customer' || role === 'employee') {
-//       loginQRUrl = `${NadiaPlatformVerifierbaseQrUrl}?state=${qr_scanner_state_request}&client_callback=${encodeURIComponent(clientCallbackUrl)}&t=${role}`;
-//       console.log(loginQRUrl)
-//     } else {
-//       return res.status(400).json({ status: 'failed', message: 'Invalid role provided.' });
-//     }
-
-
-//     /* Launch Puppeteer and get rendered HTML, in order to get the QR */
-//     const browser = await puppeteer.launch({
-//       args: ['--no-sandbox', '--disable-setuid-sandbox'],
-//       headless: true,
-//     });
-//     const page = await browser.newPage();
-//     await page.goto(loginQRUrl, { waitUntil: 'networkidle2' });
-//     let svgElement = null;
-//     const startTime = Date.now();
-//     while (Date.now() - startTime < MAX_WAIT_TIME) {
-//       /* Dont exit the while until the QR (svg html element) found , otherwise exit after MAX_WAIT_TIME */
-//       const html = await page.content();
-//       const { JSDOM } = require('jsdom');
-//       const dom = new JSDOM(html);
-//       const document = dom.window.document;
-//       svgElement = document.querySelector("svg");
-//       if (svgElement) break;
-//       await delay(POLL_INTERVAL);
-//     }
-//     await browser.close();
-//     if (svgElement) {
-//       /* Entire svg component sent to the client */
-//       const DEVICE_AUTHENTICATION_QR_CODE = svgElement.outerHTML;
-
-//       res.status(200).json({
-//         status: "success",
-//         message: 'QR Code generated successfully.',
-//         deviceAuthQRCode: DEVICE_AUTHENTICATION_QR_CODE,
-//         sessionRequest: savedSessionRequest,
-//         role: role,
-//       });
-//     } else {
-//       /* Log error if QR is not found in the html page */
-//       logEvent({
-//         event: 'PROCESSING QR CODE BASE64',
-//         status: 'FAILED ❌',
-//         cause: `QR CODE NOT FOUND`,
-//         device_id: device_id,
-//         ip: req.ip
-//       });
-//       res.status(502).json({ status: "failed", message: 'QR code not found in the verifier service response.' });
-//     }
-
-//   } catch (err) {
-//     logEvent({
-//       event: 'EXTRACTING QR CODE BASE64',
-//       status: 'FAILED ❌',
-//       cause: `AN ERROR OCCURRED DURING EXTRACTING QR CODE BASE64: ${err.stack}`,
-//       device_id: req.body?.device_id || 'UNKNOWN',
-//       ip: req.ip
-//     });
-
-//     res.status(500).json({ status: "failed", message: 'Failed to extract QR code due to an internal server error.' });
-//   }
-// };
 exports.beginSession = async (req, res) => {
+
+  /* Extract the device_id, the log_file_uri and the selected role */
   try {
     const { device_id, log_file_uri, role } = req.body;
 
+    /* If the role is not 'employee' or 'customer', invalid role */
     if (!['employee', 'customer'].includes(role)) {
       return res.status(400).json({ status: 'failed', message: 'Invalid role provided.' });
     }
 
+    /* Select the clientID based on the selected role */
     const clientId =
       role === 'customer'
         ? 'smart-hospitality-customer-service'
         : 'smart-hospitality-employee-service';
 
+    /* Make the post request to the auth init endpoint of the verifier */
     const response = await axios.get(
-      `https://ui-backend.tango.nadiaplatform.com/auth_init?client_id=${clientId}`
+      `${process.env.HOSTNAME_VERIFIER_NADIA_PLATFORM_AUTH_INIT}${clientId}`
     );
 
+    /* If the response is not succesfull */
     if (response.data.status !== 'OK' || !response.data.sessionId || !response.data.response) {
-      return res.status(500).json({ status: 'failed', message: 'Failed to initialize session.', details: response.data });
+      return res.status(500).json({ status: 'failed', message: 'Failed to initialize session.' });
     }
 
-    console.log(response)
-    const responseString = response.data.response; // your full response string
+    /* Extract the response QR String */
+    const responseQrString = response.data.response;
 
-    // Remove the `openid://?` prefix to parse as query string
-    const queryString = responseString.replace('openid://?', '');
+    /* Remove the `openid://?` prefix to parse as query string */
+    const queryString = responseQrString.replace('openid://?', '');
 
-    // Use URLSearchParams to parse the query string
+    /* Use URLSearchParams to parse the query string */
     const params = new URLSearchParams(queryString);
 
-    // Get the value of the `state` parameter
+    /* Get the value of the `state` parameter */
     const state = params.get('state');
-    const sessionId=response.data.sessionId;
+
+    /* Take the originalUrl callback, and set the redirect_uri to the corresponding dcba-backend auth-callbacb endpoint, in order to receive the response */
     const originalUrl = response.data.response;
     const customRedirectUri = `https://${process.env.HOSTNAME_DNS_INTRASOFT_DCBA_BACKEND_SERVICE}/development/dcba-backend/authenticator/auth-callback`;
-
     const updatedUrl = originalUrl.replace(
       /redirect_uri=[^&]+/,
       `redirect_uri=${encodeURIComponent(customRedirectUri)}`
     );
 
-    // Save or update session request in MongoDB: -------------------- PREPEI NA TO KANW FIX NA GINETAI REPLACE
     /* Append or replace (if already exists a session request associated with this device_id) */
     let savedSessionRequest;
     savedSessionRequest = await SESSION_REQUEST.replaceOne(
@@ -1039,25 +901,23 @@ exports.beginSession = async (req, res) => {
         state,
         role,
         log_file_uri,
-        timestamp: moment().tz("Europe/Athens").toDate()
+        timestamp: new Date()  /* Saves the current time in UTC */
       },
       { upsert: true }
     );
 
-    console.log("SavedSessionRequst: ", device_id, state)
 
-
-    // Return session info
+    /* Return session info */
     return res.status(200).json({
       status: 'success',
       message: 'QR Code generated successfully.',
-      sessionId: state,
+      state: state,
       openid_url: updatedUrl,
     });
 
   } catch (error) {
     console.error('Error starting session:', error);
-    return res.status(500).json({ status: 'failed', message: 'Internal server error.', error: error.message });
+    return res.status(500).json({ status: 'failed', message: 'Internal server error while initiating the session.'});
   }
 };
 
@@ -1072,50 +932,56 @@ exports.beginSession = async (req, res) => {
  */
 exports.handleAuthCallback = async (req, res) => {
   try {
-    console.log('Received POST /auth-callback');
-    console.log('Request Body:', req.body);
-
+    /* Extract necessary values from the incoming POST request body */
     const state = req.body.state;
     const vp_token = req.body.vp_token;
 
+    /* Construct the form-urlencoded payload to send to the verification service */
     const params = new URLSearchParams({
       vp_token: vp_token,
       presentation_submission: req.body.presentation_submission,
       state: state,
     });
 
-    console.log("Received state from auth-callback: ", state)
-
-
+    /* Send the verification request to the external verifier, with state in query param */
     const response = await axios.post(
-      `https://ips-verifier.tango.nadiaplatform.com/api/v1/authentication_response?state=${encodeURIComponent(state)}`,
+      `${HOSTNAME_VERIFIER_NADIA_PLATFORM_AUTH_RESPONSE}${encodeURIComponent(state)}`,
       params.toString(),
       { headers: { 'Content-Type': 'application/x-www-form-urlencoded' } }
     );
 
-    console.log('Response from verification service:', response.status, response.statusText);
-
+    /* If authentication is successful, proceed to decode the vp_token */
     if (response.status === 200 && response.statusText === 'OK') {
       try {
         const decoded = jwt.decode(vp_token, { complete: true });
-        console.log('Decoded vp_token payload:', decoded);
+
+        /* Extract the issuer (DID) and subject from the decoded token */
         const did = decoded.payload.iss;
         const sub = decoded.payload.sub;
+
+        /* Continue processing the session with the extracted credentials */
         const result = await processSessionRequest(vp_token, state, did, sub, req);
       } catch (decodeError) {
+        /* Handle decoding errors */
         console.error('Failed to decode vp_token:', decodeError);
       }
+    } else {
+      console.log("Auth-callback response: ", response)
     }
 
+    /* Return the verifier service's response to the client */
     return res.status(response.status).json(response.data);
 
   } catch (error) {
+    /* Catch any unexpected errors and return appropriate HTTP status */
     console.error('Error in auth callback:', error);
 
+    /* If the external verifier provided an error response, forward it */
     if (error.response) {
       return res.status(error.response.status).json(error.response.data);
     }
 
+    /* Fallback error handling */
     return res.status(500).json({
       status: 'failed',
       message: 'Internal server error.',
@@ -1124,126 +990,7 @@ exports.handleAuthCallback = async (req, res) => {
   }
 };
 
-// exports.handleAuthCallback = async (req, res) => {
-//   const { code, state } = req.query;
-//   //console.log(code, state)
-//   console.log(req.query)
 
-//   /* Check if required parameters (code, state) are missing */
-//   if (!code || !state) {
-//     return res.status(400).json({
-//       status: "failed",
-//       message: 'Missing required parameters: code or state.'
-//     });
-    
-//   }
- 
-//   //const url = `https://ips-verifier.k8s-cluster.tango.rid-intrasoft.eu/token`
-//   const url = `https://ips-verifier.tango.nadiaplatform.com/api/v1/token`;
-//   const headers = {
-//     'accept': 'application/json',
-//     'Content-Type': 'application/x-www-form-urlencoded'
-//   };
-
-//   // Prepare the request data
-//   const data = qs.stringify({
-//     'grant_type': 'authorization_code',
-//     'code': code,
-//     redirect_uri: `https://${process.env.HOSTNAME_DNS_INTRASOFT_DCBA_BACKEND_SERVICE}/development/dcba-backend/authenticator/auth-callback`
-//   });
-
-//   // Load the custom CA certificate (ensure the path is correct)
-//   // const certPath = '/usr/local/share/ca-certificates/ca.crt';
-//   // let cert;
-//   // try {
-//   //   cert = fs.readFileSync(certPath); // Read the certificate file
-//   // } catch (err) {
-//   //   logEvent({
-//   //     event: 'READING CERTIFICATE FILE',
-//   //     status: 'FAILED ❌',
-//   //     cause: `AN ERROR OCCURRED DURING READING CERTIFICATE FILE: ${err}`,
-//   //     ip: req.ip
-//   //   });
-//   //   return res.status(200).json({ status: "failed", message: 'Error reading the certificate.' });
-
-//   // }
-
-//   /* Create a custom HTTPS agent with the CA certificate */
-//   const httpsAgent = new https.Agent({
-//     //ca: cert,               /* Provide the certificate to verify the server's certificate */
-//     rejectUnauthorized: false /* Ensure SSL verification is enabled */
-//   });
-
-//   try {
-//     /* Make the POST request to exchange the authorization code for an access token */
-//     const response = await axios.post(url, data, { headers, httpsAgent });
-
-//     /* Check if the response contains the access token */
-//     const authToken = response.data.access_token;
-//     if (!authToken) {
-//       return res.status(401).json({
-//         status: "failed",
-//         message: 'Authentication token not received.'
-//       });
-      
-//     }
-
-//     /* Decode the JWT access token to extract information */
-//     const decodedPayload = jwt.decode(authToken, { complete: true });
-
-//     /* Extract the 'did' and 'sub' from the decoded payload */
-//     const did = decodedPayload.payload?.verifiableCredential?.id; 
-//     const sub = decodedPayload.payload?.sub;
-
-//     if (!did || !sub) {
-//       return res.status(401).json({
-//         status: "failed",
-//         message: 'Invalid authentication token payload.'
-//       });
-      
-//     }
-
-//     logEvent({
-//       event: 'AUTHENTICATION CALLBACK',
-//       status: 'SUCCESS ✅',
-//       did: did,
-//       ip: req.ip
-//     });
-
-//     /* Respond to the AUTHENTICATOR via the web socket */
-//     const result = await processSessionRequest(authToken, state, did, sub, req);
-
-//     /* Response with success only if the response is 200(auth-success) */
-//     const ApiResponse = {
-//       status: result.status === 200 ? "success" : "failed",
-//       message: result.message
-//     };
-
-//     //console.log(decodedPayload);
-    
-//     if (result.status === 200) {
-//       ApiResponse.decodedPayload = decodedPayload;
-//     }
-    
-//     res.status(result.status).json(ApiResponse);
-    
-//   } catch (err) {
-//     /* Catch any errors during the request */
-//     logEvent({
-//       event: 'AUTHENTICATION CALLBACK',
-//       status: 'FAILED ❌',
-//       cause: `AN ERROR OCCURRED DURING AUTHENTICATION CALLBACK: ${err.stack}`,
-//       ip: req.ip
-//     });
-    
-//     if (err.response) {
-//     }
-//     return res.status(500).json({
-//       status: "failed",
-//       message: 'Internal server error. Authentication failed.'
-//     });
-//   }
-// };
 
 /** [15]
  * Fetches the list of devices who are currently online and active.
