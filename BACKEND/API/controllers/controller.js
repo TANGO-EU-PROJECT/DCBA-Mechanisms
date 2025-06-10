@@ -931,10 +931,12 @@ exports.beginSession = async (req, res) => {
  * @param res - Response object
  */
 exports.handleAuthCallback = async (req, res) => {
+  let state;
+  let vp_token;
   try {
     /* Extract necessary values from the incoming POST request body */
-    const state = req.body.state;
-    const vp_token = req.body.vp_token;
+    state = req.body.state;
+    vp_token = req.body.vp_token;
 
     /* Construct the form-urlencoded payload to send to the verification service */
     const params = new URLSearchParams({
