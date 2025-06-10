@@ -945,7 +945,7 @@ exports.handleAuthCallback = async (req, res) => {
 
     /* Send the verification request to the external verifier, with state in query param */
     const response = await axios.post(
-      `${HOSTNAME_VERIFIER_NADIA_PLATFORM_AUTH_RESPONSE}${encodeURIComponent(state)}`,
+      `${process.env.HOSTNAME_VERIFIER_NADIA_PLATFORM_AUTH_RESPONSE}${encodeURIComponent(state)}`,
       params.toString(),
       { headers: { 'Content-Type': 'application/x-www-form-urlencoded' } }
     );
