@@ -97,10 +97,10 @@ const deviceSchema = new mongoose.Schema({
   }
 }, schema_opts);
 
-// Prune location history to only keep entries from the last 2 days (in UTC)
+// Prune location history to only keep entries from the last 10 days (in UTC)
 deviceSchema.pre('save', function (next) {
-  const TWO_DAYS_AGO = moment().utc().subtract(2, 'days').toDate();
-  this.location_history = this.location_history.filter(entry => entry.first_seen_at > TWO_DAYS_AGO);
+  const TEN_DAYS_AGO = moment().utc().subtract(10, 'days').toDate();
+  this.location_history = this.location_history.filter(entry => entry.first_seen_at > TEN_DAYS_AGO);
   next();
 });
 
