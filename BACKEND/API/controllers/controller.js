@@ -1648,28 +1648,73 @@ exports.fetchDeviceRestrictedLocationHistory = async (req, res) => {
  */
 exports.fetchDevicesAlerts = async (req, res) => {
   try {
-    const timezone = req.query.timezone;
-    
-    /* Validate timezone */
-    if (!moment.tz.zone(timezone)) {
+    const { timezone, from, to } = req.query;
+
+    // Required: Validate timezone
+    if (!timezone || !moment.tz.zone(timezone)) {
       return res.status(400).json({
         status: "failed",
-        message: "Invalid timezone. Please provide a valid IANA timezone name (e.g. 'Europe/Athens', 'America/New_York')."
+        message: "Invalid or missing 'timezone'. Please provide a valid IANA timezone (e.g. 'Europe/Athens')."
       });
     }
 
-    /* Fetch alerts excluding unwanted fields */
+    // Optional: Validate and parse 'from' and 'to'
+    const localDateTimeRegex = /^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}(?:\.\d{1,3})?$/;
+    let fromTimestamp = null;
+    let toTimestamp = null;
+
+    if (from) {
+      if (!localDateTimeRegex.test(from)) {
+        return res.status(400).json({
+          status: "failed",
+          message: "Invalid 'from' format. Use 'YYYY-MM-DD HH:mm:ss'."
+        });
+      }
+      fromTimestamp = moment.tz(from, timezone).utc().valueOf();
+    }
+
+    if (to) {
+      if (!localDateTimeRegex.test(to)) {
+        return res.status(400).json({
+          status: "failed",
+          message: "Invalid 'to' format. Use 'YYYY-MM-DD HH:mm:ss'."
+        });
+      }
+      toTimestamp = moment.tz(to, timezone).utc().valueOf();
+    }
+
+    // Fetch all alerts from DB
     const alerts = await ALERT.find({})
       .select('-_id -createdAt -updatedAt -__v')
       .exec();
 
-    /* Convert timestamps inside each alert to requested timezone */
-    const alertsWithTimezone = alerts.map(alert => {
+    // Apply time filtering if from/to are provided
+    const filteredAlerts = alerts.filter(alert => {
+      const firstSeen = alert.alert_info?.first_seen_at;
+      if (!firstSeen) return false;
+
+      const firstSeenUTC = new Date(firstSeen).getTime();
+
+      if (fromTimestamp && firstSeenUTC < fromTimestamp) return false;
+      if (toTimestamp && firstSeenUTC > toTimestamp) return false;
+
+      return true;
+    });
+
+    // Convert timestamps to requested timezone
+    const alertsWithTimezone = filteredAlerts.map(alert => {
       const alertObj = alert.toObject();
 
       if (alertObj.alert_info) {
-        alertObj.alert_info.first_seen_at = moment.utc(alertObj.alert_info.first_seen_at).tz(timezone).format('YYYY-MM-DD HH:mm:ss');
-        alertObj.alert_info.last_seen_at = moment.utc(alertObj.alert_info.last_seen_at).tz(timezone).format('YYYY-MM-DD HH:mm:ss');
+        alertObj.alert_info.first_seen_at = moment
+          .utc(alertObj.alert_info.first_seen_at)
+          .tz(timezone)
+          .format('YYYY-MM-DD HH:mm:ss');
+
+        alertObj.alert_info.last_seen_at = moment
+          .utc(alertObj.alert_info.last_seen_at)
+          .tz(timezone)
+          .format('YYYY-MM-DD HH:mm:ss');
       }
 
       return alertObj;
@@ -1684,7 +1729,7 @@ exports.fetchDevicesAlerts = async (req, res) => {
   } catch (error) {
     console.error('Error fetching alerts:', error);
     return res.status(500).json({
-      status: "error",
+      status: "failed",
       message: "Error retrieving alert history."
     });
   }
