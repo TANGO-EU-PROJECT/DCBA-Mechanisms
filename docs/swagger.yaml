@@ -769,7 +769,7 @@ paths:
                 to:
                   type: string
                   description: "Local start date-time in the specified timezone for filtering the location history: 'YYYY-MM-DD HH:mm:ss'."
-                  example: "2025-06-30 12:15:00"
+                  example: "2025-07-30 12:15:00"
                 timezone: 
                   type: string
                   description: >
@@ -782,7 +782,7 @@ paths:
                 value:
                   didRequester: "did:jwk:eyJrdHkiOiJFQyIsImNydiI6IlAtMjU2Iiwia2lkIjoiMDVhZ0UxdXZPcW1yVDRLY2NiZ1ZKenAwRmJ5SF9weXE4WE5mU2VoOHRkSSIsIngiOiJDRTVqODFybWxqV1JoM1FEOFlJQVNGb093SzRrMjRqU0pWVWEtdl9rSTVZIiwieSI6IjBRU29vbktGVXA4Y0ZLd0dwWHhLSjlSeEZJTk9BOHpWd0ZCTTloQzRKczgifQ"
                   from: "2025-05-28 12:00:00"
-                  to: "2025-05-29 12:00:00"
+                  to: "2025-07-30 12:15:00"
                   timezone: "Europe/Athens"
       responses:
         '200':
@@ -958,7 +958,7 @@ paths:
                 to:
                   type: string
                   description: "Local start date-time in the specified timezone for filtering the location history: 'YYYY-MM-DD HH:mm:ss'."
-                  example: "2025-06-30 12:15:00"
+                  example: "2025-07-30 12:15:00"
                 timezone: 
                   type: string
                   description: >
@@ -971,7 +971,7 @@ paths:
                 value:
                   didRequester: "did:jwk:eyJrdHkiOiJFQyIsImNydiI6IlAtMjU2Iiwia2lkIjoiMDVhZ0UxdXZPcW1yVDRLY2NiZ1ZKenAwRmJ5SF9weXE4WE5mU2VoOHRkSSIsIngiOiJDRTVqODFybWxqV1JoM1FEOFlJQVNGb093SzRrMjRqU0pWVWEtdl9rSTVZIiwieSI6IjBRU29vbktGVXA4Y0ZLd0dwWHhLSjlSeEZJTk9BOHpWd0ZCTTloQzRKczgifQ"
                   from: "2025-05-28 12:00:00"
-                  to: "2025-05-29 12:00:00"
+                  to: "2025-07-30 12:15:00"
                   timezone: "Europe/Athens"
 
                   
@@ -1149,7 +1149,7 @@ paths:
                 to:
                   type: string
                   description: "Local start date-time in the specified timezone for filtering the location history: 'YYYY-MM-DD HH:mm:ss'."
-                  example: "2025-06-30 12:15:00"
+                  example: "2025-07-30 12:15:00"
                 timezone: 
                   type: string
                   description: >
@@ -1162,7 +1162,7 @@ paths:
                 value:
                   didRequester: "did:jwk:eyJrdHkiOiJFQyIsImNydiI6IlAtMjU2Iiwia2lkIjoiMDVhZ0UxdXZPcW1yVDRLY2NiZ1ZKenAwRmJ5SF9weXE4WE5mU2VoOHRkSSIsIngiOiJDRTVqODFybWxqV1JoM1FEOFlJQVNGb093SzRrMjRqU0pWVWEtdl9rSTVZIiwieSI6IjBRU29vbktGVXA4Y0ZLd0dwWHhLSjlSeEZJTk9BOHpWd0ZCTTloQzRKczgifQ"
                   from: "2025-05-28 12:00:00"
-                  to: "2025-05-29 12:00:00"
+                  to: "2025-07-30 12:15:00"
                   timezone: "Europe/Athens"
       responses:
         '200':
@@ -1333,7 +1333,7 @@ paths:
           required: false
           schema:
             type: string
-            example: "2025-06-01 00:00:00"
+            example: "2025-05-28 00:00:00"
         - name: to
           in: query
           description: >
@@ -1342,7 +1342,7 @@ paths:
           required: false
           schema:
             type: string
-            example: "2025-06-30 23:59:59"
+            example: "2025-07-30 12:15:00"
       responses:
         '200':
           description: Alerts retrieved successfully.
