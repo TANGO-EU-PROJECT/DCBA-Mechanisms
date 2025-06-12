@@ -600,18 +600,13 @@ paths:
             schema:
               type: object
               required:
-                - didSP
                 - didRequester
                 - timezone
               properties:
-                didSP:
-                  type: string
-                  description: The Decentralized Identifier (DID) of the service provider initiating the request.
-                  example: "did:example:serviceprovider123"
                 didRequester:
                   type: string
                   description: The Decentralized Identifier (DID) of the requesting employee.
-                  example: "urn:uuid:056815a2-6f4a-4db4-8f19-16e64099d934"
+                  example: "did:jwk:eyJrdHkiOiJFQyIsImNydiI6IlAtMjU2Iiwia2lkIjoiMDVhZ0UxdXZPcW1yVDRLY2NiZ1ZKenAwRmJ5SF9weXE4WE5mU2VoOHRkSSIsIngiOiJDRTVqODFybWxqV1JoM1FEOFlJQVNGb093SzRrMjRqU0pWVWEtdl9rSTVZIiwieSI6IjBRU29vbktGVXA4Y0ZLd0dwWHhLSjlSeEZJTk9BOHpWd0ZCTTloQzRKczgifQ"
                 timezone: 
                   type: string
                   description: >
@@ -622,8 +617,7 @@ paths:
               validRequest:
                 summary: Valid request example
                 value:
-                  didSP: "did:example:serviceprovider123"
-                  didRequester: "urn:uuid:056815a2-6f4a-4db4-8f19-16e64099d934"
+                  didRequester: "did:jwk:eyJrdHkiOiJFQyIsImNydiI6IlAtMjU2Iiwia2lkIjoiMDVhZ0UxdXZPcW1yVDRLY2NiZ1ZKenAwRmJ5SF9weXE4WE5mU2VoOHRkSSIsIngiOiJDRTVqODFybWxqV1JoM1FEOFlJQVNGb093SzRrMjRqU0pWVWEtdl9rSTVZIiwieSI6IjBRU29vbktGVXA4Y0ZLd0dwWHhLSjlSeEZJTk9BOHpWd0ZCTTloQzRKczgifQ"
                   timezone: "Europe/Athens"
       responses:
         '200':
@@ -672,7 +666,7 @@ paths:
                   summary: Missing required fields
                   value:
                     status: "failed"
-                    message: "Missing required fields: didSP, didRequester, or timezone."
+                    message: "Missing required fields: didRequester or timezone."
                 invalidTimezone:
                   summary: Invalid timezone format
                   value:
@@ -759,20 +753,15 @@ paths:
             schema:
               type: object
               required:
-                - didSP
                 - didRequester
                 - from
                 - to
                 - timezone
               properties:
-                didSP:
-                  type: string
-                  description: The Decentralized Identifier (DID) of the service provider initiating the request.
-                  example: "did:example:serviceprovider123"
                 didRequester:
                   type: string
                   description: The Decentralized Identifier (DID) of the requesting employee.
-                  example: "urn:uuid:056815a2-6f4a-4db4-8f19-16e64099d934"
+                  example: "did:jwk:eyJrdHkiOiJFQyIsImNydiI6IlAtMjU2Iiwia2lkIjoiMDVhZ0UxdXZPcW1yVDRLY2NiZ1ZKenAwRmJ5SF9weXE4WE5mU2VoOHRkSSIsIngiOiJDRTVqODFybWxqV1JoM1FEOFlJQVNGb093SzRrMjRqU0pWVWEtdl9rSTVZIiwieSI6IjBRU29vbktGVXA4Y0ZLd0dwWHhLSjlSeEZJTk9BOHpWd0ZCTTloQzRKczgifQ"
                 from:
                   type: string
                   description: "Local start date-time in the specified timezone for filtering the location history: 'YYYY-MM-DD HH:mm:ss'."
@@ -791,8 +780,7 @@ paths:
               validRequest:
                 summary: Valid request example
                 value:
-                  didSP: "did:example:serviceprovider123"
-                  didRequester: "urn:uuid:056815a2-6f4a-4db4-8f19-16e64099d934"
+                  didRequester: "did:jwk:eyJrdHkiOiJFQyIsImNydiI6IlAtMjU2Iiwia2lkIjoiMDVhZ0UxdXZPcW1yVDRLY2NiZ1ZKenAwRmJ5SF9weXE4WE5mU2VoOHRkSSIsIngiOiJDRTVqODFybWxqV1JoM1FEOFlJQVNGb093SzRrMjRqU0pWVWEtdl9rSTVZIiwieSI6IjBRU29vbktGVXA4Y0ZLd0dwWHhLSjlSeEZJTk9BOHpWd0ZCTTloQzRKczgifQ"
                   from: "2025-05-28 12:00:00"
                   to: "2025-05-29 12:00:00"
                   timezone: "Europe/Athens"
@@ -862,7 +850,7 @@ paths:
                   summary: Missing required fields
                   value:
                     status: "failed"
-                    message: "Missing required fields: didSP, didRequester, from, to, or timezone."
+                    message: "Missing required fields: didRequester, from, to, or timezone."
                 InvalidTimestamps:
                   summary: Invalid timestamp format
                   value:
@@ -954,20 +942,15 @@ paths:
             schema:
               type: object
               required:
-                - didSP
                 - didRequester
                 - from
                 - to
                 - timezone
               properties:
-                didSP:
-                  type: string
-                  description: The Decentralized Identifier (DID) of the service provider initiating the request.
-                  example: "did:example:serviceprovider123"
                 didRequester:
                   type: string
                   description: The Decentralized Identifier (DID) of the requesting employee.
-                  example: "urn:uuid:056815a2-6f4a-4db4-8f19-16e64099d934"
+                  example: "did:jwk:eyJrdHkiOiJFQyIsImNydiI6IlAtMjU2Iiwia2lkIjoiMDVhZ0UxdXZPcW1yVDRLY2NiZ1ZKenAwRmJ5SF9weXE4WE5mU2VoOHRkSSIsIngiOiJDRTVqODFybWxqV1JoM1FEOFlJQVNGb093SzRrMjRqU0pWVWEtdl9rSTVZIiwieSI6IjBRU29vbktGVXA4Y0ZLd0dwWHhLSjlSeEZJTk9BOHpWd0ZCTTloQzRKczgifQ"
                 from:
                   type: string
                   description: "Local start date-time in the specified timezone for filtering the location history: 'YYYY-MM-DD HH:mm:ss'."
@@ -986,8 +969,7 @@ paths:
               validRequest:
                 summary: Valid request example
                 value:
-                  didSP: "did:example:serviceprovider123"
-                  didRequester: "urn:uuid:056815a2-6f4a-4db4-8f19-16e64099d934"
+                  didRequester: "did:jwk:eyJrdHkiOiJFQyIsImNydiI6IlAtMjU2Iiwia2lkIjoiMDVhZ0UxdXZPcW1yVDRLY2NiZ1ZKenAwRmJ5SF9weXE4WE5mU2VoOHRkSSIsIngiOiJDRTVqODFybWxqV1JoM1FEOFlJQVNGb093SzRrMjRqU0pWVWEtdl9rSTVZIiwieSI6IjBRU29vbktGVXA4Y0ZLd0dwWHhLSjlSeEZJTk9BOHpWd0ZCTTloQzRKczgifQ"
                   from: "2025-05-28 12:00:00"
                   to: "2025-05-29 12:00:00"
                   timezone: "Europe/Athens"
@@ -1059,7 +1041,7 @@ paths:
                   summary: Missing required fields
                   value:
                     status: "failed"
-                    message: "Missing required fields: didSP, didRequester, from, to, or timezone."
+                    message: "Missing required fields: didRequester, from, to, or timezone."
                 InvalidTimestamps:
                   summary: Invalid timestamp format
                   value:
@@ -1151,20 +1133,15 @@ paths:
             schema:
               type: object
               required:
-                - didSP
                 - didRequester
                 - from
                 - to
                 - timezone
               properties:
-                didSP:
-                  type: string
-                  description: The Decentralized Identifier (DID) of the service provider initiating the request.
-                  example: "did:example:serviceprovider123"
                 didRequester:
                   type: string
                   description: The Decentralized Identifier (DID) of the requesting employee.
-                  example: "urn:uuid:056815a2-6f4a-4db4-8f19-16e64099d934"
+                  example: "did:jwk:eyJrdHkiOiJFQyIsImNydiI6IlAtMjU2Iiwia2lkIjoiMDVhZ0UxdXZPcW1yVDRLY2NiZ1ZKenAwRmJ5SF9weXE4WE5mU2VoOHRkSSIsIngiOiJDRTVqODFybWxqV1JoM1FEOFlJQVNGb093SzRrMjRqU0pWVWEtdl9rSTVZIiwieSI6IjBRU29vbktGVXA4Y0ZLd0dwWHhLSjlSeEZJTk9BOHpWd0ZCTTloQzRKczgifQ"
                 from:
                   type: string
                   description: "Local start date-time in the specified timezone for filtering the location history: 'YYYY-MM-DD HH:mm:ss'."
@@ -1183,8 +1160,7 @@ paths:
               validRequest:
                 summary: Valid request example
                 value:
-                  didSP: "did:example:serviceprovider123"
-                  didRequester: "urn:uuid:056815a2-6f4a-4db4-8f19-16e64099d934"
+                  didRequester: "did:jwk:eyJrdHkiOiJFQyIsImNydiI6IlAtMjU2Iiwia2lkIjoiMDVhZ0UxdXZPcW1yVDRLY2NiZ1ZKenAwRmJ5SF9weXE4WE5mU2VoOHRkSSIsIngiOiJDRTVqODFybWxqV1JoM1FEOFlJQVNGb093SzRrMjRqU0pWVWEtdl9rSTVZIiwieSI6IjBRU29vbktGVXA4Y0ZLd0dwWHhLSjlSeEZJTk9BOHpWd0ZCTTloQzRKczgifQ"
                   from: "2025-05-28 12:00:00"
                   to: "2025-05-29 12:00:00"
                   timezone: "Europe/Athens"
@@ -1254,7 +1230,7 @@ paths:
                   summary: Missing required fields
                   value:
                     status: "failed"
-                    message: "Missing required fields: didSP, didRequester, from, to, or timezone."
+                    message: "Missing required fields: didRequester, from, to, or timezone."
                 InvalidTimestamps:
                   summary: Invalid timestamp format
                   value:

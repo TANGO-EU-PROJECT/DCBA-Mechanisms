@@ -1173,7 +1173,7 @@ exports.fetchDeviceBehaviouralScore = async (req, res) => {
  * 
  * @route   POST /devices/last-location
  * @desc    This endpoint receives a request from an external service,
- *          validates the input fields (`didSP`, `didRequester`), verifies the JWT token,
+ *          validates the input fields (`didRequester`, `timezone`), verifies the JWT token,
  *          attempts to find the device by its DID, and returns the last location of the device.
  *          
  *          Handles the following cases:
@@ -1185,19 +1185,18 @@ exports.fetchDeviceBehaviouralScore = async (req, res) => {
  * 
  * @access  Restricted – Requires a valid authorization token in the header.
  * @param   {Object} req.body - The request payload containing:
- *          - {string} didSP - Service Provider's DID
  *          - {string} didRequester - Device's DID to query
  *          - {string} timezone - The timezone specified for the returned timestamps
  * @param   {Object} res - Express response object used to return the result or an error message.
  */
 exports.fetchDeviceLastLocation = async (req, res) => {
-  const { didSP, didRequester, timezone } = req.body;
+  const { didRequester, timezone } = req.body;
 
   /* Validate reqeust body is not missing */
-  if (!didSP || !didRequester || !timezone) {
+  if (!didRequester || !timezone) {
     return res.status(400).json({
       status: "failed",
-      message: 'Missing required fields: didSP, didRequester, or timezone.'
+      message: 'Missing required fields: didRequester or timezone.'
     });
   }
 
@@ -1257,7 +1256,7 @@ exports.fetchDeviceLastLocation = async (req, res) => {
       event: 'RETRIEVING LAST LOCATION',
       status: 'FAILED ❌',
       did: didRequester,
-      cause: `ERROR RETRIEVING DEVICE LAST LOCATION REQUESTED FROM didSP '${didSP}': ${dbErr.stack}`
+      cause: `ERROR RETRIEVING DEVICE LAST LOCATION REQUESTED FOR didRequester '${didRequester}': ${dbErr.stack}`
     });
 
     return res.status(500).json({
@@ -1275,7 +1274,7 @@ exports.fetchDeviceLastLocation = async (req, res) => {
  * 
  * @route   POST /devices/location-history
  * @desc    This endpoint receives a request from an external service,
- *          validates the input fields (`didSP`, `didRequester`, and `timeframe`), verifies the JWT token,
+ *          validates the input fields (`didRequester`, `timezone` and `timeframe`), verifies the JWT token,
  *          attempts to find the device by its DID, and returns all location entries within the given timeframe.
  *          
  *          Handles the following cases:
@@ -1287,7 +1286,6 @@ exports.fetchDeviceLastLocation = async (req, res) => {
  * 
  * @access  Restricted – Requires a valid authorization token in the header.
  * @param   {Object} req.body - The request payload containing:
- *          - {string} didSP - Service Provider's DID
  *          - {string} didRequester - Device's DID to query
  *          - {Object} timeframe - Time range to filter location history:
  *              - {string} from - ISO timestamp for the start of the range
@@ -1296,13 +1294,13 @@ exports.fetchDeviceLastLocation = async (req, res) => {
  * @param   {Object} res - Express response object used to return the result or an error message.
  */
 exports.fetchDeviceLocationHistory = async (req, res) => {
-  const { didSP, didRequester, from, to, timezone } = req.body;
+  const { didRequester, from, to, timezone } = req.body;
 
   /* Validate required fields are not missing */
-  if (!didSP || !didRequester || !from || !to) {
+  if (!didRequester || !from || !to) {
     return res.status(400).json({
       status: "failed",
-      message: 'Missing required fields: didSP, didRequester, from, to, or timezone.'
+      message: 'Missing required fields: didRequester, from, to, or timezone.'
     });
   }
 
@@ -1380,7 +1378,7 @@ exports.fetchDeviceLocationHistory = async (req, res) => {
       event: 'RETRIEVING LOCATION HISTORY',
       status: 'FAILED ❌',
       did: didRequester,
-      cause: `UNEXPECTED ERROR RETRIEVING HISTORY FROM didSP '${didSP}': ${err.stack}`
+      cause: `UNEXPECTED ERROR RETRIEVING HISTORY FOR didRequester '${didRequester}': ${err.stack}`
     });
 
     return res.status(500).json({
@@ -1398,7 +1396,7 @@ exports.fetchDeviceLocationHistory = async (req, res) => {
  * 
  * @route   POST /devices/permitted-location-history
  * @desc    This endpoint receives a request from an external service,
- *          validates the input fields (`didSP`, `didRequester` and `timeframe`), verifies the JWT token,
+ *          validates the input fields (`didRequester` and `timeframe`), verifies the JWT token,
  *          attempts to find the device by its DID, and returns only location entries with `location === "PERMITTED_AREA"` in the given timeframe.
  *          
  *          Handles the following cases:
@@ -1410,7 +1408,6 @@ exports.fetchDeviceLocationHistory = async (req, res) => {
  * 
  * @access  Restricted – Requires a valid authorization token in the header.
  * @param   {Object} req.body - The request payload containing:
- *          - {string} didSP - Service Provider's DID
  *          - {string} didRequester - Device's DID to query
  *          - {Object} timeframe - Time range to filter location history:
  *              - {string} from - ISO timestamp for the start of the range
@@ -1419,13 +1416,13 @@ exports.fetchDeviceLocationHistory = async (req, res) => {
  * @param   {Object} res - Express response object used to return the result or an error message.
  */
 exports.fetchDevicePermittedLocationHistory = async (req, res) => {
-  const { didSP, didRequester, from, to, timezone } = req.body;
+  const { didRequester, from, to, timezone } = req.body;
 
   /* Validate required fields */
-  if (!didSP || !didRequester || !from || !to || !timezone) {
+  if (!didRequester || !from || !to || !timezone) {
     return res.status(400).json({
       status: "failed",
-      message: 'Missing required fields: didSP, didRequester, from, to, or timezone.'
+      message: 'Missing required fields: didRequester, from, to, or timezone.'
     });
   }
 
@@ -1515,7 +1512,7 @@ exports.fetchDevicePermittedLocationHistory = async (req, res) => {
  * 
  * @route   POST /devices/restricted-location-history
  * @desc    This endpoint receives a request from an external service,
- *          validates the input fields (`didSP`, `didRequester` and `timeframe`), verifies the JWT token,
+ *          validates the input fields (`didRequester`, `timezeone` and `timeframe`), verifies the JWT token,
  *          attempts to find the device by its DID, and returns only location entries with `location !== "PERMITTED_AREA"` in the given timeframe.
  *          
  *          Handles the following cases:
@@ -1527,7 +1524,6 @@ exports.fetchDevicePermittedLocationHistory = async (req, res) => {
  * 
  * @access  Restricted – Requires a valid authorization token in the header.
  * @param   {Object} req.body - The request payload containing:
- *          - {string} didSP - Service Provider's DID
  *          - {string} didRequester - Device's DID to query
  *          - {Object} timeframe - Time range to filter location history:
  *              - {string} from - ISO timestamp for the start of the range
@@ -1536,13 +1532,13 @@ exports.fetchDevicePermittedLocationHistory = async (req, res) => {
  * @param   {Object} res - Express response object used to return the result or an error message.
  */
 exports.fetchDeviceRestrictedLocationHistory = async (req, res) => {
-  const { didSP, didRequester, from, to, timezone } = req.body;
+  const { didRequester, from, to, timezone } = req.body;
 
   /* Validate required fields are not missing */
-  if (!didSP || !didRequester || !from || !to || !timezone) {
+  if (!didRequester || !from || !to || !timezone) {
     return res.status(400).json({
       status: "failed",
-      message: 'Missing required fields: didSP, didRequester, from, to, or timezone.'
+      message: 'Missing required fields: didRequester, from, to, or timezone.'
     });
   }
 
@@ -1622,7 +1618,7 @@ exports.fetchDeviceRestrictedLocationHistory = async (req, res) => {
       event: 'RETRIEVING RESTRICTED LOCATION HISTORY',
       status: 'FAILED ❌',
       did: didRequester,
-      cause: `UNEXPECTED ERROR FROM didSP '${didSP}': ${err.stack}`
+      cause: `UNEXPECTED ERROR FOR didRequester '${didRequester}': ${err.stack}`
     });
 
     return res.status(500).json({
