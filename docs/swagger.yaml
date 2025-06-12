@@ -481,14 +481,14 @@ paths:
                 didRequester:
                   type: string
                   description: The Decentralized Identifier (DID) of the requesting employee.
-                  example: "urn:uuid:056815a2-6f4a-4db4-8f19-16e64099d934"
+                  example: "did:jwk:eyJrdHkiOiJFQyIsImNydiI6IlAtMjU2Iiwia2lkIjoiMDVhZ0UxdXZPcW1yVDRLY2NiZ1ZKenAwRmJ5SF9weXE4WE5mU2VoOHRkSSIsIngiOiJDRTVqODFybWxqV1JoM1FEOFlJQVNGb093SzRrMjRqU0pWVWEtdl9rSTVZIiwieSI6IjBRU29vbktGVXA4Y0ZLd0dwWHhLSjlSeEZJTk9BOHpWd0ZCTTloQzRKczgifQ"
 
             examples:
               validRequest:
                 summary: Valid request example
                 value:
                   didSP: "did:example:serviceprovider123"
-                  didRequester: "urn:uuid:056815a2-6f4a-4db4-8f19-16e64099d934"
+                  didRequester: "did:jwk:eyJrdHkiOiJFQyIsImNydiI6IlAtMjU2Iiwia2lkIjoiMDVhZ0UxdXZPcW1yVDRLY2NiZ1ZKenAwRmJ5SF9weXE4WE5mU2VoOHRkSSIsIngiOiJDRTVqODFybWxqV1JoM1FEOFlJQVNGb093SzRrMjRqU0pWVWEtdl9rSTVZIiwieSI6IjBRU29vbktGVXA4Y0ZLd0dwWHhLSjlSeEZJTk9BOHpWd0ZCTTloQzRKczgifQ"
       responses:
         '200':
           description: Behavioural score retrieved successfully
@@ -1325,6 +1325,24 @@ paths:
           schema:
             type: string
             example: Europe/Athens
+        - name: from
+          in: query
+          description: >
+            Optional lower bound of the time range to filter alerts.
+            Must be a local datetime string in the format 'YYYY-MM-DD HH:mm:ss'.
+          required: false
+          schema:
+            type: string
+            example: "2025-06-01 00:00:00"
+        - name: to
+          in: query
+          description: >
+            Optional upper bound of the time range to filter alerts.
+            Must be a local datetime string in the format 'YYYY-MM-DD HH:mm:ss'.
+          required: false
+          schema:
+            type: string
+            example: "2025-06-30 23:59:59"
       responses:
         '200':
           description: Alerts retrieved successfully.
@@ -1352,7 +1370,7 @@ paths:
                           example: "5c487cb4a62cb29d"
                         did:
                           type: string
-                          example: "urn:uuid:056815a2-6f4a-4db4-8f19-16e64099d934"
+                          example: "did:jwk:eyJrdHkiOiJFQyIsImNydiI6IlAtMjU2Iiwia2lkIjoiMDVhZ0UxdXZPcW1yVDRLY2NiZ1ZKenAwRmJ5SF9weXE4WE5mU2VoOHRkSSIsIngiOiJDRTVqODFybWxqV1JoM1FEOFlJQVNGb093SzRrMjRqU0pWVWEtdl9rSTVZIiwieSI6IjBRU29vbktGVXA4Y0ZLd0dwWHhLSjlSeEZJTk9BOHpWd0ZCTTloQzRKczgifQ"
                         alert_info:
                           type: object
                           properties:
@@ -1384,7 +1402,7 @@ paths:
                     message: Alerts retrieved successfully.
                     alerts:
                       - device_id: "5c487cb4a62cb29d"
-                        did: "urn:uuid:056815a2-6f4a-4db4-8f19-16e64099d934"
+                        did: "did:jwk:eyJrdHkiOiJFQyIsImNydiI6IlAtMjU2Iiwia2lkIjoiMDVhZ0UxdXZPcW1yVDRLY2NiZ1ZKenAwRmJ5SF9weXE4WE5mU2VoOHRkSSIsIngiOiJDRTVqODFybWxqV1JoM1FEOFlJQVNGb093SzRrMjRqU0pWVWEtdl9rSTVZIiwieSI6IjBRU29vbktGVXA4Y0ZLd0dwWHhLSjlSeEZJTk9BOHpWd0ZCTTloQzRKczgifQ"
                         alert_info:
                           estimated_location: "WAREHOUSE"
                           first_seen_at: "2025-05-30 12:00:00"
@@ -1397,14 +1415,14 @@ paths:
                     message: Alerts retrieved successfully.
                     alerts:
                       - device_id: "5c487cb4a62cb29d"
-                        did: "urn:uuid:056815a2-6f4a-4db4-8f19-16e64099d934"
+                        did: "did:jwk:eyJrdHkiOiJFQyIsImNydiI6IlAtMjU2Iiwia2lkIjoiMDVhZ0UxdXZPcW1yVDRLY2NiZ1ZKenAwRmJ5SF9weXE4WE5mU2VoOHRkSSIsIngiOiJDRTVqODFybWxqV1JoM1FEOFlJQVNGb093SzRrMjRqU0pWVWEtdl9rSTVZIiwieSI6IjBRU29vbktGVXA4Y0ZLd0dwWHhLSjlSeEZJTk9BOHpWd0ZCTTloQzRKczgifQ"
                         alert_info:
                           estimated_location: "WAREHOUSE"
                           first_seen_at: "2025-05-30 12:00:00"
                           last_seen_at: "2025-05-30 12:05:00"
                           duration_s: 300
                       - device_id: "5c487cb4a62cb29d"
-                        did: "urn:uuid:056815a2-6f4a-4db4-8f19-16e64099d934"
+                        did: "did:jwk:eyJrdHkiOiJFQyIsImNydiI6IlAtMjU2Iiwia2lkIjoiMDVhZ0UxdXZPcW1yVDRLY2NiZ1ZKenAwRmJ5SF9weXE4WE5mU2VoOHRkSSIsIngiOiJDRTVqODFybWxqV1JoM1FEOFlJQVNGb093SzRrMjRqU0pWVWEtdl9rSTVZIiwieSI6IjBRU29vbktGVXA4Y0ZLd0dwWHhLSjlSeEZJTk9BOHpWd0ZCTTloQzRKczgifQ"
                         alert_info:
                           estimated_location: "SORTING_LINES_1_TO_3"
                           first_seen_at: "2025-05-30 12:00:00"
@@ -1424,10 +1442,21 @@ paths:
                     type: string
               examples:
                 InvalidTimezone:
-                  summary: Invalid timezone format
+                  summary: Invalid or missing timezone
                   value:
                     status: "failed"
-                    message: "Invalid timezone. Please provide a valid IANA timezone name (e.g. 'Europe/Athens', 'America/New_York')."
+                    message: "Invalid or missing 'timezone'. Please provide a valid IANA timezone (e.g. 'Europe/Athens')."
+                InvalidFrom:
+                  summary: Invalid 'from' format
+                  value:
+                    status: "failed"
+                    message: "Invalid 'from' format. Use 'YYYY-MM-DD HH:mm:ss'."
+                InvalidTo:
+                  summary: Invalid 'to' format
+                  value:
+                    status: "failed"
+                    message: "Invalid 'to' format. Use 'YYYY-MM-DD HH:mm:ss'."
+                
         '401':
           description: Unauthorized - Authorization token is missing, invalid, expired, or malformed
           content:
