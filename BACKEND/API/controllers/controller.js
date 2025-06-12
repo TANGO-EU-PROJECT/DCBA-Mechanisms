@@ -1632,18 +1632,25 @@ exports.fetchDeviceRestrictedLocationHistory = async (req, res) => {
 
 
 /** [22]
- * Retrieves the alert history of all devices.
+ * Retrieves the alert history of all devices related to unauthorized presence in restricted areas.
  * 
  * @route   GET /devices/fetch-alert-history
- * @desc    This endpoint receives a get request from an external service and returns the alert history of all devices.
+ * @desc    This endpoint receives a GET request and returns device alert history.
+ *          It supports optional time filtering using 'from' and 'to' query parameters.
+ * 
  *          Handles the following cases:
- *          - Missing required fields → returns 400 Bad Request
+ *          - Missing or invalid 'timezone' → returns 400 Bad Request
+ *          - Invalid 'from' or 'to' format → returns 400 Bad Request (Optional)
  *          - Invalid or expired JWT token → returns 401 Unauthorized
  *          - Database retrieval errors → returns 500 Internal Server Error
- *          - Successful retrieval → returns 200 OK alert history
+ *          - If 'from' and/or 'to' are provided, filters alerts within that time range (in the given timezone)
+ *          - If no time filters are provided, returns the full alert history
  * 
- * @access  Restricted – Requires a valid authorization token in the header.
- * @param   - {string} timezone - The timezone specified for the returned timestamps
+ * @access  Restricted – Requires a valid Bearer token in the Authorization header.
+ * 
+ * @param   {string} req.query.timezone - Required IANA timezone name used to interpret and format timestamps.
+ * @param   {string} [req.query.from] - Optional lower bound of time range in 'YYYY-MM-DD HH:mm:ss' format (local time).
+ * @param   {string} [req.query.to] - Optional upper bound of time range in 'YYYY-MM-DD HH:mm:ss' format (local time).
  * @param   {Object} res - Express response object used to return the result or an error message.
  */
 exports.fetchDevicesAlerts = async (req, res) => {
