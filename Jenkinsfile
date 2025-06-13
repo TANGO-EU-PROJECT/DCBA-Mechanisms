@@ -204,7 +204,17 @@ pipeline {
             }
         }
 
-        /* Stage 8: Deploying the new deployment */
+        /* Stage 8: Applying dcba-secrets */
+        stage("Applying dcba-secrets") {
+            steps {
+                withKubeConfig([credentialsId: 'K8s-config-file', serverUrl: 'https://167.235.66.115:6443', namespace: 'tango-development']) {
+                    sh 'kubectl apply -f dcba-secrets.yml'
+                }
+            }
+        }
+
+
+        /* Stage 9: Deploying the new deployment */
         stage("Deploying the new deployment") {
             steps {
                 withKubeConfig([credentialsId: 'K8s-config-file', serverUrl: 'https://167.235.66.115:6443', namespace: 'tango-development']) {
