@@ -37,14 +37,14 @@ exports.verifyToken = (req, res, next) => {
   } catch (err) {
     // Handle expired token case
     if (err.name === 'TokenExpiredError') {
-      return res.status(403).json({
+      return res.status(401).json({
         status: 'failed',
         message: 'Authorization token has expired.',
       });
     }
 
     // Handle other errors (invalid token)
-    return res.status(403).json({
+    return res.status(401).json({
       status: 'failed',
       message: 'Invalid Authorization token.',
     });
