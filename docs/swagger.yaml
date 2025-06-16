@@ -1505,8 +1505,107 @@ paths:
                     type: string
                     example: Error retrieving alert history.
 
-
-
+  # [10] DELETE /devices/delete-employee
+  /devices/delete-employee:
+    delete:
+      tags:
+        - Service API Endpoints
+      summary: Delete a device using the associated did
+      description: Deletes a device from the database based on the provided `did` query parameter.
+      parameters:
+        - in: query
+          name: did
+          schema:
+            type: string
+          required: true
+          description: The Decentralized Identifier (did) of the employee to delete
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Device deleted successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: success
+                  message:
+                    type: string
+                    example: Device deleted successfully.
+                  did:
+                    type: string
+                    example: "did:jwk:eyJrdHkiOiJFQyIsImNydiI6IlAtMjU2Iiwia2lkIjoiMDVhZ0UxdXZPcW1yVDRLY2NiZ1ZKenAwRmJ5SF9weXE4WE5mU2VoOHRkSSIsIngiOiJDRTVqODFybWxqV1JoM1FEOFlJQVNGb093SzRrMjRqU0pWVWEtdl9rSTVZIiwieSI6IjBRU29vbktGVXA4Y0ZLd0dwWHhLSjlSeEZJTk9BOHpWd0ZCTTloQzRKczgifQ"
+        '400':
+          description: Missing did in the request
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: failed
+                  message:
+                    type: string
+                    example: Missing 'did'. Please provide a valid employee 'did' in the query parameters.
+        '401':
+          description: Authorization header missing or malformed
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: failed
+                  message:
+                    type: string
+                    example: Authorization token is missing.
+        '403':
+          description: Invalid or expired token
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: failed
+                  message:
+                    type: string
+                    example: Authorization token has expired.
+        '404':
+          description: No device found with the given did
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: failed
+                  message:
+                    type: string
+                    example: No device found associated with this 'did'.
+                  did:
+                    type: string
+                    example: "did:jwk:eyJrdHkiOiJFQyIsImNydiI6IlAtMjU2Iiwia2lkIjoiMDVhZ0UxdXZPcW1yVDRLY2NiZ1ZKenAwRmJ5SF9weXE4WE5mU2VoOHRkSSIsIngiOiJDRTVqODFybWxqV1JoM1FEOFlJQVNGb093SzRrMjRqU0pWVWEtdl9rSTVZIiwieSI6IjBRU29vbktGVXA4Y0ZLd0dwWHhLSjlSeEZJTk9BOHpWd0ZCTTloQzRKczgifQ"
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: failed
+                  message:
+                    type: string
+                    example: Internal server error while deleting the device associated with this 'did'.
   # Service API Endpoints # 
 
 
