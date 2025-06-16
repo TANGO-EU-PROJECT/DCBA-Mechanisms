@@ -1657,7 +1657,7 @@ exports.fetchDevicesAlerts = async (req, res) => {
   try {
     const { timezone, from, to } = req.query;
 
-    // Required: Validate timezone
+    /* Required: Validate timezone */
     if (!timezone || !moment.tz.zone(timezone)) {
       return res.status(400).json({
         status: "failed",
@@ -1665,7 +1665,7 @@ exports.fetchDevicesAlerts = async (req, res) => {
       });
     }
 
-    // Optional: Validate and parse 'from' and 'to'
+    /* Optional: Validate and parse 'from' and 'to' */
     const localDateTimeRegex = /^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}(?:\.\d{1,3})?$/;
     let fromTimestamp = null;
     let toTimestamp = null;
@@ -1690,12 +1690,12 @@ exports.fetchDevicesAlerts = async (req, res) => {
       toTimestamp = moment.tz(to, timezone).utc().valueOf();
     }
 
-    // Fetch all alerts from DB
+    /* Fetch all alerts from DB */
     const alerts = await ALERT.find({})
       .select('-_id -createdAt -updatedAt -__v')
       .exec();
 
-    // Apply time filtering if from/to are provided
+    /* Apply time filtering if from/to are provided */
     const filteredAlerts = alerts.filter(alert => {
       const firstSeen = alert.alert_info?.first_seen_at;
       if (!firstSeen) return false;
@@ -1708,7 +1708,7 @@ exports.fetchDevicesAlerts = async (req, res) => {
       return true;
     });
 
-    // Convert timestamps to requested timezone
+    /* Convert timestamps to requested timezone */
     const alertsWithTimezone = filteredAlerts.map(alert => {
       const alertObj = alert.toObject();
 
@@ -1741,6 +1741,56 @@ exports.fetchDevicesAlerts = async (req, res) => {
     });
   }
 };
+
+
+
+
+
+/**
+ * [23]
+ * Deletes a device entry from the database based on the provided `did`.
+ * @param {Object} req - Express request object
+ * @param {Object} res - Express response object
+ * @returns {JSON} Response with success or failure message and the `did` if provided
+ */
+exports.deleteDeviceByDID = async (req, res) => {
+  try {
+    const { did } = req.query;
+
+    if (!did) {
+      return res.status(400).json({
+        status: 'failed',
+        message: "Missing 'did'. Please provide a valid employee 'did' in the query parameters.",
+      });
+    }
+
+    const deletedDevice = await DEVICE.findOneAndDelete({ did });
+
+    if (!deletedDevice) {
+      return res.status(404).json({
+        status: 'failed',
+        message: `No device found associated with this 'did'.`,
+        did
+      });
+    }
+
+    return res.status(200).json({
+      status: 'success',
+      message: `Device deleted successfully.`,
+      did
+    });
+
+  } catch (error) {
+    console.error('[deleteDeviceByDID] Error:', error);
+    return res.status(500).json({
+      status: 'failed',
+      message: "Internal server error while deleting the device associated with this 'did'.",
+    });
+  }
+};
+
+
+
 
 
 /*************************************************************************** START OF API ENDPOINTS IMPLEMENTATION ***************************************************************************/

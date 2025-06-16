@@ -69,12 +69,20 @@ router.post('/permitted-location-history', verifyToken, controller.fetchDevicePe
  */
 router.post('/restricted-location-history', verifyToken, controller.fetchDeviceRestrictedLocationHistory);
 
-/** [9]
+/** [9] DONE
  * @route   GET /devices/fetch-alert-history
  * @desc    Returns all the possible alerts for devices navigating to restricted areas
  * @access  Restricted – Requires jwtAuth for access
  */
 router.get('/fetch-alert-history', verifyToken, controller.fetchDevicesAlerts);
+
+/** [10]
+ * @route   DELETE /devices/delete-employee
+ * @desc    Deletes a device with the associated did
+ * @access  Restricted – Requires jwtAuth for access
+ */
+router.delete('/delete-employee', verifyToken, controller.deleteDeviceByDID);
+
 
 
 module.exports = router;
