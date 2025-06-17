@@ -640,7 +640,6 @@ exports.handleAuthTokenValidation = async (req, res) => {
         message: 'valid',
         did,
         sub,
-        verifiableCredential,
       });
     }
 
