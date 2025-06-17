@@ -576,10 +576,8 @@ exports.handleAuthTokenValidation = async (req, res) => {
     }
 
     /* Valid Token Format. Extract its payload */
-    const { exp, sub, verifiableCredential } = decoded.payload;
-    console.log(decoded.payload)
-    console.log(verifiableCredential)
-    const did = verifiableCredential?.id;
+    const { exp, sub, iss } = decoded.payload;
+    const did = iss;
     const currentTime = Math.floor(Date.now() / 1000);
 
     /* 2. Check if the token is expired */
