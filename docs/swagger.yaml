@@ -2177,10 +2177,10 @@ paths:
                     status: failed
                     message: "Invalid authentication token format."
                 MissingDID:
-                  summary: Device ID missing from token payload
+                  summary: Device did missing from token payload
                   value:
                     status: failed
-                    message: "Device ID missing from authentication token."
+                    message: "Device 'did' missing from authentication token."
 
         '401':
           description: Unauthorized - missing or expired token.
