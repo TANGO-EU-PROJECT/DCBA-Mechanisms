@@ -577,6 +577,8 @@ exports.handleAuthTokenValidation = async (req, res) => {
 
     /* Valid Token Format. Extract its payload */
     const { exp, sub, verifiableCredential } = decoded.payload;
+    console.log(decoded.payload)
+    console.log(verifiableCredential)
     const did = verifiableCredential?.id;
     const currentTime = Math.floor(Date.now() / 1000);
 
@@ -648,12 +650,12 @@ exports.handleAuthTokenValidation = async (req, res) => {
     logEvent({
       event: 'RE-AUTHENTICATION ATTEMPT WITH AUTH-TOKEN',
       status: 'FAILED ❌',
-      cause: 'DEVICE ID MISSING FROM TOKEN',
+      cause: 'DEVICE DID MISSING FROM TOKEN',
       device_id: deviceID,
       ip,
     });
 
-    return res.status(400).json({ status: "failed", message: 'Device ID missing from authentication token.' });
+    return res.status(400).json({ status: "failed", message: "Device 'did' missing from authentication token." });
   } catch (err) {
     logEvent({
       event: 'RE-AUTHENTICATION ATTEMPT WITH AUTH-TOKEN',
