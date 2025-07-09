@@ -123,7 +123,7 @@ router.get('/:resourceName', async (req, res) => {
 //  * @access  Restricted – Requires jwtAuth for access
 //  */
 // router.post('/restricted-location-history', verifyToken, controller.fetchDeviceRestrictedLocationHistory);
-router.post('/', async (req, res) => {
+router.post('/:resourceName', async (req, res) => {
   const { sar, queryParameters, jsonBody } = req.body;
 
   if (!sar?.resource) {
