@@ -56,7 +56,7 @@ const resourceControllers = {
 //  * @middleware PEP/PDP
 //  */
 // router.get('/fetch-alert-history', controller.fetchDevicesAlerts);
-router.get('/resource/:resourceName', async (req, res) => {
+router.get('/:resourceName', async (req, res) => {
   const resourceName = req.params.resourceName;
   const fetchFunction = resourceControllers[resourceName];
 
@@ -123,7 +123,7 @@ router.get('/resource/:resourceName', async (req, res) => {
 //  * @access  Restricted – Requires jwtAuth for access
 //  */
 // router.post('/restricted-location-history', verifyToken, controller.fetchDeviceRestrictedLocationHistory);
-router.post('/resource', async (req, res) => {
+router.post('/', async (req, res) => {
   const resourceUrl = req.body?.sar?.resource;
 
   if (!resourceUrl) {
