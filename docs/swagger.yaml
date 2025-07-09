@@ -7,23 +7,6 @@ info:
 
     The **Authenticator Endpoints** are exclusively utilized by the Android application, 'Authenticator', which is deployed on employees' devices. 
 
-    To interact with the **GET** endpoints of the **Service API Endpoints**, you must authorize by providing a JWT Authorization token.
-
-    For testing purposes, you can use the following JWT token: **eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoiZXhhbXBsZV91c2VyIiwicm9sZSI6InNlcnZpY2VfcHJvdmlkZXIifQ.ppLwt2OKzPSfgl1NwzJKhzU_rRykEv3ojm0VmLRoLwk**
-
-
-    **Steps to authorize:**
-
-    1. Click the **Authorize** button, at the top-right corner.
-    2. Enter the token specified in the description.
-    3. Click **Authorize** and close the dialog.
-    4. You can now use the **Try it out** button on the Service API Endpoints.
-
-    **Note:**  
-    All **POST Service API Endpoints** require a valid `didRequester` parameter. To obtain a valid `didRequester`, first call the `GET /devices` endpoint to retrieve the list of available devices. Then, use one of the returned `did` identifiers as the `didRequester` value in your **POST Service API Endpoints** requests.
-
-
-
 servers:
   - url: https://k8s-cluster.tango.rid-intrasoft.eu/development/dcba-backend/
 
@@ -40,7 +23,7 @@ paths:
   # Service API Endpoints #
 
   # [1] GET /devices
-  /devices:
+  /resource/devices:
     get:
       security:
         - bearerAuth: []
@@ -179,7 +162,7 @@ paths:
 
 
   # [2] GET /devices/online-shifts  
-  /devices/online-shifts:
+  /resource/online:
     get:
       tags:
         - Service API Endpoints  # Tag for service-facing endpoints
@@ -318,7 +301,7 @@ paths:
 
 
   # [3] GET /devices/offline-shifts
-  /devices/offline-shifts:
+  /resource/offline:
     get:
       tags:
         - Service API Endpoints
@@ -454,7 +437,7 @@ paths:
 
 
   # [4] POST /devices/behavioural-score
-  /devices/behavioural-score:
+  /resource/behavioural_score:
     post:
       tags:
         - Service API Endpoints
@@ -582,7 +565,7 @@ paths:
                     example: "Error retrieving behavioural score."
 
   # [5] POST /devices/last-location
-  /devices/last-location:
+  /resource/last_location:
     post:
       tags:
         - Service API Endpoints
@@ -736,7 +719,7 @@ paths:
                     example: "Error retrieving device last location."
 
   # [6] POST /devices/location-history
-  /devices/location-history:
+  /resource/location_history:
     post:
       tags:
         - Service API Endpoints
@@ -925,7 +908,7 @@ paths:
 
 
   # [7] POST /devices/permitted-location-history
-  /devices/permitted-location-history:
+  /resource/permitted_location_history:
     post:
       tags:
         - Service API Endpoints
@@ -1116,7 +1099,7 @@ paths:
 
 
   # [8] POST /devices/restricted-location-history
-  /devices/restricted-location-history:
+  /resource/restricted_location_history:
     post:
       tags:
         - Service API Endpoints
@@ -1305,7 +1288,7 @@ paths:
 
 
   # [9] GET /devices/fetch-alert-history
-  /devices/fetch-alert-history:
+  /resource/alerts:
     get:
       tags:
         - Service API Endpoints
