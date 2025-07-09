@@ -124,38 +124,52 @@ router.get('/:resourceName', async (req, res) => {
 //  */
 // router.post('/restricted-location-history', verifyToken, controller.fetchDeviceRestrictedLocationHistory);
 router.post('/', async (req, res) => {
-  const resourceUrl = req.body?.sar?.resource;
+  const { sar, queryParameters, jsonBody } = req.body;
 
-  if (!resourceUrl) {
+  if (!sar?.resource) {
     return res.status(400).json({
       status: "failed",
-      message: "Missing resource URL in request body",
-    });
-  }
-
-  const parts = resourceUrl.split('/');
-  const resourceName = parts[parts.length - 1];
-
-  const fetchFunction = resourceControllers[resourceName];
-
-  if (!fetchFunction) {
-    return res.status(404).json({
-      status: "failed",
-      message: `Resource '${resourceName}' not found`,
+      message: "Missing 'sar.resource' in request body",
     });
   }
 
   try {
-    // Call the matched controller function and forward req, res
-    await fetchFunction(req, res);
-  } catch (error) {
-    console.error(error);
+    // Extract the resource name
+    const url = new URL(sar.resource);
+    const pathParts = url.pathname.split('/').filter(Boolean);
+    const resourceName = pathParts[pathParts.length - 1];
+
+    const handler = resourceControllers[resourceName];
+
+    if (!handler) {
+      return res.status(404).json({
+        status: "failed",
+        message: `Resource '${resourceName}' not found`,
+      });
+    }
+
+    // Inject queryParameters into req.query
+    if (queryParameters) {
+      req.query = { ...req.query, ...queryParameters };
+    }
+
+    // Inject jsonBody into req.body (overwriting if needed)
+    if (jsonBody) {
+      req.body = jsonBody;
+    }
+
+    await handler(req, res);
+
+  } catch (err) {
+    console.error("POST error:", err);
     res.status(500).json({
       status: "failed",
-      message: `Error fetching resource '${resourceName}'`,
+      message: "Server error while handling POST resource",
     });
   }
 });
+
+
 
 /********************** POST REQUESTS **********************/
 
