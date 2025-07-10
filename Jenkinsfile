@@ -117,22 +117,22 @@ pipeline {
                         echo "***** Tag and Push Backend Image *****"
                         sh """
                         docker image push ${ARTIFACTORY_DOCKER_REGISTRY}${BACKEND_DOCKER_IMAGE_TAG}
-                        docker tag ${ARTIFACTORY_DOCKER_REGISTRY}${BACKEND_DOCKER_IMAGE_TAG} ${ARTIFACTORY_DOCKER_REGISTRY}${BACKEND_CONTAINER_NAME}:latest_prod
-                        docker image push ${ARTIFACTORY_DOCKER_REGISTRY}${BACKEND_CONTAINER_NAME}:latest_prod
+                        docker tag ${ARTIFACTORY_DOCKER_REGISTRY}${BACKEND_DOCKER_IMAGE_TAG} ${ARTIFACTORY_DOCKER_REGISTRY}${BACKEND_CONTAINER_NAME}:latest-prod
+                        docker image push ${ARTIFACTORY_DOCKER_REGISTRY}${BACKEND_CONTAINER_NAME}:latest-prod
                         """
 
                         echo "***** Tag and Push MongoDB Image *****"
                         sh """
                         docker image push ${ARTIFACTORY_DOCKER_REGISTRY}${MONGO_DOCKER_IMAGE_TAG}
-                        docker tag ${ARTIFACTORY_DOCKER_REGISTRY}${MONGO_DOCKER_IMAGE_TAG} ${ARTIFACTORY_DOCKER_REGISTRY}${MONGO_CONTAINER_NAME}:latest_prod
-                        docker image push ${ARTIFACTORY_DOCKER_REGISTRY}${MONGO_CONTAINER_NAME}:latest_prod
+                        docker tag ${ARTIFACTORY_DOCKER_REGISTRY}${MONGO_DOCKER_IMAGE_TAG} ${ARTIFACTORY_DOCKER_REGISTRY}${MONGO_CONTAINER_NAME}:latest-prod
+                        docker image push ${ARTIFACTORY_DOCKER_REGISTRY}${MONGO_CONTAINER_NAME}:latest-prod
                         """
 
                         echo "***** Tag and Push InfluxDB Image *****"
                         sh """
                         docker image push ${ARTIFACTORY_DOCKER_REGISTRY}${INFLUX_DOCKER_IMAGE_TAG}
-                        docker tag ${ARTIFACTORY_DOCKER_REGISTRY}${INFLUX_DOCKER_IMAGE_TAG} ${ARTIFACTORY_DOCKER_REGISTRY}${INFLUX_CONTAINER_NAME}:latest_prod
-                        docker image push ${ARTIFACTORY_DOCKER_REGISTRY}${INFLUX_CONTAINER_NAME}:latest_prod
+                        docker tag ${ARTIFACTORY_DOCKER_REGISTRY}${INFLUX_DOCKER_IMAGE_TAG} ${ARTIFACTORY_DOCKER_REGISTRY}${INFLUX_CONTAINER_NAME}:latest-prod
+                        docker image push ${ARTIFACTORY_DOCKER_REGISTRY}${INFLUX_CONTAINER_NAME}:latest-prod
                         """
                     }
                 }
@@ -147,19 +147,19 @@ pipeline {
                     echo "***** Removing Backend Images *****"
                     sh """
                     docker rmi ${ARTIFACTORY_DOCKER_REGISTRY}${BACKEND_DOCKER_IMAGE_TAG}
-                    docker rmi ${ARTIFACTORY_DOCKER_REGISTRY}${BACKEND_CONTAINER_NAME}:latest_prod
+                    docker rmi ${ARTIFACTORY_DOCKER_REGISTRY}${BACKEND_CONTAINER_NAME}:latest-prod
                     """
 
                     echo "***** Removing MongoDB Image *****"
                     sh """
                     docker rmi ${ARTIFACTORY_DOCKER_REGISTRY}${MONGO_DOCKER_IMAGE_TAG}
-                    docker rmi ${ARTIFACTORY_DOCKER_REGISTRY}${MONGO_CONTAINER_NAME}:latest_prod
+                    docker rmi ${ARTIFACTORY_DOCKER_REGISTRY}${MONGO_CONTAINER_NAME}:latest-prod
                     """
 
                     echo "***** Removing InfluxDB Image *****"
                     sh """
                     docker rmi ${ARTIFACTORY_DOCKER_REGISTRY}${INFLUX_DOCKER_IMAGE_TAG}
-                    docker rmi ${ARTIFACTORY_DOCKER_REGISTRY}${INFLUX_CONTAINER_NAME}:latest_prod
+                    docker rmi ${ARTIFACTORY_DOCKER_REGISTRY}${INFLUX_CONTAINER_NAME}:latest-prod
                     """
                 }
             }

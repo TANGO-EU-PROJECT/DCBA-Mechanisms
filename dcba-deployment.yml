@@ -24,7 +24,7 @@ spec:
       
       containers:
         - name: dcba-backend
-          image: harbor.tango.rid-intrasoft.eu/dcba/dcba-backend:latest-dev
+          image: harbor.tango.rid-intrasoft.eu/dcba/dcba-backend:latest-prod
           imagePullPolicy: Always
           ports:
             - containerPort: 3000
@@ -94,7 +94,7 @@ spec:
         - name: regcred-rias
       containers:
         - name: dcba-mongo-db
-          image: harbor.tango.rid-intrasoft.eu/dcba/dcba-mongo-db:latest-dev
+          image: harbor.tango.rid-intrasoft.eu/dcba/dcba-mongo-db:latest-prod
           imagePullPolicy: Always
           ports:
             - containerPort: 27017
@@ -174,7 +174,7 @@ spec:
         - name: regcred-rias
       containers:
         - name: dcba-influx-db
-          image: harbor.tango.rid-intrasoft.eu/dcba/dcba-influx-db:latest-dev
+          image: harbor.tango.rid-intrasoft.eu/dcba/dcba-influx-db:latest-prod
           imagePullPolicy: Always
           ports:
             - containerPort: 8086
