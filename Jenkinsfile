@@ -40,14 +40,36 @@ pipeline {
     }
     
 
-    /* Set up environment variables for the pipeline */
+     /* Set up environment variables for the pipeline */
     environment {
-        BACKEND_CONTAINER_NAME = "dcba-backend"
-        ARTIFACTORY_SERVER = "harbor.tango.rid-intrasoft.eu"
-        ARTIFACTORY_DOCKER_REGISTRY = "harbor.tango.rid-intrasoft.eu/dcba/"
-        BRANCH_NAME = "rias-smart-manufacturing"
-        BACKEND_DOCKER_IMAGE_TAG = "${BACKEND_CONTAINER_NAME}:R${env.BUILD_ID}"
+        //BUILD_TAG = "stable-${env.BUILD_ID}"
+
+        // Backend
+        BACKEND_CONTAINER_NAME = "dcba-backend"                             /* Application Name */
+        ARTIFACTORY_SERVER = "harbor.tango.rid-intrasoft.eu"                /* Docker registry server URL */
+        ARTIFACTORY_DOCKER_REGISTRY = "harbor.tango.rid-intrasoft.eu/dcba/" /* Docker image registry path */
+        BRANCH_NAME = "stable"                                              /* Git branch to checkout */
+        BACKEND_DOCKER_IMAGE_TAG = "${BACKEND_CONTAINER_NAME}:R${env.BUILD_ID}" /* Docker image tag using the application name and Jenkins build ID */
+
+        // MongoDB
+        MONGO_IMAGE = "mongo:latest"
+        MONGO_CONTAINER_NAME = "dcba-mongo-db"
+        MONGO_INITDB_EXTERNAL_PORT = "27018"
+        MONGO_INITDB_INTERNAL_PORT = "27017"
+        MONGO_INITDB_ADMIN_USERNAME = "admin-username"
+        MONGO_INITDB_ADMIN_PASSWORD = "admin-password"
+        MONGO_INITDB_DATABASE = "dcba-mongo-db-v1"
         MONGO_DOCKER_IMAGE_TAG = "${MONGO_CONTAINER_NAME}:R${env.BUILD_ID}"
+        // InfluxDB
+        INFLUX_IMAGE = "influxdb:latest"
+        INFLUX_CONTAINER_NAME = "dcba-influx-db"
+        INFLUXDB_EXTERNAL_PORT = "8087"
+        INFLUXDB_INTERNAL_PORT = "8086"
+        INFLUX_INITDB_ADMIN_USERNAME = "admin-username"
+        INFLUX_INITDB_ADMIN_PASSWORD = "admin-password"
+        INFLUX_INITDB_ORG = "DCBA"
+        INFLUX_INITDB_BUCKET = "DCBA"
+        INFLUX_INITDB_AUTH_TOKEN = "QzaDsrfh8LkP0dnTmxj4fB4KAtQVZb-68BHqTTqWv2jie5daMLpEqeugbn1hIfbTcduNEuR8HAoUtVFjC2M3bw=="
         INFLUX_DOCKER_IMAGE_TAG = "${INFLUX_CONTAINER_NAME}:R${env.BUILD_ID}"
     }
 
