@@ -45,7 +45,7 @@ pipeline {
         BACKEND_CONTAINER_NAME = "dcba-backend"
         ARTIFACTORY_SERVER = "harbor.tango.rid-intrasoft.eu"
         ARTIFACTORY_DOCKER_REGISTRY = "harbor.tango.rid-intrasoft.eu/dcba/"
-        BRANCH_NAME = "stable"
+        BRANCH_NAME = "rias-smart-manufacturing"
         BACKEND_DOCKER_IMAGE_TAG = "${BACKEND_CONTAINER_NAME}:R${env.BUILD_ID}"
         MONGO_DOCKER_IMAGE_TAG = "${MONGO_CONTAINER_NAME}:R${env.BUILD_ID}"
         INFLUX_DOCKER_IMAGE_TAG = "${INFLUX_CONTAINER_NAME}:R${env.BUILD_ID}"
@@ -209,7 +209,7 @@ pipeline {
                     sh 'kubectl apply -f dcba-ingress.yml'
 
                     // Verify pod status
-                    sh 'kubectl get pods -n tango-development'
+                    sh 'kubectl get pods -n smart-manufacturing'
                 }
             }
         }
