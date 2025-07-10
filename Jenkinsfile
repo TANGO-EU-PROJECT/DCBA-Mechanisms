@@ -42,36 +42,16 @@ pipeline {
 
     /* Set up environment variables for the pipeline */
     environment {
-        //BUILD_TAG = "stable-${env.BUILD_ID}"
-
-        // Backend
-        BACKEND_CONTAINER_NAME = "dcba-backend"                             /* Application Name */
-        ARTIFACTORY_SERVER = "harbor.tango.rid-intrasoft.eu"                /* Docker registry server URL */
-        ARTIFACTORY_DOCKER_REGISTRY = "harbor.tango.rid-intrasoft.eu/dcba/" /* Docker image registry path */
-        BRANCH_NAME = "stable"                                              /* Git branch to checkout */
-        BACKEND_DOCKER_IMAGE_TAG = "${BACKEND_CONTAINER_NAME}:R${env.BUILD_ID}" /* Docker image tag using the application name and Jenkins build ID */
-
-        // MongoDB
-        MONGO_IMAGE = "mongo:latest"
-        MONGO_CONTAINER_NAME = "dcba-mongo-db"
-        MONGO_INITDB_EXTERNAL_PORT = "27018"
-        MONGO_INITDB_INTERNAL_PORT = "27017"
-        MONGO_INITDB_ADMIN_USERNAME = "admin-username"
-        MONGO_INITDB_ADMIN_PASSWORD = "admin-password"
-        MONGO_INITDB_DATABASE = "dcba-mongo-db-v1"
+        BACKEND_CONTAINER_NAME = "dcba-backend"
+        ARTIFACTORY_SERVER = "harbor.tango.rid-intrasoft.eu"
+        ARTIFACTORY_DOCKER_REGISTRY = "harbor.tango.rid-intrasoft.eu/dcba/"
+        BRANCH_NAME = "rias-smart-manufacturing"
+        BACKEND_DOCKER_IMAGE_TAG = "${BACKEND_CONTAINER_NAME}:R${env.BUILD_ID}"
         MONGO_DOCKER_IMAGE_TAG = "${MONGO_CONTAINER_NAME}:R${env.BUILD_ID}"
-        // InfluxDB
-        INFLUX_IMAGE = "influxdb:latest"
-        INFLUX_CONTAINER_NAME = "dcba-influx-db"
-        INFLUXDB_EXTERNAL_PORT = "8087"
-        INFLUXDB_INTERNAL_PORT = "8086"
-        INFLUX_INITDB_ADMIN_USERNAME = "admin-username"
-        INFLUX_INITDB_ADMIN_PASSWORD = "admin-password"
-        INFLUX_INITDB_ORG = "DCBA"
-        INFLUX_INITDB_BUCKET = "DCBA"
-        INFLUX_INITDB_AUTH_TOKEN = "QzaDsrfh8LkP0dnTmxj4fB4KAtQVZb-68BHqTTqWv2jie5daMLpEqeugbn1hIfbTcduNEuR8HAoUtVFjC2M3bw=="
         INFLUX_DOCKER_IMAGE_TAG = "${INFLUX_CONTAINER_NAME}:R${env.BUILD_ID}"
     }
+
+
 
     stages {
         /* Stage 1: Checkout the source code from the Git repository */
@@ -137,22 +117,22 @@ pipeline {
                         echo "***** Tag and Push Backend Image *****"
                         sh """
                         docker image push ${ARTIFACTORY_DOCKER_REGISTRY}${BACKEND_DOCKER_IMAGE_TAG}
-                        docker tag ${ARTIFACTORY_DOCKER_REGISTRY}${BACKEND_DOCKER_IMAGE_TAG} ${ARTIFACTORY_DOCKER_REGISTRY}${BACKEND_CONTAINER_NAME}:latest-dev
-                        docker image push ${ARTIFACTORY_DOCKER_REGISTRY}${BACKEND_CONTAINER_NAME}:latest-dev
+                        docker tag ${ARTIFACTORY_DOCKER_REGISTRY}${BACKEND_DOCKER_IMAGE_TAG} ${ARTIFACTORY_DOCKER_REGISTRY}${BACKEND_CONTAINER_NAME}:latest_prod
+                        docker image push ${ARTIFACTORY_DOCKER_REGISTRY}${BACKEND_CONTAINER_NAME}:latest_prod
                         """
 
                         echo "***** Tag and Push MongoDB Image *****"
                         sh """
                         docker image push ${ARTIFACTORY_DOCKER_REGISTRY}${MONGO_DOCKER_IMAGE_TAG}
-                        docker tag ${ARTIFACTORY_DOCKER_REGISTRY}${MONGO_DOCKER_IMAGE_TAG} ${ARTIFACTORY_DOCKER_REGISTRY}${MONGO_CONTAINER_NAME}:latest-dev
-                        docker image push ${ARTIFACTORY_DOCKER_REGISTRY}${MONGO_CONTAINER_NAME}:latest-dev
+                        docker tag ${ARTIFACTORY_DOCKER_REGISTRY}${MONGO_DOCKER_IMAGE_TAG} ${ARTIFACTORY_DOCKER_REGISTRY}${MONGO_CONTAINER_NAME}:latest_prod
+                        docker image push ${ARTIFACTORY_DOCKER_REGISTRY}${MONGO_CONTAINER_NAME}:latest_prod
                         """
 
                         echo "***** Tag and Push InfluxDB Image *****"
                         sh """
                         docker image push ${ARTIFACTORY_DOCKER_REGISTRY}${INFLUX_DOCKER_IMAGE_TAG}
-                        docker tag ${ARTIFACTORY_DOCKER_REGISTRY}${INFLUX_DOCKER_IMAGE_TAG} ${ARTIFACTORY_DOCKER_REGISTRY}${INFLUX_CONTAINER_NAME}:latest-dev
-                        docker image push ${ARTIFACTORY_DOCKER_REGISTRY}${INFLUX_CONTAINER_NAME}:latest-dev
+                        docker tag ${ARTIFACTORY_DOCKER_REGISTRY}${INFLUX_DOCKER_IMAGE_TAG} ${ARTIFACTORY_DOCKER_REGISTRY}${INFLUX_CONTAINER_NAME}:latest_prod
+                        docker image push ${ARTIFACTORY_DOCKER_REGISTRY}${INFLUX_CONTAINER_NAME}:latest_prod
                         """
                     }
                 }
@@ -167,19 +147,19 @@ pipeline {
                     echo "***** Removing Backend Images *****"
                     sh """
                     docker rmi ${ARTIFACTORY_DOCKER_REGISTRY}${BACKEND_DOCKER_IMAGE_TAG}
-                    docker rmi ${ARTIFACTORY_DOCKER_REGISTRY}${BACKEND_CONTAINER_NAME}:latest-dev
+                    docker rmi ${ARTIFACTORY_DOCKER_REGISTRY}${BACKEND_CONTAINER_NAME}:latest_prod
                     """
 
                     echo "***** Removing MongoDB Image *****"
                     sh """
                     docker rmi ${ARTIFACTORY_DOCKER_REGISTRY}${MONGO_DOCKER_IMAGE_TAG}
-                    docker rmi ${ARTIFACTORY_DOCKER_REGISTRY}${MONGO_CONTAINER_NAME}:latest-dev
+                    docker rmi ${ARTIFACTORY_DOCKER_REGISTRY}${MONGO_CONTAINER_NAME}:latest_prod
                     """
 
                     echo "***** Removing InfluxDB Image *****"
                     sh """
                     docker rmi ${ARTIFACTORY_DOCKER_REGISTRY}${INFLUX_DOCKER_IMAGE_TAG}
-                    docker rmi ${ARTIFACTORY_DOCKER_REGISTRY}${INFLUX_CONTAINER_NAME}:latest-dev
+                    docker rmi ${ARTIFACTORY_DOCKER_REGISTRY}${INFLUX_CONTAINER_NAME}:latest_prod
                     """
                 }
             }
@@ -188,16 +168,16 @@ pipeline {
         /* Stage 7: Deleting the previous deployment */
         stage("Deleting the previous deployment") {
             steps {
-                withKubeConfig([credentialsId: 'K8s-config-file', serverUrl: 'https://167.235.66.115:6443', namespace: 'tango-development']) {
+                withKubeConfig([credentialsId: 'RIAS-K8S-config-file', serverUrl: 'https://api.riastone.eu:6443', namespace: 'smart-manufacturing']) {
                     // Delete deployment
                     sh 'kubectl delete -f dcba-deployment.yml || true'
 
                     // Delete old PVC to apply new storageClass/accessMode
-                    //sh 'kubectl delete pvc dcba-mongo-pvc -n tango-development || true' // Uncomment the following line ONLY if i want to delete the existing PVC and erase all MongoDB data.
+                    sh 'kubectl delete pvc dcba-mongo-pvc -n smart-manufacturing || true' // Uncomment the following line ONLY if i want to delete the existing PVC and erase all MongoDB data.
                                                                                         // This will remove the persistent storage, causing data loss in your MongoDB replicas.
 
                     // Delete old PVC to apply new storageClass/accessMode
-                    //sh 'kubectl delete pvc dcba-influx-pvc -n tango-development || true' // Uncomment the following line ONLY if i want to delete the existing PVC and erase all MongoDB data.
+                    sh 'kubectl delete pvc dcba-influx-pvc -n smart-manufacturing || true' // Uncomment the following line ONLY if i want to delete the existing PVC and erase all MongoDB data.
                                                                                         // This will remove the persistent storage, causing data loss in your MongoDB replicas.
 
                 }
@@ -207,7 +187,7 @@ pipeline {
         /* Stage 8: Applying dcba-secrets */
         stage("Applying dcba-secrets") {
             steps {
-                withKubeConfig([credentialsId: 'K8s-config-file', serverUrl: 'https://167.235.66.115:6443', namespace: 'tango-development']) {
+                withKubeConfig([credentialsId: 'RIAS-K8S-config-file', serverUrl: 'https://api.riastone.eu:6443', namespace: 'smart-manufacturing']) {
                     sh 'kubectl apply -f dcba-secrets.yml'
                 }
             }
@@ -217,19 +197,19 @@ pipeline {
         /* Stage 9: Deploying the new deployment */
         stage("Deploying the new deployment") {
             steps {
-                withKubeConfig([credentialsId: 'K8s-config-file', serverUrl: 'https://167.235.66.115:6443', namespace: 'tango-development']) {
+                withKubeConfig([credentialsId: 'RIAS-K8S-config-file', serverUrl: 'https://api.riastone.eu:6443', namespace: 'smart-manufacturing']) {
                     // Apply new mongo PVC first
-                    //sh 'kubectl apply -f dcba-mongo-pvc.yml' // Uncomment this ONLY if i deleted the old PVC implementation and start fresh with new storage.
+                    sh 'kubectl apply -f dcba-mongo-pvc.yml' // Uncomment this ONLY if i deleted the old PVC implementation and start fresh with new storage.
 
                     // Apply new influx PVC first
-                    //sh 'kubectl apply -f dcba-influx-pvc.yml' // Uncomment this ONLY if i deleted the old PVC implementation and start fresh with new storage.
+                    sh 'kubectl apply -f dcba-influx-pvc.yml' // Uncomment this ONLY if i deleted the old PVC implementation and start fresh with new storage.
 
                     // Apply deployment and ingress
                     sh 'kubectl apply -f dcba-deployment.yml'
                     sh 'kubectl apply -f dcba-ingress.yml'
 
                     // Verify pod status
-                    sh 'kubectl get pods -n tango-development'
+                    sh 'kubectl get pods -n smart-manufacturing'
                 }
             }
         }
