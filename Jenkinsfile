@@ -190,7 +190,7 @@ pipeline {
         /* Stage 7: Deleting the previous deployment */
         stage("Deleting the previous deployment") {
             steps {
-                withKubeConfig([credentialsId: 'RIAS-K8S-config-file', serverUrl: 'https://api.riastone.eu:6443', namespace: 'smart-manufacturing']) {
+                withKubeConfig([credentialsId: 'RIAS-K8s-config-file', serverUrl: 'https://api.riastone.eu:6443', namespace: 'smart-manufacturing']) {
                     // Delete deployment
                     sh 'kubectl delete -f dcba-deployment.yml || true'
 
@@ -209,7 +209,7 @@ pipeline {
         /* Stage 8: Applying dcba-secrets */
         stage("Applying dcba-secrets") {
             steps {
-                withKubeConfig([credentialsId: 'RIAS-K8S-config-file', serverUrl: 'https://api.riastone.eu:6443', namespace: 'smart-manufacturing']) {
+                withKubeConfig([credentialsId: 'RIAS-K8s-config-file', serverUrl: 'https://api.riastone.eu:6443', namespace: 'smart-manufacturing']) {
                     sh 'kubectl apply -f dcba-secrets.yml'
                 }
             }
@@ -219,7 +219,7 @@ pipeline {
         /* Stage 9: Deploying the new deployment */
         stage("Deploying the new deployment") {
             steps {
-                withKubeConfig([credentialsId: 'RIAS-K8S-config-file', serverUrl: 'https://api.riastone.eu:6443', namespace: 'smart-manufacturing']) {
+                withKubeConfig([credentialsId: 'RIAS-K8s-config-file', serverUrl: 'https://api.riastone.eu:6443', namespace: 'smart-manufacturing']) {
                     // Apply new mongo PVC first
                     sh 'kubectl apply -f dcba-mongo-pvc.yml' // Uncomment this ONLY if i deleted the old PVC implementation and start fresh with new storage.
 
