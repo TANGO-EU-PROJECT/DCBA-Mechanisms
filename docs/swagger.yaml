@@ -5,32 +5,39 @@ info:
   description: |
     API documentation for the DCBA Services.
 
-    The **Authenticator Endpoints** are exclusively utilized by the Android application, 'Authenticator', which is deployed on employees' devices. 
+    Authentication is now handled through a PEP/PDP access control mechanism.
+    Instead of sending Bearer tokens, requests are authorized using a capability token issued by the PDP.
 
 servers:
-  - url: https://k8s-cluster.tango.rid-intrasoft.eu/development/dcba-backend/
+  - url: https://dcba-tango.riastone.eu/development/dcba-backend/
 
 components:
   securitySchemes:
-    bearerAuth:
-      type: http
-      scheme: bearer
-      bearerFormat: JWT
+    CapabilityTokenAuth:
+      type: apiKey
+      in: header
+      name: Capability-Token
+
 
 
 
 paths:
   # Service API Endpoints #
 
-  # [1] GET /devices
+  # [1] GET /resource/devices
   /resource/devices:
     get:
       security:
-        - bearerAuth: []
+        - CapabilityTokenAuth: []
       tags:
         - Service API Endpoints  # Tag for service-facing endpoints
       summary: Fetch all devices
-      description: Retrieves all device entries from the database. This route requires a valid JWT Bearer token in the Authorization header to access.
+      description: >
+        Retrieves all device entries from the database.
+
+        This endpoint requires a valid Capability Token issued by the PDP, which must be included
+        in the `Capability-Token` header. The request is mediated by the PEP component.
+
       responses:
         '200':
           description: Successfully fetched devices
@@ -144,6 +151,23 @@ paths:
                   value:
                     status: "failed"
                     message: "Invalid Authorization token."
+        '404':
+          description: Resource not found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                  message:
+                    type: string
+              examples:
+                Resource not found:
+                  summary: Resource not found
+                  value:
+                    status: "failed"
+                    message: "Resource not found."  
         '500':
           description: Internal server error while fetching devices
           content:
@@ -156,7 +180,17 @@ paths:
                     example: "failed"
                   message:
                     type: string
-                    example: "Error fetching device data."
+              examples:
+                Error fetching device data:
+                  summary: Error fetching device data
+                  value:
+                    status: "failed"
+                    message: "Error fetching device data."
+                Error fetching resource:
+                  summary: Error fetching resource
+                  value:
+                    status: "failed"
+                    message: "Error fetching resource."
 
 
 
