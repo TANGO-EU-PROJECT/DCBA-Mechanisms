@@ -94,63 +94,6 @@ paths:
                       - device_id: "gi9b459o5333c612"
                         did: "urn:uuid:b115d2e6-03c9-3t7h-000a-125374ffp9ll"
                         sub: "did:my:wallet"
-        '401':
-          description: Unauthorized - Authorization token is missing, invalid, expired, or malformed
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  status:
-                    type: string
-                    example: "failed"
-                  message:
-                    type: string
-                    example: "Authorization token is missing, invalid or expired."
-              examples:
-                MissingAuthorizationToken:
-                  summary: Missing Authorization header
-                  value:
-                    status: "failed"
-                    message: "Authorization token is missing."
-                TokenExpired:
-                  summary: Authorization token has expired
-                  value:
-                    status: "failed"
-                    message: "Authorization token has expired."
-                InvalidToken:
-                  summary: Authorization token is invalid
-                  value:
-                    status: "failed"
-                    message: "Invalid Authorization token."
-                MalformedToken:
-                  summary: Authorization header malformed
-                  value:
-                    status: "failed"
-                    message: "Authorization token is malformed. It should start with 'Bearer '."
-
-        '403':
-          description: Unauthorized - Authorization token is invalid or expired
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  status:
-                    type: string
-                  message:
-                    type: string
-              examples:
-                ExpiredToken:
-                  summary: Authorization token has expired
-                  value:
-                    status: "failed"
-                    message: "Authorization token has expired."
-                InvalidToken:
-                  summary: Authorization token is invalid
-                  value:
-                    status: "failed"
-                    message: "Invalid Authorization token."
         '404':
           description: Resource not found
           content:
@@ -195,15 +138,19 @@ paths:
 
 
 
-  # [2] GET /devices/online-shifts  
+  # [2] GET /resource/online  
   /resource/online:
     get:
       tags:
         - Service API Endpoints  # Tag for service-facing endpoints
       security:
-        - bearerAuth: []
+        - CapabilityTokenAuth: []
       summary: Fetch online devices
-      description: Retrieves devices that are currently online. This route requires a valid JWT Bearer token in the Authorization header to access.
+      description: >
+        Retrieves devices that are currently online.
+
+        This endpoint requires a valid Capability Token issued by the PDP, which must be included
+        in the `Capability-Token` header. The request is mediated by the PEP component.
       responses:
         '200':
           description: Successfully fetched online devices
@@ -260,62 +207,6 @@ paths:
                       - device_id: "gi9b459o5333c612"
                         did: "urn:uuid:b115d2e6-03c9-3t7h-000a-125374ffp9ll"
                         sub: "did:my:wallet"
-        '401':
-          description: Unauthorized - Authorization token is missing, invalid, expired, or malformed
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  status:
-                    type: string
-                    example: "failed"
-                  message:
-                    type: string
-                    example: "Authorization token is missing, invalid or expired."
-              examples:
-                MissingAuthorizationToken:
-                  summary: Missing Authorization header
-                  value:
-                    status: "failed"
-                    message: "Authorization token is missing."
-                TokenExpired:
-                  summary: Authorization token has expired
-                  value:
-                    status: "failed"
-                    message: "Authorization token has expired."
-                InvalidToken:
-                  summary: Authorization token is invalid
-                  value:
-                    status: "failed"
-                    message: "Invalid Authorization token."
-                MalformedToken:
-                  summary: Authorization header malformed
-                  value:
-                    status: "failed"
-                    message: "Authorization token is malformed. It should start with 'Bearer '."
-        '403':
-          description: Unauthorized - Authorization token is invalid or expired
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  status:
-                    type: string
-                  message:
-                    type: string
-              examples:
-                ExpiredToken:
-                  summary: Authorization token has expired
-                  value:
-                    status: "failed"
-                    message: "Authorization token has expired."
-                InvalidToken:
-                  summary: Authorization token is invalid
-                  value:
-                    status: "failed"
-                    message: "Invalid Authorization token."
         '500':
           description: Internal server error while fetching online devices
           content:
@@ -328,21 +219,35 @@ paths:
                     example: "failed"
                   message:
                     type: string
-                    example: "Error fetching online devices."
+              examples:
+                Error fetching online device data:
+                  summary: Error fetching online device data
+                  value:
+                    status: "failed"
+                    message: "Error fetching online devices."
+                Error fetching resource:
+                  summary: Error fetching resource
+                  value:
+                    status: "failed"
+                    message: "Error fetching resource."
 
 
 
 
 
-  # [3] GET /devices/offline-shifts
+  # [3] GET /resource/offline
   /resource/offline:
     get:
       tags:
         - Service API Endpoints
       security:
-        - bearerAuth: []
+        - CapabilityTokenAuth: []
       summary: Fetch offline devices
-      description: Retrieves devices that are currently offline. This route requires a valid JWT Bearer token in the Authorization header to access.
+      description: >
+        Retrieves devices that are currently offline.
+
+        This endpoint requires a valid Capability Token issued by the PDP. The token must be
+        included in the `Capability-Token` header. The PEP component validates the request.
       responses:
         '200':
           description: Successfully fetched offline devices
@@ -399,62 +304,6 @@ paths:
                       - device_id: "gi9b459o5333c612"
                         did: "urn:uuid:b115d2e6-03c9-3t7h-000a-125374ffp9ll"
                         sub: "did:my:wallet"
-        '401':
-          description: Unauthorized - Authorization token is missing, invalid, expired, or malformed
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  status:
-                    type: string
-                    example: "failed"
-                  message:
-                    type: string
-                    example: "Authorization token is missing, invalid or expired."
-              examples:
-                MissingAuthorizationToken:
-                  summary: Missing Authorization header
-                  value:
-                    status: "failed"
-                    message: "Authorization token is missing."
-                TokenExpired:
-                  summary: Authorization token has expired
-                  value:
-                    status: "failed"
-                    message: "Authorization token has expired."
-                InvalidToken:
-                  summary: Authorization token is invalid
-                  value:
-                    status: "failed"
-                    message: "Invalid Authorization token."
-                MalformedToken:
-                  summary: Authorization header malformed
-                  value:
-                    status: "failed"
-                    message: "Authorization token is malformed. It should start with 'Bearer '."
-        '403':
-          description: Unauthorized - Authorization token is invalid or expired
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  status:
-                    type: string
-                  message:
-                    type: string
-              examples:
-                ExpiredToken:
-                  summary: Authorization token has expired
-                  value:
-                    status: "failed"
-                    message: "Authorization token has expired."
-                InvalidToken:
-                  summary: Authorization token is invalid
-                  value:
-                    status: "failed"
-                    message: "Invalid Authorization token."
         '500':
           description: Internal server error while fetching offline devices
           content:
@@ -467,45 +316,85 @@ paths:
                     example: "failed"
                   message:
                     type: string
-                    example: "Error fetching offline devices."
+              examples:
+                Error fetching offline device data:
+                  summary: Error fetching offline device data
+                  value:
+                    status: "failed"
+                    message: "Error fetching offline devices."
+                Error fetching resource:
+                  summary: Error fetching resource
+                  value:
+                    status: "failed"
+                    message: "Error fetching resource."
 
 
-  # [4] POST /devices/behavioural-score
+
+
+  # [4] POST /resource/behavioural_score
   /resource/behavioural_score:
     post:
       tags:
         - Service API Endpoints
       security:
-        - bearerAuth: []
+        - CapabilityTokenAuth: []
       summary: Retrieve device behavioural score
       description: >
         Returns the behavioural score of a device based on provided DIDs.
-        This route requires a valid JWT Bearer token in the Authorization header to access.
+
+        This endpoint requires a valid Capability Token issued by the PDP, which must be included
+        in the `Capability-Token` header. The request body must include the SAR structure as defined
+        by the PEP/PDP authorization flow.
+
       requestBody:
         required: true
         content:
-          application/x-www-form-urlencoded:
+          application/json:
             schema:
               type: object
               required:
-                - didSP
-                - didRequester
+                - sar
+                - jsonBody
               properties:
-                didSP:
-                  type: string
-                  description: The Decentralized Identifier (DID) of the service provider initiating the request.
-                  example: "did:example:serviceprovider123"
-                didRequester:
-                  type: string
-                  description: The Decentralized Identifier (DID) of the requesting employee.
-                  example: "did:jwk:eyJrdHkiOiJFQyIsImNydiI6IlAtMjU2Iiwia2lkIjoiMDVhZ0UxdXZPcW1yVDRLY2NiZ1ZKenAwRmJ5SF9weXE4WE5mU2VoOHRkSSIsIngiOiJDRTVqODFybWxqV1JoM1FEOFlJQVNGb093SzRrMjRqU0pWVWEtdl9rSTVZIiwieSI6IjBRU29vbktGVXA4Y0ZLd0dwWHhLSjlSeEZJTk9BOHpWd0ZCTTloQzRKczgifQ"
-
+                sar:
+                  type: object
+                  required:
+                    - action
+                    - resource
+                  properties:
+                    action:
+                      type: string
+                      example: "POST"
+                    resource:
+                      type: string
+                      example: "https://dcba-tango.riastone.eu/development/dcba-backend/resource/behavioural_score"
+                queryParameters:
+                  type: object
+                  description: Optional query parameters to filter or shape the request
+                jsonBody:
+                  type: object
+                  required:
+                    - didSP
+                    - didRequester
+                  properties:
+                    didSP:
+                      type: string
+                      example: "did:example:serviceprovider123"
+                    didRequester:
+                      type: string
+                      example: "did:jwk:eyJrdHkiOiJFQyIsImNydiI6..."
             examples:
-              validRequest:
-                summary: Valid request example
+              ValidRequest:
+                summary: Example valid behavioural score request
                 value:
-                  didSP: "did:example:serviceprovider123"
-                  didRequester: "did:jwk:eyJrdHkiOiJFQyIsImNydiI6IlAtMjU2Iiwia2lkIjoiMDVhZ0UxdXZPcW1yVDRLY2NiZ1ZKenAwRmJ5SF9weXE4WE5mU2VoOHRkSSIsIngiOiJDRTVqODFybWxqV1JoM1FEOFlJQVNGb093SzRrMjRqU0pWVWEtdl9rSTVZIiwieSI6IjBRU29vbktGVXA4Y0ZLd0dwWHhLSjlSeEZJTk9BOHpWd0ZCTTloQzRKczgifQ"
+                  sar:
+                    action: "POST"
+                    resource: "https://dcba-tango.riastone.eu/development/dcba-backend/resource/behavioural_score"
+                  queryParameters: {}
+                  jsonBody:
+                    didSP: "did:example:serviceprovider123"
+                    didRequester: "did:jwk:eyJrdHkiOiJFQyIsImNydiI6..."
+
       responses:
         '200':
           description: Behavioural score retrieved successfully
@@ -525,7 +414,7 @@ paths:
                     format: float
                     example: 0.85
         '400':
-          description: Bad Request - Missing required fields
+          description: Bad Request - Missing required fields or SAR
           content:
             application/json:
               schema:
@@ -536,41 +425,17 @@ paths:
                     example: "failed"
                   message:
                     type: string
-                    example: "Missing required fields: didSP or didRequester."
-        '401':
-          description: Unauthorized - Authorization token is missing, invalid, expired, or malformed
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  status:
-                    type: string
-                    example: "failed"
-                  message:
-                    type: string
-                    example: "Authorization token is missing, invalid or expired."
               examples:
-                MissingAuthorizationToken:
-                  summary: Missing Authorization header
+                MissingSAR:
+                  summary: Missing 'sar.resource' in request
                   value:
                     status: "failed"
-                    message: "Authorization token is missing."
-                TokenExpired:
-                  summary: Authorization token has expired
+                    message: "Missing 'sar.resource' in request body."
+                MissingFields:
+                  summary: Missing required fields in jsonBody
                   value:
                     status: "failed"
-                    message: "Authorization token has expired."
-                InvalidToken:
-                  summary: Authorization token is invalid
-                  value:
-                    status: "failed"
-                    message: "Invalid Authorization token."
-                MalformedToken:
-                  summary: Authorization header malformed
-                  value:
-                    status: "failed"
-                    message: "Authorization token is malformed. It should start with 'Bearer '."
+                    message: "Missing required fields: didSP or didRequester."
         '404':
           description: Device not found
           content:
@@ -585,7 +450,7 @@ paths:
                     type: string
                     example: "Device not found."
         '500':
-          description: Internal server error while retrieving behavioural score 
+          description: Internal server error while retrieving behavioural score
           content:
             application/json:
               schema:
@@ -596,10 +461,21 @@ paths:
                     example: "failed"
                   message:
                     type: string
-                    example: "Error retrieving behavioural score."
+              examples:
+                Error retrieving behavioural score:
+                  summary: Server error while retrieving behavioural score
+                  value:
+                    status: "failed"
+                    message: "Error retrieving behavioural score."
+                Error fetching resource:
+                  summary: Error fetching resource
+                  value:
+                    status: "failed"
+                    message: "Error fetching resource."
 
-  # [5] POST /devices/last-location
-  /resource/last_location:
+
+  # [5] POST /devices/last_location
+  /devices/last_location:
     post:
       tags:
         - Service API Endpoints
@@ -613,29 +489,36 @@ paths:
       requestBody:
         required: true
         content:
-          application/x-www-form-urlencoded:
+          application/json:   # changed from x-www-form-urlencoded to JSON
             schema:
               type: object
               required:
                 - didRequester
                 - timezone
+                - sar.resource       # Added sar.resource as required
               properties:
                 didRequester:
                   type: string
                   description: The Decentralized Identifier (DID) of the requesting employee.
                   example: "did:jwk:eyJrdHkiOiJFQyIsImNydiI6IlAtMjU2Iiwia2lkIjoiMDVhZ0UxdXZPcW1yVDRLY2NiZ1ZKenAwRmJ5SF9weXE4WE5mU2VoOHRkSSIsIngiOiJDRTVqODFybWxqV1JoM1FEOFlJQVNGb093SzRrMjRqU0pWVWEtdl9rSTVZIiwieSI6IjBRU29vbktGVXA4Y0ZLd0dwWHhLSjlSeEZJTk9BOHpWd0ZCTTloQzRKczgifQ"
-                timezone: 
+                timezone:
                   type: string
                   description: >
                     Preferred IANA timezone name to interpret the 'from' and 'to' parameters for filtering location history, and to format the returned timestamps accordingly.
                     Example values include: Europe/Athens, Europe/Lisbon, Asia/Tokyo.
                   example: "Europe/Athens"
+                sar.resource:
+                  type: string
+                  description: >
+                    The resource name or identifier to specify the device or data requested.
+                  example: "last_location"
             examples:
               validRequest:
                 summary: Valid request example
                 value:
                   didRequester: "did:jwk:eyJrdHkiOiJFQyIsImNydiI6IlAtMjU2Iiwia2lkIjoiMDVhZ0UxdXZPcW1yVDRLY2NiZ1ZKenAwRmJ5SF9weXE4WE5mU2VoOHRkSSIsIngiOiJDRTVqODFybWxqV1JoM1FEOFlJQVNGb093SzRrMjRqU0pWVWEtdl9rSTVZIiwieSI6IjBRU29vbktGVXA4Y0ZLd0dwWHhLSjlSeEZJTk9BOHpWd0ZCTTloQzRKczgifQ"
                   timezone: "Europe/Athens"
+                  sar.resource: "last_location"
       responses:
         '200':
           description: Last known device location retrieved successfully
@@ -665,7 +548,6 @@ paths:
                     type: integer
                     example: 60
 
-
         '400':
           description: Bad Request - Missing required fields or invalid timezone
           content:
@@ -683,47 +565,12 @@ paths:
                   summary: Missing required fields
                   value:
                     status: "failed"
-                    message: "Missing required fields: didRequester or timezone."
+                    message: "Missing required fields: didRequester, timezone, or sar.resource."
                 invalidTimezone:
                   summary: Invalid timezone format
                   value:
                     status: "failed"
                     message: "Invalid timezone. Please provide a valid IANA timezone name (e.g. 'Europe/Athens', 'America/New_York')."
-
-        '401':
-          description: Unauthorized - Authorization token is missing, invalid, expired, or malformed
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  status:
-                    type: string
-                    example: "failed"
-                  message:
-                    type: string
-                    example: "Authorization token is missing, invalid or expired."
-              examples:
-                MissingAuthorizationToken:
-                  summary: Missing Authorization header
-                  value:
-                    status: "failed"
-                    message: "Authorization token is missing."
-                TokenExpired:
-                  summary: Authorization token has expired
-                  value:
-                    status: "failed"
-                    message: "Authorization token has expired."
-                InvalidToken:
-                  summary: Authorization token is invalid
-                  value:
-                    status: "failed"
-                    message: "Invalid Authorization token."
-                MalformedToken:
-                  summary: Authorization header malformed
-                  value:
-                    status: "failed"
-                    message: "Authorization token is malformed. It should start with 'Bearer '."
 
         '404':
           description: Device not found
@@ -738,6 +585,7 @@ paths:
                   message:
                     type: string
                     example: "Device not found."
+
         '500':
           description: Internal server error while retrieving last location
           content:
@@ -750,7 +598,18 @@ paths:
                     example: "failed"
                   message:
                     type: string
-                    example: "Error retrieving device last location."
+              examples:
+                Error retrieving device last location:
+                  summary: Server error while retrieving device last location
+                  value:
+                    status: "failed"
+                    message: "Error retrieving device last location."
+                Error fetching resource:
+                  summary: Error fetching resource
+                  value:
+                    status: "failed"
+                    message: "Error fetching resource."
+
 
   # [6] POST /devices/location-history
   /resource/location_history:
@@ -878,40 +737,6 @@ paths:
                   value:
                     status: "failed"
                     message: "Invalid timezone. Please provide a valid IANA timezone name (e.g. 'Europe/Athens', 'America/New_York')."
-        '401':
-          description: Unauthorized - Authorization token is missing, invalid, expired, or malformed
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  status:
-                    type: string
-                    example: "failed"
-                  message:
-                    type: string
-                    example: "Authorization token is missing, invalid or expired."
-              examples:
-                MissingAuthorizationToken:
-                  summary: Missing Authorization header
-                  value:
-                    status: "failed"
-                    message: "Authorization token is missing."
-                TokenExpired:
-                  summary: Authorization token has expired
-                  value:
-                    status: "failed"
-                    message: "Authorization token has expired."
-                InvalidToken:
-                  summary: Authorization token is invalid
-                  value:
-                    status: "failed"
-                    message: "Invalid Authorization token."
-                MalformedToken:
-                  summary: Authorization header malformed
-                  value:
-                    status: "failed"
-                    message: "Authorization token is malformed. It should start with 'Bearer '."
         '404':
           description: Device not found
           content:
