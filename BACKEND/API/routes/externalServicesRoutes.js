@@ -129,7 +129,7 @@ router.post('/:resourceName', async (req, res) => {
   if (!sar?.resource) {
     return res.status(400).json({
       status: "failed",
-      message: "Missing 'sar.resource' in request body",
+      message: "Missing 'sar.resource' in request body.",
     });
   }
 
@@ -139,12 +139,12 @@ router.post('/:resourceName', async (req, res) => {
     const pathParts = url.pathname.split('/').filter(Boolean);
     const resourceName = pathParts[pathParts.length - 1];
 
-    const handler = resourceControllers[resourceName];
+    const postHandler = resourceControllers[resourceName];
 
-    if (!handler) {
+    if (!postHandler) {
       return res.status(404).json({
         status: "failed",
-        message: `Resource '${resourceName}' not found`,
+        message: `Resource not found.`,
       });
     }
 
@@ -158,13 +158,13 @@ router.post('/:resourceName', async (req, res) => {
       req.body = jsonBody;
     }
 
-    await handler(req, res);
+    await postHandler(req, res);
 
   } catch (err) {
     console.error("POST error:", err);
     res.status(500).json({
       status: "failed",
-      message: "Server error while handling POST resource",
+      message: `Error fetching resource.`,
     });
   }
 });
