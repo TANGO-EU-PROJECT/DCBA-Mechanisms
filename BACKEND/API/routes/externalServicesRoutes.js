@@ -63,7 +63,7 @@ router.get('/:resourceName', async (req, res) => {
   if (!fetchFunction) {
     return res.status(404).json({
       status: "failed",
-      message: `Resource '${resourceName}' not found`
+      message: `Resource not found.`
     });
   }
 
@@ -74,7 +74,7 @@ router.get('/:resourceName', async (req, res) => {
     console.error(error);
     res.status(500).json({
       status: "failed",
-      message: `Error fetching resource '${resourceName}'`,
+      message: `Error fetching resource.`,
     });
   }
 });
@@ -168,9 +168,6 @@ router.post('/:resourceName', async (req, res) => {
     });
   }
 });
-
-
-
 /********************** POST REQUESTS **********************/
 
 
