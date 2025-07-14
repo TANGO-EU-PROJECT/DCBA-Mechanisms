@@ -6,56 +6,105 @@ const { verifyToken } = require('../middleware/auth');  // Import the middleware
 
 
 const resourceControllers = {
-  /* GET */
-  devices: controller.fetchDevices,
-  online: controller.fetchOnlineDevices,
-  offline: controller.fetchOfflineDevices,
-  alerts: controller.fetchDevicesAlerts,
+  /************************************************** GET REQUESTS **************************************************/
+  /** [1] 
+   * @route   GET /resource/devices
+   * @desc    Fetch all devices from the database.
+   * @middleware PEP/PDP
+   */
+  "devices": controller.fetchDevices,
 
-  /* POST */
-  behavioural_score: controller.fetchDeviceBehaviouralScore,
-  last_location: controller.fetchDeviceLastLocation,
-  location_history: controller.fetchDeviceLocationHistory,
-  permitted_location_history: controller.fetchDevicePermittedLocationHistory,
-  restricted_location_history: controller.fetchDeviceRestrictedLocationHistory
+
+  /** [2] 
+ * @route   GET /resource/online-devices
+ * @desc    Fetches the online devices
+ * @middleware PEP/PDP
+ */
+  "online-devices": controller.fetchOnlineDevices,
+
+  /** [3] 
+   * @route   GET /resource/offline-devices
+   * @desc    Fetches the offline devices
+   * @middleware PEP/PDP
+   */
+  "offline-devices": controller.fetchOfflineDevices,
+
+  /** [4] 
+   * @route   GET /resourse/alerts
+   * @desc    Returns all the possible alerts for devices navigating to restricted areas
+   * @middleware PEP/PDP
+   */
+  "alerts": controller.fetchDevicesAlerts,
+  /************************************************** GET REQUESTS **************************************************/
+
+
+
+
+
+
+
+
+  /************************************************** POST REQUESTS **************************************************/
+  /** [5] 
+   * @route   POST /resource/behavioural-score
+   * @desc    Returns the devices's behavioural score based on provided DIDs.
+   * @middleware PEP/PDP
+   */
+  "behavioural-score": controller.fetchDeviceBehaviouralScore,
+
+
+  /** [6] 
+   * @route   POST /resource/last-location
+   * @desc    Returns the devices's last location based on provided DIDs.
+   * @middleware PEP/PDP
+   */
+  "last-location": controller.fetchDeviceLastLocation,
+
+  /** [7]
+   * @route   POST /resource/location-history
+   * @desc    Returns the device’s location history within a specified timeframe, based on provided DIDs.
+   * @middleware PEP/PDP
+   */
+  "location-history": controller.fetchDeviceLocationHistory,
+
+  /** [8] 
+   * @route   POST /resource/permitted-location-history
+   * @desc    Returns the devices's permitted location history within a specified timeframe, based on provided DIDs and authorization.
+   * @middleware PEP/PDP
+   */
+  "permitted-location-history": controller.fetchDevicePermittedLocationHistory,
+
+
+  /** [9]
+   * @route   POST /resource/restricted-location-history
+   * @desc    Returns the devices's restricted location history within a specified timeframe, based on provided DIDs and authorization.
+   * @middleware PEP/PDP
+   */
+  "restricted-location-history": controller.fetchDeviceRestrictedLocationHistory,
+  /************************************************** POST REQUESTS **************************************************/
+
+
+
+
+
+
+  /************************************************** DELETE REQUESTS **************************************************/
+  /** [10]
+   * @route   DELETE /resource/delete-employee
+   * @desc    Deletes a device with the associated did
+   * @middleware PEP/PDP
+   */
+  "delete-employee": controller.deleteDeviceByDID,
+  /************************************************** DELETE REQUESTS **************************************************/
 };
 
 
+
+
+
+
+
 /********************** GET REQUESTS **********************/
-// /** [1] DONE
-//  * @route   GET /devices
-//  * @desc    Fetch all devices from the database.
-//  * @access  Private (requires valid JWT Authorization token)
-//  * @middleware PEP/PDP
-//  */
-// router.get('/',controller.fetchDevices);
-
-
-// /** [2] DONE
-//  * @route   GET /devices/online-shifts
-//  * @desc    Fetches the online devices
-//  * @access  Private (requires valid JWT Authorization token)
-//  * @middleware PEP/PDP
-//  */
-// router.get('/online-shifts',controller.fetchOnlineDevices);
-
-
-// /** [3] DONE
-//  * @route   GET /devices/offline-shifts
-//  * @desc    Fetches the offline devices
-//  * @access  Private (requires valid JWT Authorization token)
-//  * @middleware PEP/PDP
-//  */
-// router.get('/offline-shifts', controller.fetchOfflineDevices);
-
-
-// /** [4] DONE
-//  * @route   GET /devices/fetch-alert-history
-//  * @desc    Returns all the possible alerts for devices navigating to restricted areas
-//  * @access  Restricted – Requires jwtAuth for access
-//  * @middleware PEP/PDP
-//  */
-// router.get('/fetch-alert-history', controller.fetchDevicesAlerts);
 router.get('/:resourceName', async (req, res) => {
   const resourceName = req.params.resourceName;
   const fetchFunction = resourceControllers[resourceName];
@@ -63,7 +112,7 @@ router.get('/:resourceName', async (req, res) => {
   if (!fetchFunction) {
     return res.status(404).json({
       status: "failed",
-      message: `Resource not found.`
+      message: "Cannot GET. Resource not found."
     });
   }
 
@@ -82,47 +131,7 @@ router.get('/:resourceName', async (req, res) => {
 
 
 
-
-
-
-
 /********************** POST REQUESTS **********************/
-// /** [5] DONE
-//  * @route   POST /devices/behavioural-score
-//  * @desc    Returns the devices's behavioural score based on provided DIDs and authorization.
-//  * @access  Restricted – Requires jwtAuth for access in the req.body
-//  */
-// router.post('/behavioural-score', verifyToken, controller.fetchDeviceBehaviouralScore);
-
-
-// /** [6] DONE
-//  * @route   POST /devices/last-location
-//  * @desc    Returns the devices's last location based on provided DIDs and authorization.
-//  * @access  Restricted – Requires jwtAuth for access
-//  */
-// router.post('/last-location', verifyToken, controller.fetchDeviceLastLocation);
-
-
-// /** [7] DONE
-//  * @route   POST /devices/location-history
-//  * @desc    Returns the device’s location history within a specified timeframe, based on provided DIDs and authorization.
-//  * @access  Restricted – Requires jwtAuth for access
-//  */
-// router.post('/location-history', verifyToken, controller.fetchDeviceLocationHistory);
-
-// /** [8] DONE
-//  * @route   POST /devices/permitted-location-history
-//  * @desc    Returns the devices's permitted location history within a specified timeframe, based on provided DIDs and authorization.
-//  * @access  Restricted – Requires jwtAuth for access
-//  */
-// router.post('/permitted-location-history', verifyToken, controller.fetchDevicePermittedLocationHistory);
-
-// /** [9] DONE
-//  * @route   POST /devices/restricted-location-history
-//  * @desc    Returns the devices's restricted location history within a specified timeframe, based on provided DIDs and authorization.
-//  * @access  Restricted – Requires jwtAuth for access
-//  */
-// router.post('/restricted-location-history', verifyToken, controller.fetchDeviceRestrictedLocationHistory);
 router.post('/:resourceName', async (req, res) => {
   const { sar, queryParameters, jsonBody } = req.body;
 
@@ -172,14 +181,28 @@ router.post('/:resourceName', async (req, res) => {
 
 
 /********************** DELETE REQUESTS **********************/
-/** [10]
- * @route   DELETE /devices/delete-employee
- * @desc    Deletes a device with the associated did
- * @access  Restricted – Requires jwtAuth for access
- */
-router.delete('/delete-employee', verifyToken, controller.deleteDeviceByDID);
-/********************** DELETE REQUESTS **********************/
+router.delete('/:resourceName', async (req, res) => {
+  const resourceName = req.params.resourceName;
+  const deleteHandler = resourceControllers[resourceName];
 
+  if (!deleteHandler) {
+    return res.status(404).json({
+      status: "failed",
+      message: "Cannot DELETE. Resource not found."
+    });
+  }
+
+  try {
+    await deleteHandler(req, res);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({
+      status: "failed",
+      message: "Error deleting resource.",
+    });
+  }
+});
+/********************** DELETE REQUESTS **********************/
 
 
 module.exports = router;
