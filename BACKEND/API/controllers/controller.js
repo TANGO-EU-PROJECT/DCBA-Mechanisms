@@ -874,7 +874,7 @@ exports.beginSession = async (req, res) => {
       {
         params: {
           state: device_id,
-          client_callback: `https://ui-backend.tango.nadiaplatform.com/auth_callback`,
+          client_callback: `https://${process.env.HOSTNAME_DNS_INTRASOFT_DCBA_BACKEND_SERVICE}/development/dcba-backend/authenticator/auth-callback`,
           client_id: clientId
         }
       }
@@ -895,15 +895,6 @@ exports.beginSession = async (req, res) => {
     const params = new URLSearchParams(queryString);
     const state = params.get('state') || device_id;
 
-    // Replace the redirect_uri in the openid URL
-    const customRedirectUri = `https://${process.env.HOSTNAME_DNS_INTRASOFT_DCBA_BACKEND_SERVICE}/development/dcba-backend/authenticator/auth-callback`;
-    const updatedOpenidUrl = openidUrl.replace(
-      /redirect_uri=[^&]+/,
-      `redirect_uri=${encodeURIComponent(customRedirectUri)}`
-    );
-
-    console.log(openidUrl, updatedOpenidUrl)
-
     // Save or update session in DB
     await SESSION_REQUEST.replaceOne(
       { device_id },
@@ -922,7 +913,7 @@ exports.beginSession = async (req, res) => {
       status: 'success',
       message: 'QR Code generated successfully.',
       state: state,
-      openid_url: updatedOpenidUrl
+      openid_url: openidUrl
     });
 
   } catch (error) {
@@ -950,7 +941,7 @@ exports.handleAuthCallback = async (req, res) => {
   let vp_token;
   let sessionRequest;
 
-  console.log("BODY: ", req.body)
+  console.log("QUERRY: ", req.query)
 
 
    /* Otherwise, fallback error handling */
