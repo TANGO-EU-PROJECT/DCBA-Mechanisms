@@ -845,27 +845,32 @@ exports.getHealthStatus = (req, res) => {
  * The QR code is extracted from an external authentication service (ips-verifier.tango.nadiaplatform.com).  
  * * @route   POST /devices/begin-session
  */
+/**
+ * [13] Handles the initiation of a device session by displaying a QR Code.
+ * Creates a session request, retrieving an authentication QR code from the verifier.
+ * @route   POST /devices/begin-session
+ */
 exports.beginSession = async (req, res) => {
-
-  /* Extract the device_id, the log_file_uri and the selected role */
   try {
     const { device_id, log_file_uri, role } = req.body;
 
-    /* If the role is not 'employee' or 'customer', invalid role */
+    // Validate role
     if (!['employee', 'customer'].includes(role)) {
-      return res.status(400).json({ status: 'failed', message: 'Invalid role provided.' });
+      return res.status(400).json({
+        status: 'failed',
+        message: 'Invalid role provided.'
+      });
     }
 
-    /* Select the clientID based on the selected role */
+    // Choose client ID based on role
     const clientId =
       role === 'customer'
         ? 'smart-hospitality-customer-service'
         : 'smart-hospitality-employee-service';
 
-
-    /* Make the post request to the auth init endpoint of the verifier */
+    // Generate verifier request
     const response = await axios.get(
-    `https://ips-verifier.tango.nadiaplatform.com/api/v1/startsiop`,
+      `https://ips-verifier.tango.nadiaplatform.com/api/v1/startsiop`,
       {
         params: {
           state: device_id,
@@ -875,70 +880,55 @@ exports.beginSession = async (req, res) => {
       }
     );
 
-    console.log(response)
-
-
-    /* Return session info */
-    return res.status(200).json({
-      status: 'success',
-      message: 'QR Code generated successfully.',
-      state: "w",
-      openid_url: "2",
-    });
-
-
-    /* If the response is not succesfull */
-    if (response.data.status !== 'OK' || !response.data.sessionId || !response.data.response) {
-      return res.status(500).json({ status: 'failed', message: 'Failed to initialize session.' });
+    // Check verifier response
+    if (
+      response.data.status !== 'OK' ||
+      !response.data.sessionId ||
+      !response.data.response
+    ) {
+      return res.status(500).json({
+        status: 'failed',
+        message: 'Failed to initialize session.'
+      });
     }
 
-    /* Extract the response QR String */
-    const responseQrString = response.data.response;
+    const openidUrl = response.data.response;  // Full openid:// string
 
-    /* Remove the `openid://?` prefix to parse as query string */
-    const queryString = responseQrString.replace('openid://?', '');
-
-    /* Use URLSearchParams to parse the query string */
+    // Parse `state` from the URL to save in DB (in case verifier changed it internally)
+    const queryString = openidUrl.replace('openid://?', '');
     const params = new URLSearchParams(queryString);
+    const state = params.get('state') || device_id;
 
-    /* Get the value of the `state` parameter */
-    const state = params.get('state');
-
-    /* Take the originalUrl callback, and set the redirect_uri to the corresponding dcba-backend auth-callbacb endpoint, in order to receive the response */
-    const originalUrl = response.data.response;
-    const customRedirectUri = `https://${process.env.HOSTNAME_DNS_INTRASOFT_DCBA_BACKEND_SERVICE}/authenticator/auth-callback`;
-    const updatedUrl = originalUrl.replace(
-      /redirect_uri=[^&]+/,
-      `redirect_uri=${encodeURIComponent(customRedirectUri)}`
-    );
-
-    /* Append or replace (if already exists a session request associated with this device_id) */
-    let savedSessionRequest;
-    savedSessionRequest = await SESSION_REQUEST.replaceOne(
-      { device_id: device_id },
+    // Save session to DB (or replace existing)
+    await SESSION_REQUEST.replaceOne(
+      { device_id },
       {
         device_id,
         state,
         role,
         log_file_uri,
-        timestamp: new Date()  /* Saves the current time in UTC */
+        timestamp: new Date()
       },
       { upsert: true }
     );
 
-    /* Return session info */
+    // Respond with QR info
     return res.status(200).json({
       status: 'success',
       message: 'QR Code generated successfully.',
       state: state,
-      openid_url: updatedUrl,
+      openid_url: openidUrl  // ← Send this to frontend/watch for QR code generation
     });
 
   } catch (error) {
     console.error('Error starting session:', error);
-    return res.status(500).json({ status: 'failed', message: 'Internal server error while initiating the session.'});
+    return res.status(500).json({
+      status: 'failed',
+      message: 'Internal server error while initiating the session.'
+    });
   }
 };
+
 
     
 
@@ -953,6 +943,8 @@ exports.handleAuthCallback = async (req, res) => {
   let state;
   let vp_token;
   let sessionRequest;
+
+  console.log('AUTH CALLBACK: ', req.body)
 
   try {
     /* Extract necessary values from the incoming POST request body */
