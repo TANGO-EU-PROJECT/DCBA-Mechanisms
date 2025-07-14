@@ -7,7 +7,7 @@ metadata:
     app: back-end                  # Label to categorize the resource for the application
   annotations:
     nginx.ingress.kubernetes.io/use-regex: "true"       # Enables regular expression-based path matching
-    nginx.ingress.kubernetes.io/rewrite-target: /$2     # Rewrites the incoming request path, preserving the captured groups
+    nginx.ingress.kubernetes.io/rewrite-target: /$1     # Rewrites the incoming request path, preserving the captured groups
     cert-manager.io/cluster-issuer: "letsencrypt-prod"  # Specifies the cluster issuer for Let's Encrypt certificate management
     kubernetes.io/ingress.class: "nginx"                # Specifies the ingress controller to be used, in this case, NGINX
     
@@ -26,7 +26,7 @@ spec:
     - host: dcba-tango.riastone.eu # Defines the domain for the ingress rule
       http:
         paths:
-          - path: /(/|$)(.*)  # Regex path matching, captures the rest of the URL after this prefix
+          - path: /(.*)  # Regex path matching, captures the rest of the URL after this prefix
             pathType: ImplementationSpecific          # Allows path matching based on the ingress controller's specific implementation
             backend:
               service:
