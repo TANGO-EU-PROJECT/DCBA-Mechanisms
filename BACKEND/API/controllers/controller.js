@@ -875,61 +875,77 @@ exports.beginSession = async (req, res) => {
 
     /* Make the post request to the auth init endpoint of the verifier */
     const response = await axios.get(
-      `${process.env.HOSTNAME_VERIFIER_NADIA_PLATFORM_AUTH_INIT}${clientId}`
+      `https://ips-verifier.tango.nadiaplatform.com/api/v1/startsiop?state=${device_id}&client_callback=https://ui-backend.tango.nadiaplatform.com/auth_callback&client_id=${clientId}`
     );
 
-    /* If the response is not succesfull */
-    if (response.data.status !== 'OK' || !response.data.sessionId || !response.data.response) {
-      return res.status(500).json({ status: 'failed', message: 'Failed to initialize session.' });
+        /* Extract the openid URL string */
+    const originalUrl = response.data; // Assumes response.data is the full openid://?... string
+
+    console.log("ORIGINAL: ",originalUrl)
+
+    // Sanity check
+    if (typeof originalUrl !== 'string' || !originalUrl.startsWith('openid://?')) {
+      return res.status(500).json({
+        status: 'failed',
+        message: 'Invalid OpenID response from verifier.'
+      });
     }
 
-    /* Extract the response QR String */
-    const responseQrString = response.data.response;
-
-    /* Remove the `openid://?` prefix to parse as query string */
-    const queryString = responseQrString.replace('openid://?', '');
-
-    /* Use URLSearchParams to parse the query string */
+    /* Remove the openid://? prefix to parse the query params */
+    const queryString = originalUrl.replace('openid://?', '');
     const params = new URLSearchParams(queryString);
 
-    /* Get the value of the `state` parameter */
+    /* Extract the state */
     const state = params.get('state');
 
-    /* Take the originalUrl callback, and set the redirect_uri to the corresponding dcba-backend auth-callbacb endpoint, in order to receive the response */
-    const originalUrl = response.data.response;
-    const customRedirectUri = `https://${process.env.HOSTNAME_DNS_INTRASOFT_DCBA_BACKEND_SERVICE}/development/dcba-backend/authenticator/auth-callback`;
-    const updatedUrl = originalUrl.replace(
-      /redirect_uri=[^&]+/,
-      `redirect_uri=${encodeURIComponent(customRedirectUri)}`
-    );
+    if (!state) {
+      return res.status(500).json({
+        status: 'failed',
+        message: 'Missing "state" in OpenID URL.'
+      });
+    }
 
-    /* Append or replace (if already exists a session request associated with this device_id) */
-    let savedSessionRequest;
-    savedSessionRequest = await SESSION_REQUEST.replaceOne(
-      { device_id: device_id },
+    /* Replace the redirect_uri param */
+    const customRedirectUri = `https://${process.env.HOSTNAME_DNS_INTRASOFT_DCBA_BACKEND_SERVICE}/development/dcba-backend/authenticator/auth-callback`;
+    params.set('redirect_uri', customRedirectUri);
+
+    /* Rebuild the OpenID URL */
+    const updatedUrl = `openid://?${params.toString()}`;
+
+    console.log("UPDATED: ",originalUrl)
+
+
+    /* Save or update session request */
+    await SESSION_REQUEST.replaceOne(
+      { device_id },
       {
         device_id,
         state,
         role,
         log_file_uri,
-        timestamp: new Date()  /* Saves the current time in UTC */
+        timestamp: new Date()
       },
       { upsert: true }
     );
 
-    /* Return session info */
+    /* Return session info to client */
     return res.status(200).json({
       status: 'success',
       message: 'QR Code generated successfully.',
       state: state,
-      openid_url: updatedUrl,
+      openid_url: updatedUrl
     });
-
-  } catch (error) {
-    console.error('Error starting session:', error);
-    return res.status(500).json({ status: 'failed', message: 'Internal server error while initiating the session.'});
   }
+  catch (error) {
+      console.error('Error starting session:', error);
+      return res.status(500).json({
+        status: 'failed',
+        message: 'Internal server error while initiating the session.'
+      });
+    }
 };
+
+
 
 
 
