@@ -902,6 +902,8 @@ exports.beginSession = async (req, res) => {
       `redirect_uri=${encodeURIComponent(customRedirectUri)}`
     );
 
+    console.log(openidUrl, updatedOpenidUrl)
+
     // Save or update session in DB
     await SESSION_REQUEST.replaceOne(
       { device_id },
