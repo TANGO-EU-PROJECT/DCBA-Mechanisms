@@ -153,7 +153,7 @@ router.post('/:resourceName', async (req, res) => {
     if (!postHandler) {
       return res.status(404).json({
         status: "failed",
-        message: `Resource not found.`,
+        message: `Cannot POST. Resource not found.`,
       });
     }
 

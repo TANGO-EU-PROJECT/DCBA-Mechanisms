@@ -862,6 +862,7 @@ exports.beginSession = async (req, res) => {
         ? 'smart-hospitality-customer-service'
         : 'smart-hospitality-employee-service';
 
+
     /* Make the post request to the auth init endpoint of the verifier */
     const response = await axios.get(
       `${process.env.HOSTNAME_VERIFIER_NADIA_PLATFORM_AUTH_INIT}${clientId}`

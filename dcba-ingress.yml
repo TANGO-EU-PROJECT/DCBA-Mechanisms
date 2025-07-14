@@ -2,7 +2,7 @@ apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
   name: dcba-backend-ingress-rule  # Name of the ingress resource
-  namespace: smart-manufacturing    # Namespace where the ingress resource is deployed
+  namespace: tango-development    # Namespace where the ingress resource is deployed
   labels: 
     app: back-end                  # Label to categorize the resource for the application
   annotations:

@@ -12,7 +12,7 @@ const { initializeWebSocketServer } = require('./BACKEND/UTILITIES/functions'); 
 const moment = require('moment-timezone');
 const cors = require('cors');
 const authenticatorRoutes = require('./BACKEND/API/routes/authenticatorRoutes'); /* Import AUTHENTICATOR routes */
-const externalServicesRoutes = require('./BACKEND/API/routes/externalServicesRoutes'); /* Import EXTERNAL SERVICES routes */
+const resourceRoutes = require('./BACKEND/API/routes/resourceServicesRoutes'); /* Import resource SERVICES routes */
 const cookieParser = require('cookie-parser');
 
 /* Define ANSI escape codes for colored console output */                                                                     
@@ -112,8 +112,9 @@ async function startServer() {
 
   // Define the routes
   DCBA_SERVER.use('/authenticator', authenticatorRoutes);
-  DCBA_SERVER.use('/resource', externalServicesRoutes);
+  DCBA_SERVER.use('/resource', resourceRoutes);
   DCBA_SERVER.get('/health', controller.getHealthStatus);
+  DCBA_SERVER.use('/api', accessControlRoutes);  
 
   // Start the Express server
   server.listen(internalPort, ip, () => {
