@@ -874,7 +874,7 @@ exports.beginSession = async (req, res) => {
       {
         params: {
           state: device_id,
-          client_callback: `https://${process.env.HOSTNAME_DNS_INTRASOFT_DCBA_BACKEND_SERVICE}/development/dcba-backend/authenticator/auth-callback`,
+          client_callback: `https://ui-backend.tango.nadiaplatform.com/auth_callback`,
           client_id: clientId
         }
       }
