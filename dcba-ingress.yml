@@ -26,7 +26,7 @@ spec:
     - host: dcba-tango.riastone.eu # Defines the domain for the ingress rule
       http:
         paths:
-          - path: /(.*)  # Regex path matching, captures the rest of the URL after this prefix
+          - path: /(.*)                               # Regex path matching, captures the rest of the URL after this prefix
             pathType: ImplementationSpecific          # Allows path matching based on the ingress controller's specific implementation
             backend:
               service:

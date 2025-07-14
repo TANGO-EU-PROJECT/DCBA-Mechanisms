@@ -832,8 +832,8 @@ exports.handleLogout = async (req, res) => {
  * Function to handle requests , made to check whether the server is up or not
  * Endpoint: GET /server/status
 */
-exports.getServerStatus = (req, res) => {
-  res.status(200).json({ status: "success", message: 'DCBA-backend server is up and functional.' });
+exports.getHealthStatus = (req, res) => {
+  res.status(200).json({ status: "success", message: 'DCBA-Backend Server is up and functional.' });
 };
 
 

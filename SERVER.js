@@ -113,7 +113,7 @@ async function startServer() {
   // Define the routes
   DCBA_SERVER.use('/authenticator', authenticatorRoutes);
   DCBA_SERVER.use('/resource', externalServicesRoutes);
-  DCBA_SERVER.get('/server/status', controller.getServerStatus);
+  DCBA_SERVER.get('/health', controller.getHealthStatus);
 
   // Start the Express server
   server.listen(internalPort, ip, () => {
