@@ -13,11 +13,11 @@ router.post('/begin-session', controller.beginSession);
 
 
 /** [2] DONE
- * @route   POST /authenticator/auth-callback
+ * @route   GET /authenticator/auth-callback
  * @desc    Handle authentication callback and retrieve the access token.
  * @access  Public
  */
-router.post('/auth-callback', controller.handleAuthCallback);
+router.get('/auth-callback', controller.handleAuthCallback);
 
 
 /** [3] DONE

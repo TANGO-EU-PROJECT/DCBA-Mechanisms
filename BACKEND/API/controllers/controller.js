@@ -942,7 +942,14 @@ exports.handleAuthCallback = async (req, res) => {
   let vp_token;
   let sessionRequest;
 
-  console.log('AUTH CALLBACK: ', req.body)
+  console.log("QUERRY: ", req.query)
+
+
+   /* Otherwise, fallback error handling */
+    return res.status(500).json({
+      status: 'failed',
+      message: 'Invalid Verifiable Credentials.',
+    });
 
   try {
     /* Extract necessary values from the incoming POST request body */
