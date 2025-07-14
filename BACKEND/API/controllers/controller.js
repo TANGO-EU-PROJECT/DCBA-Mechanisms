@@ -880,19 +880,17 @@ exports.beginSession = async (req, res) => {
       }
     );
 
+    
+
+    const openidUrl = response.data;  // Full openid:// string
+
     // Check verifier response
-    if (
-      response.data.status !== 'OK' ||
-      !response.data.sessionId ||
-      !response.data.response
-    ) {
+    if (typeof openidUrl !== 'string' || !openidUrl.startsWith('openid://?')) {
       return res.status(500).json({
         status: 'failed',
         message: 'Failed to initialize session.'
       });
     }
-
-    const openidUrl = response.data.response;  // Full openid:// string
 
     // Parse `state` from the URL to save in DB (in case verifier changed it internally)
     const queryString = openidUrl.replace('openid://?', '');
