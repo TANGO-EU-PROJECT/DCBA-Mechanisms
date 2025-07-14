@@ -17,7 +17,7 @@ router.post('/begin-session', controller.beginSession);
  * @desc    Handle authentication callback and retrieve the access token.
  * @access  Public
  */
-router.get('/auth-callback', controller.handleAuthCallback);
+router.post('/auth-callback', controller.handleAuthCallback);
 
 
 /** [3] DONE
