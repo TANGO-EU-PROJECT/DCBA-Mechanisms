@@ -13,7 +13,7 @@ const moment = require('moment-timezone');
 const cors = require('cors');
 const authenticatorRoutes = require('./BACKEND/API/routes/authenticatorRoutes'); /* Import AUTHENTICATOR routes */
 const resourceRoutes = require('./BACKEND/API/routes/resourceRoutes'); /* Import resource SERVICES routes */
-const accessControlRoutes = require('./BACKEND/API/routes/accessControlRoutes'); /* Import AUTHENTICATOR routes */
+const { router: accessControlRoutes } = require('./BACKEND/API/routes/accessControlRoutes');
 
 const cookieParser = require('cookie-parser');
 
