@@ -850,78 +850,84 @@ exports.getHealthStatus = (req, res) => {
  * Creates a session request, retrieving an authentication QR code from the verifier.
  * @route   POST /devices/begin-session
  */
+/** [13] 
+ * Handles the initiation of a device session by displayng the a QR Code.  
+ * Creates a session request, and retrieving an authentication QR code.  
+ * The QR code is extracted from an external authentication service (ips-verifier.tango.nadiaplatform.com).  
+ * * @route   POST /devices/begin-session
+ */
 exports.beginSession = async (req, res) => {
+
+  /* Extract the device_id, the log_file_uri and the selected role */
   try {
     const { device_id, log_file_uri, role } = req.body;
 
-    // Validate role
+    /* If the role is not 'employee' or 'customer', invalid role */
     if (!['employee', 'customer'].includes(role)) {
-      return res.status(400).json({
-        status: 'failed',
-        message: 'Invalid role provided.'
-      });
+      return res.status(400).json({ status: 'failed', message: 'Invalid role provided.' });
     }
 
-    // Choose client ID based on role
+    /* Select the clientID based on the selected role */
     const clientId =
       role === 'customer'
         ? 'smart-hospitality-customer-service'
         : 'smart-hospitality-employee-service';
 
-    // Make request to verifier
+    /* Make the post request to the auth init endpoint of the verifier */
     const response = await axios.get(
-      `https://ips-verifier.tango.nadiaplatform.com/api/v1/startsiop`,
-      {
-        params: {
-          state: device_id,
-          client_callback: `https://${process.env.HOSTNAME_DNS_INTRASOFT_DCBA_BACKEND_SERVICE}/development/dcba-backend/authenticator/auth-callback`,
-          client_id: clientId
-        }
-      }
+      `${process.env.HOSTNAME_VERIFIER_NADIA_PLATFORM_AUTH_INIT}${clientId}`
     );
 
-    const openidUrl = response.data;  // Full openid://?...
-
-    // Validate response
-    if (typeof openidUrl !== 'string' || !openidUrl.startsWith('openid://?')) {
-      return res.status(500).json({
-        status: 'failed',
-        message: 'Failed to initialize session.'
-      });
+    /* If the response is not succesfull */
+    if (response.data.status !== 'OK' || !response.data.sessionId || !response.data.response) {
+      return res.status(500).json({ status: 'failed', message: 'Failed to initialize session.' });
     }
 
-    // Parse query from URL
-    const queryString = openidUrl.replace('openid://?', '');
-    const params = new URLSearchParams(queryString);
-    const state = params.get('state') || device_id;
+    /* Extract the response QR String */
+    const responseQrString = response.data.response;
 
-    // Save or update session in DB
-    await SESSION_REQUEST.replaceOne(
-      { device_id },
+    /* Remove the `openid://?` prefix to parse as query string */
+    const queryString = responseQrString.replace('openid://?', '');
+
+    /* Use URLSearchParams to parse the query string */
+    const params = new URLSearchParams(queryString);
+
+    /* Get the value of the `state` parameter */
+    const state = params.get('state');
+
+    /* Take the originalUrl callback, and set the redirect_uri to the corresponding dcba-backend auth-callbacb endpoint, in order to receive the response */
+    const originalUrl = response.data.response;
+    const customRedirectUri = `https://${process.env.HOSTNAME_DNS_INTRASOFT_DCBA_BACKEND_SERVICE}/development/dcba-backend/authenticator/auth-callback`;
+    const updatedUrl = originalUrl.replace(
+      /redirect_uri=[^&]+/,
+      `redirect_uri=${encodeURIComponent(customRedirectUri)}`
+    );
+
+    /* Append or replace (if already exists a session request associated with this device_id) */
+    let savedSessionRequest;
+    savedSessionRequest = await SESSION_REQUEST.replaceOne(
+      { device_id: device_id },
       {
         device_id,
         state,
         role,
         log_file_uri,
-        timestamp: new Date()
+        timestamp: new Date()  /* Saves the current time in UTC */
       },
       { upsert: true }
     );
 
-    // Return QR to client
+    /* Return session info */
     return res.status(200).json({
       status: 'success',
       message: 'QR Code generated successfully.',
       state: state,
-      openid_url: openidUrl
+      openid_url: updatedUrl,
     });
 
   } catch (error) {
     console.error('Error starting session:', error);
-    return res.status(500).json({
-      status: 'failed',
-      message: 'Internal server error while initiating the session.'
-    });
+    return res.status(500).json({ status: 'failed', message: 'Internal server error while initiating the session.'});
   }
 };
 
@@ -940,15 +946,6 @@ exports.handleAuthCallback = async (req, res) => {
   let state;
   let vp_token;
   let sessionRequest;
-
-  console.log("QUERRY: ", req.query)
-
-
-   /* Otherwise, fallback error handling */
-    return res.status(500).json({
-      status: 'failed',
-      message: 'Invalid Verifiable Credentials.',
-    });
 
   try {
     /* Extract necessary values from the incoming POST request body */
