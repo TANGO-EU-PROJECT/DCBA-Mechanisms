@@ -2216,7 +2216,7 @@ paths:
 
 
   # Server API Endpoints # 
-  /server/status:
+  /health:
     get:
       summary: Check server status
       description: |
