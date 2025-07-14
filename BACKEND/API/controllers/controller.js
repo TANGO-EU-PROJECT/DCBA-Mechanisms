@@ -865,8 +865,27 @@ exports.beginSession = async (req, res) => {
 
     /* Make the post request to the auth init endpoint of the verifier */
     const response = await axios.get(
-      `${process.env.HOSTNAME_VERIFIER_NADIA_PLATFORM_AUTH_INIT}${clientId}`
+    `https://ips-verifier.tango.nadiaplatform.com/api/v1/startsiop`,
+      {
+        params: {
+          state: device_id,
+          client_callback: `https://${process.env.HOSTNAME_DNS_INTRASOFT_DCBA_BACKEND_SERVICE}/authenticator/auth-callback`,
+          client_id: clientId
+        }
+      }
     );
+
+    console.log(response)
+
+
+    /* Return session info */
+    return res.status(200).json({
+      status: 'success',
+      message: 'QR Code generated successfully.',
+      state: "w",
+      openid_url: "2",
+    });
+
 
     /* If the response is not succesfull */
     if (response.data.status !== 'OK' || !response.data.sessionId || !response.data.response) {
