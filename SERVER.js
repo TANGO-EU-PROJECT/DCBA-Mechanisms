@@ -12,7 +12,7 @@ const { initializeWebSocketServer } = require('./BACKEND/UTILITIES/functions'); 
 const moment = require('moment-timezone');
 const cors = require('cors');
 const authenticatorRoutes = require('./BACKEND/API/routes/authenticatorRoutes'); /* Import AUTHENTICATOR routes */
-const resourceRoutes = require('./BACKEND/API/routes/resourceServicesRoutes'); /* Import resource SERVICES routes */
+const resourceRoutes = require('./BACKEND/API/routes/resourceRoutes'); /* Import resource SERVICES routes */
 const cookieParser = require('cookie-parser');
 
 /* Define ANSI escape codes for colored console output */                                                                     
