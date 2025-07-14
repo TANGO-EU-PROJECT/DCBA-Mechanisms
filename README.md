@@ -53,7 +53,7 @@ This directory contains the Dockerfile for the MongoDB, used for K8s deployment.
   - `dcba-mongo-db`: Internal port: 27017, External port: 27018
   - `dcba-influx-db`: Internal port: 8086, External port: 8087
 
-- **dcba-server-ingress.yml**: This Kubernetes Ingress resource defines routing rules for external HTTP traffic (currently) to the `dcba-backend` application within the `smart-manufacturing` namespace. It utilizes the NGINX Ingress controller and includes TLS configuration with a Let's Encrypt certificate for secure access. The Ingress rules route traffic from the host `k8s-cluster.tango.rid-intrasoft.eu` to the `dcba-backend` service, specifically handling requests to the path `/development/dcba-backend`.
+- **dcba-server-ingress.yml**: This Kubernetes Ingress resource defines routing rules for external HTTP traffic (currently) to the `dcba-backend` application within the `smart-manufacturing` namespace. It utilizes the NGINX Ingress controller and includes TLS configuration with a Let's Encrypt certificate for secure access. The Ingress rules route traffic from the host `https://dcba-tango.riastone.eu/` to the `dcba-backend` service.
 
 ## Swagger
 
