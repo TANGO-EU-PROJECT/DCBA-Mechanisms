@@ -9,7 +9,7 @@ info:
     Instead of sending Bearer tokens, requests are authorized using a capability token issued by the PDP.
 
 servers:
-  - url: https://dcba-tango.riastone.eu/development/dcba-backend/
+  - url: https://dcba-tango.riastone.eu/
 
 components:
   securitySchemes:
@@ -367,7 +367,7 @@ paths:
                       example: "POST"
                     resource:
                       type: string
-                      example: "https://dcba-tango.riastone.eu/development/dcba-backend/resource/behavioural_score"
+                      example: "https://dcba-tango.riastone.eu/resource/behavioural_score"
                 queryParameters:
                   type: object
                   description: Optional query parameters to filter or shape the request
@@ -389,7 +389,7 @@ paths:
                 value:
                   sar:
                     action: "POST"
-                    resource: "https://dcba-tango.riastone.eu/development/dcba-backend/resource/behavioural_score"
+                    resource: "https://dcba-tango.riastone.eu/resource/behavioural_score"
                   queryParameters: {}
                   jsonBody:
                     didSP: "did:example:serviceprovider123"

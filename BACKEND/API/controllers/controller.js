@@ -886,7 +886,7 @@ exports.beginSession = async (req, res) => {
 
     /* Take the originalUrl callback, and set the redirect_uri to the corresponding dcba-backend auth-callbacb endpoint, in order to receive the response */
     const originalUrl = response.data.response;
-    const customRedirectUri = `https://${process.env.HOSTNAME_DNS_INTRASOFT_DCBA_BACKEND_SERVICE}/development/dcba-backend/authenticator/auth-callback`;
+    const customRedirectUri = `https://${process.env.HOSTNAME_DNS_INTRASOFT_DCBA_BACKEND_SERVICE}/authenticator/auth-callback`;
     const updatedUrl = originalUrl.replace(
       /redirect_uri=[^&]+/,
       `redirect_uri=${encodeURIComponent(customRedirectUri)}`
