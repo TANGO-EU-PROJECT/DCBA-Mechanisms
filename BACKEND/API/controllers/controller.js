@@ -873,6 +873,7 @@ exports.beginSession = async (req, res) => {
       `https://ips-verifier.tango.nadiaplatform.com/api/v1/startsiop`,
       {
         params: {
+          state: device_id,
           client_callback: `https://ui-backend.tango.nadiaplatform.com/auth_callback`,
           client_id: clientId
         }
@@ -892,9 +893,7 @@ exports.beginSession = async (req, res) => {
     // Parse query from URL
     const queryString = openidUrl.replace('openid://?', '');
     const params = new URLSearchParams(queryString);
-    const state = params.get('state');
-
-    console.log(state)
+    const state = params.get('state') || device_id;
 
     // Replace the redirect_uri in the openid URL
     const customRedirectUri = `https://${process.env.HOSTNAME_DNS_INTRASOFT_DCBA_BACKEND_SERVICE}/development/dcba-backend/authenticator/auth-callback`;
