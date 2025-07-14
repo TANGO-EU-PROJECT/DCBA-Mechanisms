@@ -48,7 +48,7 @@ pipeline {
         BACKEND_CONTAINER_NAME = "dcba-backend"                             /* Application Name */
         ARTIFACTORY_SERVER = "harbor.tango.rid-intrasoft.eu"                /* Docker registry server URL */
         ARTIFACTORY_DOCKER_REGISTRY = "harbor.tango.rid-intrasoft.eu/dcba/" /* Docker image registry path */
-        BRANCH_NAME = "rias-smart-manufacturing"                                              /* Git branch to checkout */
+        BRANCH_NAME = "rias-tango-development"                                              /* Git branch to checkout */
         BACKEND_DOCKER_IMAGE_TAG = "${BACKEND_CONTAINER_NAME}:R${env.BUILD_ID}" /* Docker image tag using the application name and Jenkins build ID */
 
         // MongoDB
@@ -190,16 +190,16 @@ pipeline {
         /* Stage 7: Deleting the previous deployment */
         stage("Deleting the previous deployment") {
             steps {
-                withKubeConfig([credentialsId: 'RIAS-K8s-config-file', serverUrl: 'https://api.riastone.eu:6443', namespace: 'smart-manufacturing']) {
+                withKubeConfig([credentialsId: 'K8s-config-file', serverUrl: 'https://167.235.66.115:6443', namespace: 'tango-development']) {
                     // Delete deployment
                     sh 'kubectl delete -f dcba-deployment.yml || true'
 
                     // Delete old PVC to apply new storageClass/accessMode
-                    sh 'kubectl delete pvc dcba-mongo-pvc -n smart-manufacturing || true' // Uncomment the following line ONLY if i want to delete the existing PVC and erase all MongoDB data.
+                    sh 'kubectl delete pvc dcba-mongo-pvc -n tango-development || true' // Uncomment the following line ONLY if i want to delete the existing PVC and erase all MongoDB data.
                                                                                         // This will remove the persistent storage, causing data loss in your MongoDB replicas.
 
                     // Delete old PVC to apply new storageClass/accessMode
-                    sh 'kubectl delete pvc dcba-influx-pvc -n smart-manufacturing || true' // Uncomment the following line ONLY if i want to delete the existing PVC and erase all MongoDB data.
+                    sh 'kubectl delete pvc dcba-influx-pvc -n tango-development || true' // Uncomment the following line ONLY if i want to delete the existing PVC and erase all MongoDB data.
                                                                                         // This will remove the persistent storage, causing data loss in your MongoDB replicas.
 
                 }
@@ -209,7 +209,7 @@ pipeline {
         /* Stage 8: Applying dcba-secrets */
         stage("Applying dcba-secrets") {
             steps {
-                withKubeConfig([credentialsId: 'RIAS-K8s-config-file', serverUrl: 'https://api.riastone.eu:6443', namespace: 'smart-manufacturing']) {
+                withKubeConfig([credentialsId: 'K8s-config-file', serverUrl: 'https://167.235.66.115:6443', namespace: 'tango-development']) {
                     sh 'kubectl apply -f dcba-secrets.yml'
                 }
             }
@@ -219,7 +219,7 @@ pipeline {
         /* Stage 9: Deploying the new deployment */
         stage("Deploying the new deployment") {
             steps {
-                withKubeConfig([credentialsId: 'RIAS-K8s-config-file', serverUrl: 'https://api.riastone.eu:6443', namespace: 'smart-manufacturing']) {
+                withKubeConfig([credentialsId: 'K8s-config-file', serverUrl: 'https://167.235.66.115:6443', namespace: 'tango-development']) {
                     // Apply new mongo PVC first
                     sh 'kubectl apply -f dcba-mongo-pvc.yml' // Uncomment this ONLY if i deleted the old PVC implementation and start fresh with new storage.
 
@@ -231,7 +231,7 @@ pipeline {
                     sh 'kubectl apply -f dcba-ingress.yml'
 
                     // Verify pod status
-                    sh 'kubectl get pods -n smart-manufacturing'
+                    sh 'kubectl get pods -n tango-development'
                 }
             }
         }
