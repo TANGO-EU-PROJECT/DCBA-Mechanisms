@@ -868,7 +868,7 @@ exports.beginSession = async (req, res) => {
         ? 'smart-hospitality-customer-service'
         : 'smart-hospitality-employee-service';
 
-    // Generate verifier request
+    // Make request to verifier
     const response = await axios.get(
       `https://ips-verifier.tango.nadiaplatform.com/api/v1/startsiop`,
       {
@@ -880,11 +880,9 @@ exports.beginSession = async (req, res) => {
       }
     );
 
-    
+    const openidUrl = response.data;  // Full openid://?...
 
-    const openidUrl = response.data;  // Full openid:// string
-
-    // Check verifier response
+    // Validate response
     if (typeof openidUrl !== 'string' || !openidUrl.startsWith('openid://?')) {
       return res.status(500).json({
         status: 'failed',
@@ -892,12 +890,19 @@ exports.beginSession = async (req, res) => {
       });
     }
 
-    // Parse `state` from the URL to save in DB (in case verifier changed it internally)
+    // Parse query from URL
     const queryString = openidUrl.replace('openid://?', '');
     const params = new URLSearchParams(queryString);
     const state = params.get('state') || device_id;
 
-    // Save session to DB (or replace existing)
+    // Replace the redirect_uri in the openid URL
+    const customRedirectUri = `https://${process.env.HOSTNAME_DNS_INTRASOFT_DCBA_BACKEND_SERVICE}/development/dcba-backend/authenticator/auth-callback`;
+    const updatedOpenidUrl = openidUrl.replace(
+      /redirect_uri=[^&]+/,
+      `redirect_uri=${encodeURIComponent(customRedirectUri)}`
+    );
+
+    // Save or update session in DB
     await SESSION_REQUEST.replaceOne(
       { device_id },
       {
@@ -910,12 +915,12 @@ exports.beginSession = async (req, res) => {
       { upsert: true }
     );
 
-    // Respond with QR info
+    // Return QR to client
     return res.status(200).json({
       status: 'success',
       message: 'QR Code generated successfully.',
       state: state,
-      openid_url: openidUrl  // ← Send this to frontend/watch for QR code generation
+      openid_url: updatedOpenidUrl
     });
 
   } catch (error) {
@@ -926,6 +931,7 @@ exports.beginSession = async (req, res) => {
     });
   }
 };
+
 
 
     
@@ -942,7 +948,7 @@ exports.handleAuthCallback = async (req, res) => {
   let vp_token;
   let sessionRequest;
 
-  console.log("QUERRY: ", req.query)
+  console.log("BODY: ", req.body)
 
 
    /* Otherwise, fallback error handling */
