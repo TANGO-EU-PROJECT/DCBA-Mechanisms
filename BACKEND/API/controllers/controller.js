@@ -81,7 +81,7 @@ const ALERT = require(path.resolve(deviceAlertModelPath));
 /*************************************************************************** START OF API ENDPOINTS IMPLEMENTATION ***************************************************************************/
 /** [1] 
  * Fetches all device data from the MongoDB database and returns it as a JSON response.
- * Endpoint: GET /devices
+ * Endpoint: GET /resource/devices
  * 
  * @param {Object} req - The request object.
  * @param {Object} res - The response object.
@@ -110,7 +110,7 @@ exports.fetchDevices = async (req, res) => {
 
 /** [2]
  * Function to handle the Android Logs received from the device devices
- * Endpoint: POST /devices/post-logs
+ * Endpoint: POST /authenticator/post-logs
  * @param {Object} req - The request object(containing the did, the deviceID, the log and the authToken).
  * @param {Object} res - The response object.
 */
@@ -674,7 +674,7 @@ exports.handleAuthTokenValidation = async (req, res) => {
 
 /* [11]
  * Function to handle device logout and token revocation
- * Endpoint: POST /devices/logout
+ * Endpoint: POST /authenticator/logout
 */
 exports.handleLogout = async (req, res) => {
   try {
@@ -830,7 +830,7 @@ exports.handleLogout = async (req, res) => {
 
 /* [12]
  * Function to handle requests , made to check whether the server is up or not
- * Endpoint: GET /server/status
+ * Endpoint: GET /health
 */
 exports.getHealthStatus = (req, res) => {
   res.status(200).json({ status: "success", message: 'DCBA-Backend Server is up and functional.' });
@@ -838,23 +838,11 @@ exports.getHealthStatus = (req, res) => {
 
 
 
-
 /** [13] 
  * Handles the initiation of a device session by displayng the a QR Code.  
  * Creates a session request, and retrieving an authentication QR code.  
  * The QR code is extracted from an external authentication service (ips-verifier.tango.nadiaplatform.com).  
- * * @route   POST /devices/begin-session
- */
-/**
- * [13] Handles the initiation of a device session by displaying a QR Code.
- * Creates a session request, retrieving an authentication QR code from the verifier.
- * @route   POST /devices/begin-session
- */
-/** [13] 
- * Handles the initiation of a device session by displayng the a QR Code.  
- * Creates a session request, and retrieving an authentication QR code.  
- * The QR code is extracted from an external authentication service (ips-verifier.tango.nadiaplatform.com).  
- * * @route   POST /devices/begin-session
+ * * @route   POST /authenticator/begin-session
  */
 exports.beginSession = async (req, res) => {
 
@@ -874,14 +862,19 @@ exports.beginSession = async (req, res) => {
         : 'smart-hospitality-employee-service';
 
     /* Make the post request to the auth init endpoint of the verifier */
-    const response = await axios.get(
-      `https://ips-verifier.tango.nadiaplatform.com/api/v1/startsiop?state=${device_id}&client_callback=https://ui-backend.tango.nadiaplatform.com/auth_callback&client_id=${clientId}`
-    );
+    const verifierBaseUrl = process.env.HOSTNAME_VERIFIER_NADIA_PLATFORM_STARTSIOP_URL;
+    const clientCallbackUrl = process.env.HOSTNAME_VERIFIER_NADIA_VERIFIER_CALLBACK_URL;
 
-        /* Extract the openid URL string */
+    // Build the full URL with query parameters safely
+    const verifierUrl = new URL(verifierBaseUrl);
+    verifierUrl.searchParams.set('state', device_id);
+    verifierUrl.searchParams.set('client_callback', clientCallbackUrl);
+    verifierUrl.searchParams.set('client_id', clientId);
+    const response = await axios.get(verifierUrl.toString());
+
+
+    /* Extract the openid URL string */
     const originalUrl = response.data; // Assumes response.data is the full openid://?... string
-
-    console.log("ORIGINAL: ",originalUrl)
 
     // Sanity check
     if (typeof originalUrl !== 'string' || !originalUrl.startsWith('openid://?')) {
@@ -906,14 +899,11 @@ exports.beginSession = async (req, res) => {
     }
 
     /* Replace the redirect_uri param */
-    const customRedirectUri = `https://${process.env.HOSTNAME_DNS_INTRASOFT_DCBA_BACKEND_SERVICE}/development/dcba-backend/authenticator/auth-callback`;
-    params.set('redirect_uri', customRedirectUri);
+    const dcbaBackendRedirectUri = process.env.REDIRECT_BACKEND_CALLBACK_URL;
+    params.set('redirect_uri', dcbaBackendRedirectUri);
 
     /* Rebuild the OpenID URL */
     const updatedUrl = `openid://?${params.toString()}`;
-
-    console.log("UPDATED: ",originalUrl)
-
 
     /* Save or update session request */
     await SESSION_REQUEST.replaceOne(
@@ -946,18 +936,14 @@ exports.beginSession = async (req, res) => {
 };
 
 
-
-
-
-    
-
-
 /** [14]
+ * POST /authenticator/auth-callback
  * Handle the authentication callback by exchanging the authorization code for an access token.
- * Decodes the received JWT token and processes session requests based on authentication data.
+ * Decodes the received JWT token (vp_token) and processes session requests based on authentication data.
  * @param req - Request object
  * @param res - Response object
  */
+
 exports.handleAuthCallback = async (req, res) => {
   let state;
   let vp_token;
@@ -1057,11 +1043,8 @@ exports.handleAuthCallback = async (req, res) => {
 /** [15]
  * Fetches the list of devices who are currently online and active.
  * Queries the database for devices with the status 'online' and returns their details such as status, did, and device_id.
- * This route requires a valid JWT authorization token to access.
- * @route   GET /devices/online-shifts
+ * @route   GET /resource/online-devices
  * @desc    Retrieves a list of devices who are marked as "online" in the database. 
- *          This route requires a valid authorization token.
- * @access  Private (Requires JWT token)
  * @param   req - Request object
  * @param   res - Response object
  */
@@ -1092,11 +1075,8 @@ exports.fetchOnlineDevices = async (req, res) => {
 /** [16]
  * Fetches the list of devices who are currently offline and inactive.
  * Queries the database for devices with the status 'offline' and returns their details such as status, did, and device_id.
- * This route requires a valid JWT authorization token to access.
- * @route   GET /devices/offline-shifts
+ * @route   GET /resource/offline-devices
  * @desc    Retrieves a list of devices who are marked as "offline" in the database. 
- *          This route requires a valid authorization token.
- * @access  Private (Requires JWT token)
  * @param   req - Request object
  * @param   res - Response object
  */
@@ -1127,19 +1107,17 @@ exports.fetchOfflineDevices = async (req, res) => {
 /** [17]
  * Retrieves the behavioural score of a specific device using its Decentralized Identifier (DID).
  * 
- * @route   POST /devices/behavioural-score
+ * @route   POST /resource/behavioural-score
  * @desc    This endpoint receives a request from an external service (e.g., PEP),
- *          validates the input fields (`didSP`, `didRequester`), verifies the JWT token,
+ *          validates the input fields (`didSP`, `didRequester`),
  *          attempts to find the device by its DID, and returns the behavioural score (a float between 0 and 1).
  *          
  *          Handles the following cases:
  *          - Missing required fields → returns 400 Bad Request
- *          - Invalid or expired JWT token → returns 401 Unauthorized
  *          - Device not found → returns 404 Not Found
  *          - Database retrieval errors → returns 500 Internal Server Error
  *          - Successful retrieval → returns 200 OK with the behavioural score
  * 
- * @access  Restricted – Requires a valid authorization token in header.
  * @param   {Object} req.body - The request payload containing:
  *          - {string} didSP - Service Provider's DID
  *          - {string} didRequester - Device's DID to query
@@ -1199,19 +1177,17 @@ exports.fetchDeviceBehaviouralScore = async (req, res) => {
 /** [18]
  * Retrieves the last location of a specific device using its Decentralized Identifier (DID).
  * 
- * @route   POST /devices/last-location
+ * @route   POST /resource/last-location
  * @desc    This endpoint receives a request from an external service,
- *          validates the input fields (`didRequester`, `timezone`), verifies the JWT token,
+ *          validates the input fields (`didRequester`, `timezone`),
  *          attempts to find the device by its DID, and returns the last location of the device.
  *          
  *          Handles the following cases:
  *          - Missing required fields → returns 400 Bad Request
- *          - Invalid or expired JWT token → returns 401 Unauthorized
  *          - Device not found → returns 404 Not Found
  *          - Database retrieval errors → returns 500 Internal Server Error
  *          - Successful retrieval → returns 200 OK with the last coordinates
  * 
- * @access  Restricted – Requires a valid authorization token in the header.
  * @param   {Object} req.body - The request payload containing:
  *          - {string} didRequester - Device's DID to query
  *          - {string} timezone - The timezone specified for the returned timestamps
@@ -1300,19 +1276,17 @@ exports.fetchDeviceLastLocation = async (req, res) => {
 /** [19]
  * Retrieves the location history of a specific device using its Decentralized Identifier (DID) within a specified timeframe.
  * 
- * @route   POST /devices/location-history
+ * @route   POST /resource/location-history
  * @desc    This endpoint receives a request from an external service,
- *          validates the input fields (`didRequester`, `timezone` and `timeframe`), verifies the JWT token,
+ *          validates the input fields (`didRequester`, `timezone` and `timeframe`),
  *          attempts to find the device by its DID, and returns all location entries within the given timeframe.
  *          
  *          Handles the following cases:
  *          - Missing required fields → returns 400 Bad Request
- *          - Invalid or expired JWT token → returns 401 Unauthorized
  *          - Device not found → returns 404 Not Found
  *          - Database retrieval errors → returns 500 Internal Server Error
  *          - Successful retrieval → returns 200 OK with location entries in the specified timeframe
  * 
- * @access  Restricted – Requires a valid authorization token in the header.
  * @param   {Object} req.body - The request payload containing:
  *          - {string} didRequester - Device's DID to query
  *          - {Object} timeframe - Time range to filter location history:
@@ -1422,19 +1396,17 @@ exports.fetchDeviceLocationHistory = async (req, res) => {
 /** [20]
  * Retrieves the location history of a specific device, **filtered to only include entries** where the location is "PERMITTED_AREA", within a specified timeframe.
  * 
- * @route   POST /devices/permitted-location-history
+ * @route   POST /resource/permitted-location-history
  * @desc    This endpoint receives a request from an external service,
- *          validates the input fields (`didRequester` and `timeframe`), verifies the JWT token,
+ *          validates the input fields (`didRequester` and `timeframe`), 
  *          attempts to find the device by its DID, and returns only location entries with `location === "PERMITTED_AREA"` in the given timeframe.
  *          
  *          Handles the following cases:
  *          - Missing required fields → returns 400 Bad Request
- *          - Invalid or expired JWT token → returns 401 Unauthorized
  *          - Device not found → returns 404 Not Found
  *          - Database retrieval errors → returns 500 Internal Server Error
  *          - Successful retrieval → returns 200 OK with filtered entries
  * 
- * @access  Restricted – Requires a valid authorization token in the header.
  * @param   {Object} req.body - The request payload containing:
  *          - {string} didRequester - Device's DID to query
  *          - {Object} timeframe - Time range to filter location history:
@@ -1538,19 +1510,17 @@ exports.fetchDevicePermittedLocationHistory = async (req, res) => {
 /** [21]
  * Retrieves the location history of a specific device, **filtered to only include entries** where the location is NOT "PERMITTED_AREA", within a specified timeframe.
  * 
- * @route   POST /devices/restricted-location-history
+ * @route   POST /resource/restricted-location-history
  * @desc    This endpoint receives a request from an external service,
- *          validates the input fields (`didRequester`, `timezeone` and `timeframe`), verifies the JWT token,
+ *          validates the input fields (`didRequester`, `timezeone` and `timeframe`),
  *          attempts to find the device by its DID, and returns only location entries with `location !== "PERMITTED_AREA"` in the given timeframe.
  *          
  *          Handles the following cases:
  *          - Missing required fields → returns 400 Bad Request
- *          - Invalid or expired JWT token → returns 401 Unauthorized
  *          - Device not found → returns 404 Not Found
  *          - Database retrieval errors → returns 500 Internal Server Error
  *          - Successful retrieval → returns 200 OK with filtered entries
  * 
- * @access  Restricted – Requires a valid authorization token in the header.
  * @param   {Object} req.body - The request payload containing:
  *          - {string} didRequester - Device's DID to query
  *          - {Object} timeframe - Time range to filter location history:
@@ -1662,19 +1632,17 @@ exports.fetchDeviceRestrictedLocationHistory = async (req, res) => {
 /** [22]
  * Retrieves the alert history of all devices related to unauthorized presence in restricted areas.
  * 
- * @route   GET /devices/fetch-alert-history
+ * @route   GET /resource/alerts
  * @desc    This endpoint receives a GET request and returns device alert history.
  *          It supports optional time filtering using 'from' and 'to' query parameters.
  * 
  *          Handles the following cases:
  *          - Missing or invalid 'timezone' → returns 400 Bad Request
  *          - Invalid 'from' or 'to' format → returns 400 Bad Request (Optional)
- *          - Invalid or expired JWT token → returns 401 Unauthorized
  *          - Database retrieval errors → returns 500 Internal Server Error
  *          - If 'from' and/or 'to' are provided, filters alerts within that time range (in the given timezone)
  *          - If no time filters are provided, returns the full alert history
  * 
- * @access  Restricted – Requires a valid Bearer token in the Authorization header.
  * 
  * @param   {string} req.query.timezone - Required IANA timezone name used to interpret and format timestamps.
  * @param   {string} [req.query.from] - Optional lower bound of time range in 'YYYY-MM-DD HH:mm:ss' format (local time).
