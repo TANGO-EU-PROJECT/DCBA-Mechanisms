@@ -13,7 +13,7 @@ router.post('/begin-session', controller.beginSession);
 
 
 /** [2] DONE
- * @route   GET /authenticator/auth-callback
+ * @route   POST /authenticator/auth-callback
  * @desc    Handle authentication callback and retrieve the access token.
  * @access  Public
  */
