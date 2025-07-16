@@ -429,7 +429,7 @@ paths:
   /resource/last-location:
     post:
       tags:
-        - Service API Endpoints
+        - Resource API Endpoints
       summary: Retrieve device last location
       description: >
         Returns the last location of a device
