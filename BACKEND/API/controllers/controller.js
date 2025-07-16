@@ -1567,7 +1567,7 @@ exports.fetchDeviceRestrictedLocationHistory = async (req, res) => {
     if (!device) {
       return res.status(404).json({
         status: "failed",
-        message: 'Device not found.'
+        message: 'Device not found'
       });
     }
 

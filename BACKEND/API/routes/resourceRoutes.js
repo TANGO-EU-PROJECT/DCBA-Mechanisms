@@ -45,7 +45,7 @@ const resourceControllers = {
 
 
   /************************************************** POST REQUESTS **************************************************/
-  /** [5] done
+  /** [5] DONE
    * @route   POST /resource/behavioural-score
    * @desc    Returns the devices's behavioural score based on provided DIDs.
    * @middleware PEP/PDP
@@ -60,14 +60,14 @@ const resourceControllers = {
    */
   "last-location": controller.fetchDeviceLastLocation,
 
-  /** [7] done
+  /** [7] DONE
    * @route   POST /resource/location-history
    * @desc    Returns the device’s location history within a specified timeframe, based on provided DIDs.
    * @middleware PEP/PDP
    */
   "location-history": controller.fetchDeviceLocationHistory,
 
-  /** [8] done
+  /** [8] DONE
    * @route   POST /resource/permitted-location-history
    * @desc    Returns the devices's permitted location history within a specified timeframe, based on provided DIDs and authorization.
    * @middleware PEP/PDP
@@ -75,7 +75,7 @@ const resourceControllers = {
   "permitted-location-history": controller.fetchDevicePermittedLocationHistory,
 
 
-  /** [9] done
+  /** [9] DONE
    * @route   POST /resource/restricted-location-history
    * @desc    Returns the devices's restricted location history within a specified timeframe, based on provided DIDs and authorization.
    * @middleware PEP/PDP
