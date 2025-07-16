@@ -4,21 +4,19 @@ info:
   version: 1.0.0
   description: |
     API documentation for the DCBA Services.
-
     Authentication is now handled through a PEP/PDP access control mechanism.
-    Instead of sending Bearer tokens, requests are authorized using a capability token issued by the PDP.
 
 servers:
   - url: https://dcba-tango.riastone.eu/
 
 paths:
-  # Service API Endpoints #
+  # Resource API Endpoints #
 
   # [1] GET /resource/devices
   /resource/devices:
     get:
       tags:
-        - Service API Endpoints  # Tag for service-facing endpoints
+        - Resource API Endpoints  # Tag for service-facing endpoints
       summary: Fetch all devices
       description: >
         Retrieves all device entries from the database.
@@ -126,7 +124,7 @@ paths:
   /resource/online-devices:
     get:
       tags:
-        - Service API Endpoints  # Tag for service-facing endpoints
+        - Resource API Endpoints  # Tag for service-facing endpoints
       summary: Fetch online devices
       description: >
         Retrieves devices that are currently online.
@@ -214,7 +212,7 @@ paths:
   /resource/offline-devices:
     get:
       tags:
-        - Service API Endpoints
+        - Resource API Endpoints
       security:
         - CapabilityTokenAuth: []
       summary: Fetch offline devices
@@ -307,7 +305,7 @@ paths:
   /resource/behavioural-score:
     post:
       tags:
-        - Service API Endpoints
+        - Resource API Endpoints
       security:
         - CapabilityTokenAuth: []
       summary: Retrieve device behavioural score
@@ -446,7 +444,7 @@ paths:
   /resource/last-location:
     post:
       tags:
-        - Service API Endpoints
+        - Resource API Endpoints
       security:
         - bearerAuth: []
       summary: Retrieve device last location
@@ -582,7 +580,7 @@ paths:
   /resource/location-history:
     post:
       tags:
-        - Service API Endpoints
+        - Resource API Endpoints
       security:
         - bearerAuth: []
       summary: Retrieve device location history within a specified timeframe
@@ -736,7 +734,7 @@ paths:
   /resource/permitted-location-history:
     post:
       tags:
-        - Service API Endpoints
+        - Resource API Endpoints
       security:
         - bearerAuth: []
       summary: Retrieve device permitted location history within a specified timeframe
@@ -926,7 +924,7 @@ paths:
   /resource/restricted-location-history:
     post:
       tags:
-        - Service API Endpoints
+        - Resource API Endpoints
       security:
         - bearerAuth: []
       summary: Retrieve device restricted location history within a specified timeframe
@@ -1114,7 +1112,7 @@ paths:
   /resource/alerts:
     get:
       tags:
-        - Service API Endpoints
+        - Resource API Endpoints
       security:
         - bearerAuth: []
       summary: Retrieve all history alert related to devices presence in Restricted Areas.
@@ -1314,7 +1312,7 @@ paths:
   /resource/delete-employee:
     delete:
       tags:
-        - Service API Endpoints
+        - Resource API Endpoints
       summary: Delete a device using the associated did
       description: Deletes a device from the database based on the provided `did` query parameter.
       parameters:
@@ -1419,7 +1417,7 @@ paths:
                   message:
                     type: string
                     example: Internal server error while deleting the device associated with this 'did'.
-  # Service API Endpoints # 
+  # Resource API Endpoints # 
 
 
 
