@@ -526,21 +526,6 @@ paths:
                     example: "failed"
                   message:
                     type: string
-                    example: "Error retrieving device last location"
-
-
-        '500':
-          description: Internal server error while retrieving last location
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  status:
-                    type: string
-                    example: "failed"
-                  message:
-                    type: string
               examples:
                 Error retrieving retrieving last location:
                   summary: Internal server error while retrieving last location
