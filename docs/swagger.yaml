@@ -11,33 +11,17 @@ info:
 servers:
   - url: https://dcba-tango.riastone.eu/
 
-components:
-  securitySchemes:
-    CapabilityTokenAuth:
-      type: apiKey
-      in: header
-      name: Capability-Token
-
-
-
-
 paths:
   # Service API Endpoints #
 
   # [1] GET /resource/devices
   /resource/devices:
     get:
-      security:
-        - CapabilityTokenAuth: []
       tags:
         - Service API Endpoints  # Tag for service-facing endpoints
       summary: Fetch all devices
       description: >
         Retrieves all device entries from the database.
-
-        This endpoint requires a valid Capability Token issued by the PDP, which must be included
-        in the `Capability-Token` header. The request is mediated by the PEP component.
-
       responses:
         '200':
           description: Successfully fetched devices
@@ -138,19 +122,14 @@ paths:
 
 
 
-  # [2] GET /resource/online  
-  /resource/online:
+  # [2] GET /resource/online-devices  
+  /resource/online-devices:
     get:
       tags:
         - Service API Endpoints  # Tag for service-facing endpoints
-      security:
-        - CapabilityTokenAuth: []
       summary: Fetch online devices
       description: >
         Retrieves devices that are currently online.
-
-        This endpoint requires a valid Capability Token issued by the PDP, which must be included
-        in the `Capability-Token` header. The request is mediated by the PEP component.
       responses:
         '200':
           description: Successfully fetched online devices
@@ -231,12 +210,8 @@ paths:
                     status: "failed"
                     message: "Error fetching resource."
 
-
-
-
-
-  # [3] GET /resource/offline
-  /resource/offline:
+  # [3] GET /resource/offline-devices
+  /resource/offline-devices:
     get:
       tags:
         - Service API Endpoints
@@ -245,9 +220,6 @@ paths:
       summary: Fetch offline devices
       description: >
         Retrieves devices that are currently offline.
-
-        This endpoint requires a valid Capability Token issued by the PDP. The token must be
-        included in the `Capability-Token` header. The PEP component validates the request.
       responses:
         '200':
           description: Successfully fetched offline devices
@@ -331,8 +303,8 @@ paths:
 
 
 
-  # [4] POST /resource/behavioural_score
-  /resource/behavioural_score:
+  # [4] POST /resource/behavioural-score
+  /resource/behavioural-score:
     post:
       tags:
         - Service API Endpoints
@@ -341,10 +313,6 @@ paths:
       summary: Retrieve device behavioural score
       description: >
         Returns the behavioural score of a device based on provided DIDs.
-
-        This endpoint requires a valid Capability Token issued by the PDP, which must be included
-        in the `Capability-Token` header. The request body must include the SAR structure as defined
-        by the PEP/PDP authorization flow.
 
       requestBody:
         required: true
@@ -474,8 +442,8 @@ paths:
                     message: "Error fetching resource."
 
 
-  # [5] POST /devices/last_location
-  /devices/last_location:
+  # [5] POST /resource/last-location
+  /resource/last-location:
     post:
       tags:
         - Service API Endpoints
@@ -485,7 +453,6 @@ paths:
       description: >
         Returns the last location of a device
         based on provided employee DIDs.
-        This route requires a valid JWT Bearer token in the Authorization header to access.
       requestBody:
         required: true
         content:
@@ -611,8 +578,8 @@ paths:
                     message: "Error fetching resource."
 
 
-  # [6] POST /devices/location-history
-  /resource/location_history:
+  # [6] POST /resource/location-history
+  /resource/location-history:
     post:
       tags:
         - Service API Endpoints
@@ -621,7 +588,6 @@ paths:
       summary: Retrieve device location history within a specified timeframe
       description: >
         Returns the location history of a device based on provided employee DIDs.
-        This route requires a valid JWT Bearer token in the Authorization header to access.
       requestBody:
         required: true
         content:
@@ -766,8 +732,8 @@ paths:
 
 
 
-  # [7] POST /devices/permitted-location-history
-  /resource/permitted_location_history:
+  # [7] POST /resource/permitted-location-history
+  /resource/permitted-location-history:
     post:
       tags:
         - Service API Endpoints
@@ -776,7 +742,6 @@ paths:
       summary: Retrieve device permitted location history within a specified timeframe
       description: >
         Returns the permitted location history of a device based on provided employee DIDs.
-        This route requires a valid JWT Bearer token in the Authorization header to access.
       requestBody:
         required: true
         content:
@@ -957,8 +922,8 @@ paths:
                     example: "Error retrieving device permitted location history."
 
 
-  # [8] POST /devices/restricted-location-history
-  /resource/restricted_location_history:
+  # [8] POST /resource/restricted-location-history
+  /resource/restricted-location-history:
     post:
       tags:
         - Service API Endpoints
@@ -967,7 +932,6 @@ paths:
       summary: Retrieve device restricted location history within a specified timeframe
       description: >
         Returns the restricted location history of a device based on provided employee DIDs.
-        This route requires a valid JWT Bearer token in the Authorization header to access.
       requestBody:
         required: true
         content:
@@ -1146,7 +1110,7 @@ paths:
                     example: "Error retrieving device restricted location history."
 
 
-  # [9] GET /devices/fetch-alert-history
+  # [9] GET /resource/alerts
   /resource/alerts:
     get:
       tags:
@@ -1156,7 +1120,6 @@ paths:
       summary: Retrieve all history alert related to devices presence in Restricted Areas.
       description: >
         Returns the restricted location history of a device based on provided employee DIDs.
-        This route requires a valid JWT Bearer token in the Authorization header to access.
       parameters:
         - name: timezone
           in: query
@@ -1347,8 +1310,8 @@ paths:
                     type: string
                     example: Error retrieving alert history.
 
-  # [10] DELETE /devices/delete-employee
-  /devices/delete-employee:
+  # [10] DELETE /resource/delete-employee
+  /resource/delete-employee:
     delete:
       tags:
         - Service API Endpoints
