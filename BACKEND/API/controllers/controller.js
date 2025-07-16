@@ -833,7 +833,7 @@ exports.handleLogout = async (req, res) => {
  * Endpoint: GET /health
 */
 exports.getHealthStatus = (req, res) => {
-  res.status(200).json({ status: "success", message: 'DCBA-Backend Server is up and functional.' });
+  res.status(200).json({ status: "success", message: 'DCBA-Backend Server is up and functional' });
 };
 
 
@@ -1248,7 +1248,7 @@ exports.fetchDeviceLastLocation = async (req, res) => {
     /* Send the response */
     return res.status(200).json({
       status: "success",
-      message: "Device found.",
+      message: "Device found",
       lastLocation: lastEntry ? lastEntry.estimated_location : 'UNKNOWN',
       firstSeenAt: firstSeenFormatted,
       lastSeenAt: lastSeenFormatted,

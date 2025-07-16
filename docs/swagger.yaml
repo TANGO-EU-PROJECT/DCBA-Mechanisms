@@ -2102,11 +2102,11 @@ paths:
                     description: Indicates the result of the server status check.
                   message:
                     type: string
-                    example: "DCBA-Backend Server is up and functional."
+                    example: "DCBA-Backend Server is up and functional"
                     description: A human-readable message confirming server functionality.
               examples:
                 Healthy:
                   summary: Server is operational
                   value:
                     status: success
-                    message: "DCBA-Backend Server is up and functional."
+                    message: "DCBA-Backend Server is up and functional"
