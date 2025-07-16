@@ -7,7 +7,7 @@ const { verifyToken } = require('../middleware/auth');  // Import the middleware
 
 const resourceControllers = {
   /************************************************** GET REQUESTS **************************************************/
-  /** [1] 
+  /** [1] DONE
    * @route   GET /resource/devices
    * @desc    Fetch all devices from the database.
    * @middleware PEP/PDP
@@ -15,22 +15,22 @@ const resourceControllers = {
   "devices": controller.fetchDevices,
 
 
-  /** [2] 
+  /** [2] DONE
  * @route   GET /resource/online-devices
  * @desc    Fetches the online devices
  * @middleware PEP/PDP
  */
   "online-devices": controller.fetchOnlineDevices,
 
-  /** [3] 
+  /** [3] DONE
    * @route   GET /resource/offline-devices
    * @desc    Fetches the offline devices
    * @middleware PEP/PDP
    */
   "offline-devices": controller.fetchOfflineDevices,
 
-  /** [4] 
-   * @route   GET /resourse/alerts
+  /** [4] DONE
+   * @route   GET /resource/alerts
    * @desc    Returns all the possible alerts for devices navigating to restricted areas
    * @middleware PEP/PDP
    */
@@ -45,7 +45,7 @@ const resourceControllers = {
 
 
   /************************************************** POST REQUESTS **************************************************/
-  /** [5] 
+  /** [5] DONE
    * @route   POST /resource/behavioural-score
    * @desc    Returns the devices's behavioural score based on provided DIDs.
    * @middleware PEP/PDP
@@ -112,7 +112,7 @@ router.get('/:resourceName', async (req, res) => {
   if (!fetchFunction) {
     return res.status(404).json({
       status: "failed",
-      message: "Cannot GET. Resource not found."
+      message: "Cannot GET. Resource not found"
     });
   }
 
@@ -123,7 +123,7 @@ router.get('/:resourceName', async (req, res) => {
     console.error(error);
     res.status(500).json({
       status: "failed",
-      message: `Error fetching resource.`,
+      message: `Error fetching resource`,
     });
   }
 });
@@ -133,38 +133,15 @@ router.get('/:resourceName', async (req, res) => {
 
 /********************** POST REQUESTS **********************/
 router.post('/:resourceName', async (req, res) => {
-  const { sar, queryParameters, jsonBody } = req.body;
-
-  if (!sar?.resource) {
-    return res.status(400).json({
-      status: "failed",
-      message: "Missing 'sar.resource' in request body.",
-    });
-  }
-
   try {
-    // Extract the resource name
-    const url = new URL(sar.resource);
-    const pathParts = url.pathname.split('/').filter(Boolean);
-    const resourceName = pathParts[pathParts.length - 1];
-
+    const { resourceName } = req.params;
     const postHandler = resourceControllers[resourceName];
 
     if (!postHandler) {
       return res.status(404).json({
         status: "failed",
-        message: `Cannot POST. Resource not found.`,
+        message: `Cannot POST. Resource not found`
       });
-    }
-
-    // Inject queryParameters into req.query
-    if (queryParameters) {
-      req.query = { ...req.query, ...queryParameters };
-    }
-
-    // Inject jsonBody into req.body (overwriting if needed)
-    if (jsonBody) {
-      req.body = jsonBody;
     }
 
     await postHandler(req, res);
@@ -173,10 +150,12 @@ router.post('/:resourceName', async (req, res) => {
     console.error("POST error:", err);
     res.status(500).json({
       status: "failed",
-      message: `Error fetching resource.`,
+      message: "Error processing request"
     });
+
   }
 });
+
 /********************** POST REQUESTS **********************/
 
 
@@ -188,7 +167,7 @@ router.delete('/:resourceName', async (req, res) => {
   if (!deleteHandler) {
     return res.status(404).json({
       status: "failed",
-      message: "Cannot DELETE. Resource not found."
+      message: "Cannot DELETE. Resource not found"
     });
   }
 
@@ -198,7 +177,7 @@ router.delete('/:resourceName', async (req, res) => {
     console.error(error);
     res.status(500).json({
       status: "failed",
-      message: "Error deleting resource.",
+      message: "Error deleting resource",
     });
   }
 });

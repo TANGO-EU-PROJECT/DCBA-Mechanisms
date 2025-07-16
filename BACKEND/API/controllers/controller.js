@@ -94,7 +94,7 @@ exports.fetchDevices = async (req, res) => {
     /* Send the selected device data as a JSON response (200 OK) */
     res.status(200).json({
       status: "success",
-      message: "Devices fetched successfully.",
+      message: "Devices fetched successfully",
       data: devices,
     });
 
@@ -102,7 +102,7 @@ exports.fetchDevices = async (req, res) => {
     /* Return a (500 ERROR) response if something goes wrong */
     res.status(500).json({
       status: "failed",
-      message: "Error fetching device data.",
+      message: "Error fetching device data",
     });
   }
 };
@@ -1059,14 +1059,14 @@ exports.fetchOnlineDevices = async (req, res) => {
     /* Return the response with the filtered data */
     return res.status(200).json({
       status: "success",
-      message: 'Fetched online devices successfully.',
+      message: 'Fetched online devices successfully',
       data: onlineDevices,
     });
   } catch (error) {
     /* Handle any errors */
     return res.status(500).json({
       status: "failed",
-      message: 'Error fetching online devices.',
+      message: 'Error fetching online devices',
     });
   }
 };
@@ -1091,14 +1091,14 @@ exports.fetchOfflineDevices = async (req, res) => {
     /* Return the response with the filtered data */
     return res.status(200).json({
       status: "success",
-      message: 'Fetched offline devices successfully.',
+      message: 'Fetched offline devices successfully',
       data: offlineDevices,
     });
   } catch (error) {
     /* Handle any errors */
     return res.status(500).json({
       status: "failed",
-      message: 'Error fetching offline devices.',
+      message: 'Error fetching offline devices',
     });
   }
 };
@@ -1129,7 +1129,7 @@ exports.fetchDeviceBehaviouralScore = async (req, res) => {
   if (!didSP || !didRequester) {
     return res.status(400).json({
       status: "failed",
-      message: 'Missing required fields: didSP or didRequester.'
+      message: 'Missing required fields: didSP or didRequester'
     });
   }
 
@@ -1139,7 +1139,7 @@ exports.fetchDeviceBehaviouralScore = async (req, res) => {
     if (!device) {
       return res.status(404).json({
         status: "failed",
-        message: 'Device not found.'
+        message: 'Device not found'
       });
     }
 
@@ -1153,7 +1153,7 @@ exports.fetchDeviceBehaviouralScore = async (req, res) => {
 
     return res.status(200).json({
       status: "success",
-      message: "Device found.",
+      message: "Device found",
       behaviouralScore: device.behavioural_score
     });
 
@@ -1167,7 +1167,7 @@ exports.fetchDeviceBehaviouralScore = async (req, res) => {
 
     return res.status(500).json({
       status: "failed",
-      message: "Error retrieving behavioural score."
+      message: "Error retrieving behavioural score"
     });
   }
 };
@@ -1200,7 +1200,7 @@ exports.fetchDeviceLastLocation = async (req, res) => {
   if (!didRequester || !timezone) {
     return res.status(400).json({
       status: "failed",
-      message: 'Missing required fields: didRequester or timezone.'
+      message: 'Missing required fields: didRequester or timezone'
     });
   }
 
@@ -1208,7 +1208,7 @@ exports.fetchDeviceLastLocation = async (req, res) => {
   if (!moment.tz.zone(timezone)) {
     return res.status(400).json({
       status: "failed",
-      message: "Invalid timezone. Please provide a valid IANA timezone name (e.g. 'Europe/Athens', 'America/New_York')."
+      message: "Invalid timezone. Please provide a valid IANA timezone name (e.g. 'Europe/Athens', 'America/New_York')"
     });
   }
 
@@ -1219,7 +1219,7 @@ exports.fetchDeviceLastLocation = async (req, res) => {
     if (!device) {
       return res.status(404).json({
         status: "failed",
-        message: 'Device not found.'
+        message: 'Device not found'
       });
     }
 
@@ -1265,7 +1265,7 @@ exports.fetchDeviceLastLocation = async (req, res) => {
 
     return res.status(500).json({
       status: "failed",
-      message: "Error retrieving device last location."
+      message: "Error retrieving device last location"
     });
   }
 };
@@ -1657,7 +1657,7 @@ exports.fetchDevicesAlerts = async (req, res) => {
     if (!timezone || !moment.tz.zone(timezone)) {
       return res.status(400).json({
         status: "failed",
-        message: "Invalid or missing 'timezone'. Please provide a valid IANA timezone (e.g. 'Europe/Athens')."
+        message: "Invalid or missing 'timezone'. Please provide a valid IANA timezone (e.g. 'Europe/Athens')"
       });
     }
 
@@ -1670,7 +1670,7 @@ exports.fetchDevicesAlerts = async (req, res) => {
       if (!localDateTimeRegex.test(from)) {
         return res.status(400).json({
           status: "failed",
-          message: "Invalid 'from' format. Use 'YYYY-MM-DD HH:mm:ss'."
+          message: "Invalid 'from' format. Use 'YYYY-MM-DD HH:mm:ss'"
         });
       }
       fromTimestamp = moment.tz(from, timezone).utc().valueOf();
@@ -1680,7 +1680,7 @@ exports.fetchDevicesAlerts = async (req, res) => {
       if (!localDateTimeRegex.test(to)) {
         return res.status(400).json({
           status: "failed",
-          message: "Invalid 'to' format. Use 'YYYY-MM-DD HH:mm:ss'."
+          message: "Invalid 'to' format. Use 'YYYY-MM-DD HH:mm:ss'"
         });
       }
       toTimestamp = moment.tz(to, timezone).utc().valueOf();
@@ -1725,7 +1725,7 @@ exports.fetchDevicesAlerts = async (req, res) => {
 
     return res.status(200).json({
       status: "success",
-      message: "Alerts retrieved successfully.",
+      message: "Alerts retrieved successfully",
       alerts: alertsWithTimezone
     });
 
@@ -1733,7 +1733,7 @@ exports.fetchDevicesAlerts = async (req, res) => {
     console.error('Error fetching alerts:', error);
     return res.status(500).json({
       status: "failed",
-      message: "Error retrieving alert history."
+      message: "Error retrieving alert history"
     });
   }
 };
