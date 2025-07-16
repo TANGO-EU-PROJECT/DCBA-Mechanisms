@@ -321,11 +321,13 @@ paths:
 
 
 
-  # [4] POST /resource/behavioural-score
+   # [4] POST /devices/behavioural-score
   /resource/behavioural_score:
     post:
       tags:
         - Resource API Endpoints
+      security:
+        - bearerAuth: []
       summary: Retrieve device behavioural score
       description: >
         Returns the behavioural score of a device based on provided DIDs.
@@ -384,6 +386,7 @@ paths:
                     example: "failed"
                   message:
                     type: string
+                    example: "Missing required fields: didSP or didRequester"
         '404':
           description: Device not found
           content:
@@ -409,7 +412,17 @@ paths:
                     example: "failed"
                   message:
                     type: string
-                    example: "Error retrieving behavioural score."
+              examples:
+                Error retrieving behavioural score:
+                  summary: Error retrieving behavioural score
+                  value:
+                    status: "failed"
+                    message: "Error retrieving behavioural score"
+                Error processing request:
+                  summary: Error processing request
+                  value:
+                    status: "failed"
+                    message: "Error processing request"
 
 
   # [5] POST /resource/last-location
@@ -460,7 +473,7 @@ paths:
                     example: "success"
                   message:
                     type: string
-                    example: "Device found."
+                    example: "Device found"
                   lastLocation:
                     type: string
                     example: "WAREHOUSE"
@@ -475,7 +488,6 @@ paths:
                   durationSeconds:
                     type: integer
                     example: 60
-
 
         '400':
           description: Bad Request - Missing required fields or invalid timezone
@@ -532,11 +544,11 @@ paths:
                   value:
                     status: "failed"
                     message: "Error retrieving device last location"
-                Error fetching resource:
-                  summary: Error fetching resource
+                Error processing request:
+                  summary: Error processing request
                   value:
                     status: "failed"
-                    message: "Error fetching resource"
+                    message: "Error processing request"
 
 
   # [6] POST /resource/location-history
@@ -544,8 +556,6 @@ paths:
     post:
       tags:
         - Resource API Endpoints
-      security:
-        - bearerAuth: []
       summary: Retrieve device location history within a specified timeframe
       description: >
         Returns the location history of a device based on provided employee DIDs.
@@ -600,19 +610,19 @@ paths:
                     example: "success"
                   message:
                     type: string
-                    example: "Device location history retrieved."
+                    example: "Device location history retrieved"
               examples:
                 NoLocationHistoryFound:
                   summary: Example response with no location history
                   value:
                     status: "success"
-                    message: "Device location history retrieved."
+                    message: "Device location history retrieved"
                     location_history: []
                 singleLocation:
                   summary: Example response with single location entry
                   value:
                     status: "success"
-                    message: "Device location history retrieved."
+                    message: "Device location history retrieved"
                     location_history:
                       - estimated_location: "WAREHOUSE"
                         firstSeenAt: "2025-05-29 11:19:26"
@@ -622,7 +632,7 @@ paths:
                   summary: Example response with multiple location entries
                   value:
                     status: "success"
-                    message: "Device location history retrieved."
+                    message: "Device location history retrieved"
                     location_history:
                       - estimated_location: "WAREHOUSE"
                         firstSeenAt: "2025-05-29 11:19:26"
@@ -653,17 +663,17 @@ paths:
                   summary: Missing required fields
                   value:
                     status: "failed"
-                    message: "Missing required fields: didRequester, from, to, or timezone."
+                    message: "Missing required fields: didRequester, from, to, or timezone"
                 InvalidTimestamps:
                   summary: Invalid timestamp format
                   value:
                     status: "failed"
-                    message: "Invalid from/to format. Both must be local datetime strings like 'YYYY-MM-DD HH:mm:ss'."
+                    message: "Invalid from/to format. Both must be local datetime strings like 'YYYY-MM-DD HH:mm:ss'"
                 InvalidTimezone:
                   summary: Invalid timezone format
                   value:
                     status: "failed"
-                    message: "Invalid timezone. Please provide a valid IANA timezone name (e.g. 'Europe/Athens', 'America/New_York')."
+                    message: "Invalid timezone. Please provide a valid IANA timezone name (e.g. 'Europe/Athens', 'America/New_York')"
         '404':
           description: Device not found
           content:
@@ -676,7 +686,7 @@ paths:
                     example: "failed"
                   message:
                     type: string
-                    example: "Device not found."
+                    example: "Device not found"
         '500':
           description: Internal server error while retrieving device location history
           content:
@@ -689,7 +699,17 @@ paths:
                     example: "failed"
                   message:
                     type: string
-                    example: "Error retrieving device location history."
+              examples:
+                Error retrieving device location history:
+                  summary: Error retrieving device location history
+                  value:
+                    status: "failed"
+                    message: "Error retrieving device location history"
+                Error processing request:
+                  summary: Error processing request
+                  value:
+                    status: "failed"
+                    message: "Error processing request"
 
 
 
@@ -698,8 +718,6 @@ paths:
     post:
       tags:
         - Resource API Endpoints
-      security:
-        - bearerAuth: []
       summary: Retrieve device permitted location history within a specified timeframe
       description: >
         Returns the permitted location history of a device based on provided employee DIDs.
@@ -756,19 +774,19 @@ paths:
                     example: "success"
                   message:
                     type: string
-                    example: "Device permitted location history retrieved."
+                    example: "Device permitted location history retrieved"
               examples:
                 NoLocationHistoryFound:
                   summary: Example response with no permitted location entry
                   value:
                     status: "success"
-                    message: "Device permitted location history retrieved."
+                    message: "Device permitted location history retrieved"
                     permitted_location_history: []
                 singleLocation:
                   summary: Example response with single permitted location entry
                   value:
                     status: "success"
-                    message: "Device permitted location history retrieved."
+                    message: "Device permitted location history retrieved"
                     permitted_location_history:
                       - estimated_location: "PERMITTED_AREA"
                         firstSeenAt: "2025-05-29 11:19:26"
@@ -778,7 +796,7 @@ paths:
                   summary: Example response with multiple permitted location entries
                   value:
                     status: "success"
-                    message: "Device permitted location history retrieved."
+                    message: "Device permitted location history retrieved"
                     permitted_location_history:
                       - estimated_location: "PERMITTED_AREA"
                         firstSeenAt: "2025-05-29 11:19:26"
@@ -809,52 +827,17 @@ paths:
                   summary: Missing required fields
                   value:
                     status: "failed"
-                    message: "Missing required fields: didRequester, from, to, or timezone."
+                    message: "Missing required fields: didRequester, from, to, or timezone"
                 InvalidTimestamps:
                   summary: Invalid timestamp format
                   value:
                     status: "failed"
-                    message: "Invalid from/to format. Both must be local datetime strings like 'YYYY-MM-DD HH:mm:ss'."
+                    message: "Invalid from/to format. Both must be local datetime strings like 'YYYY-MM-DD HH:mm:ss'"
                 InvalidTimezone:
                   summary: Invalid timezone format
                   value:
                     status: "failed"
-                    message: "Invalid timezone. Please provide a valid IANA timezone name (e.g. 'Europe/Athens', 'America/New_York')."
-
-        '401':
-          description: Unauthorized - Authorization token is missing, invalid, expired, or malformed
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  status:
-                    type: string
-                    example: "failed"
-                  message:
-                    type: string
-                    example: "Authorization token is missing, invalid or expired."
-              examples:
-                MissingAuthorizationToken:
-                  summary: Missing Authorization header
-                  value:
-                    status: "failed"
-                    message: "Authorization token is missing."
-                TokenExpired:
-                  summary: Authorization token has expired
-                  value:
-                    status: "failed"
-                    message: "Authorization token has expired."
-                InvalidToken:
-                  summary: Authorization token is invalid
-                  value:
-                    status: "failed"
-                    message: "Invalid Authorization token."
-                MalformedToken:
-                  summary: Authorization header malformed
-                  value:
-                    status: "failed"
-                    message: "Authorization token is malformed. It should start with 'Bearer '."
+                    message: "Invalid timezone. Please provide a valid IANA timezone name (e.g. 'Europe/Athens', 'America/New_York')"
         '404':
           description: Device not found
           content:
@@ -867,7 +850,7 @@ paths:
                     example: "failed"
                   message:
                     type: string
-                    example: "Device not found."
+                    example: "Device not found"
         '500':
           description: Internal server error while retrieving device permitted location history
           content:
@@ -880,7 +863,17 @@ paths:
                     example: "failed"
                   message:
                     type: string
-                    example: "Error retrieving device permitted location history."
+              examples:
+                Error retrieving device permitted location history:
+                  summary: Error retrieving device permitted location history
+                  value:
+                    status: "failed"
+                    message: "Error retrieving device permitted location history"
+                Error processing request:
+                  summary: Error processing request
+                  value:
+                    status: "failed"
+                    message: "Error processing request"
 
 
   # [8] POST /resource/restricted-location-history
@@ -888,8 +881,6 @@ paths:
     post:
       tags:
         - Resource API Endpoints
-      security:
-        - bearerAuth: []
       summary: Retrieve device restricted location history within a specified timeframe
       description: >
         Returns the restricted location history of a device based on provided employee DIDs.
@@ -944,19 +935,19 @@ paths:
                     example: "success"
                   message:
                     type: string
-                    example: "Device restricted location history retrieved."
+                    example: "Device restricted location history retrieved"
               examples:
                 NoLocationHistoryFound:
                   summary: Example response with no restricted location entry
                   value:
                     status: "success"
-                    message: "Device restricted location history retrieved."
+                    message: "Device restricted location history retrieved"
                     restricted-location-history: []
                 singleLocation:
                   summary: Example response with single restricted location entry
                   value:
                     status: "success"
-                    message: "Device restricted location history retrieved."
+                    message: "Device restricted location history retrieved"
                     restricted_location_history:
                       - estimated_location: "PACKAGING_LINES"
                         firstSeenAt: "2025-05-29 11:19:26"
@@ -966,7 +957,7 @@ paths:
                   summary: Example response with multiple restricted location entries
                   value:
                     status: "success"
-                    message: "Device restricted location history retrieved."
+                    message: "Device restricted location history retrieved"
                     restricted_location_history:
                       - estimated_location: "PACKAGING_LINES"
                         firstSeenAt: "2025-05-29 11:19:26"
@@ -997,52 +988,17 @@ paths:
                   summary: Missing required fields
                   value:
                     status: "failed"
-                    message: "Missing required fields: didRequester, from, to, or timezone."
+                    message: "Missing required fields: didRequester, from, to, or timezone"
                 InvalidTimestamps:
                   summary: Invalid timestamp format
                   value:
                     status: "failed"
-                    message: "Invalid from/to format. Both must be local datetime strings like 'YYYY-MM-DD HH:mm:ss'."
+                    message: "Invalid from/to format. Both must be local datetime strings like 'YYYY-MM-DD HH:mm:ss'"
                 InvalidTimezone:
                   summary: Invalid timezone format
                   value:
                     status: "failed"
-                    message: "Invalid timezone. Please provide a valid IANA timezone name (e.g. 'Europe/Athens', 'America/New_York')."
-
-        '401':
-          description: Unauthorized - Authorization token is missing, invalid, expired, or malformed
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  status:
-                    type: string
-                    example: "failed"
-                  message:
-                    type: string
-                    example: "Authorization token is missing, invalid or expired."
-              examples:
-                MissingAuthorizationToken:
-                  summary: Missing Authorization header
-                  value:
-                    status: "failed"
-                    message: "Authorization token is missing."
-                TokenExpired:
-                  summary: Authorization token has expired
-                  value:
-                    status: "failed"
-                    message: "Authorization token has expired."
-                InvalidToken:
-                  summary: Authorization token is invalid
-                  value:
-                    status: "failed"
-                    message: "Invalid Authorization token."
-                MalformedToken:
-                  summary: Authorization header malformed
-                  value:
-                    status: "failed"
-                    message: "Authorization token is malformed. It should start with 'Bearer '."
+                    message: "Invalid timezone. Please provide a valid IANA timezone name (e.g. 'Europe/Athens', 'America/New_York')"
         '404':
           description: Device not found
           content:
@@ -1055,7 +1011,7 @@ paths:
                     example: "failed"
                   message:
                     type: string
-                    example: "Device not found."
+                    example: "Device not found"
         '500':
           description: Internal server error while retrieving device restricted location history
           content:
@@ -1068,7 +1024,17 @@ paths:
                     example: "failed"
                   message:
                     type: string
-                    example: "Error retrieving device restricted location history."
+              examples:
+                Error retrieving device restricted location history:
+                  summary: Error retrieving device restricted location history
+                  value:
+                    status: "failed"
+                    message: "Error retrieving device restricted location history"
+                Error processing request:
+                  summary: Error processing request
+                  value:
+                    status: "failed"
+                    message: "Error processing request"
 
 
   # [9] GET /resource/alerts

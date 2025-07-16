@@ -1302,7 +1302,7 @@ exports.fetchDeviceLocationHistory = async (req, res) => {
   if (!didRequester || !from || !to) {
     return res.status(400).json({
       status: "failed",
-      message: 'Missing required fields: didRequester, from, to, or timezone.'
+      message: 'Missing required fields: didRequester, from, to, or timezone'
     });
   }
 
@@ -1311,7 +1311,7 @@ exports.fetchDeviceLocationHistory = async (req, res) => {
   if (!localDateTimeRegex.test(from) || !localDateTimeRegex.test(to)) {
     return res.status(400).json({
       status: "failed",
-      message: "Invalid from/to format. Both must be local datetime strings like 'YYYY-MM-DD HH:mm:ss'."
+      message: "Invalid from/to format. Both must be local datetime strings like 'YYYY-MM-DD HH:mm:ss'"
     });
   }
 
@@ -1319,7 +1319,7 @@ exports.fetchDeviceLocationHistory = async (req, res) => {
   if (!moment.tz.zone(timezone)) {
     return res.status(400).json({
       status: "failed",
-      message: "Invalid timezone. Please provide a valid IANA timezone name (e.g. 'Europe/Athens', 'America/New_York')."
+      message: "Invalid timezone. Please provide a valid IANA timezone name (e.g. 'Europe/Athens', 'America/New_York')"
     });
   }
 
@@ -1334,7 +1334,7 @@ exports.fetchDeviceLocationHistory = async (req, res) => {
     if (!device) {
       return res.status(404).json({
         status: "failed",
-        message: 'Device not found.'
+        message: 'Device not found'
       });
     }
 
@@ -1371,7 +1371,7 @@ exports.fetchDeviceLocationHistory = async (req, res) => {
 
     return res.status(200).json({
       status: "success",
-      message: "Device location history retrieved.",
+      message: "Device location history retrieved",
       location_history: convertedHistory
     });
 
@@ -1385,7 +1385,7 @@ exports.fetchDeviceLocationHistory = async (req, res) => {
 
     return res.status(500).json({
       status: "failed",
-      message: "Error retrieving device location history."
+      message: "Error retrieving device location history"
     });
   }
 };
@@ -1422,7 +1422,7 @@ exports.fetchDevicePermittedLocationHistory = async (req, res) => {
   if (!didRequester || !from || !to || !timezone) {
     return res.status(400).json({
       status: "failed",
-      message: 'Missing required fields: didRequester, from, to, or timezone.'
+      message: 'Missing required fields: didRequester, from, to, or timezone'
     });
   }
 
@@ -1431,7 +1431,7 @@ exports.fetchDevicePermittedLocationHistory = async (req, res) => {
   if (!localDateTimeRegex.test(from) || !localDateTimeRegex.test(to)) {
     return res.status(400).json({
       status: "failed",
-      message: "Invalid from/to format. Both must be local datetime strings like 'YYYY-MM-DD HH:mm:ss'."
+      message: "Invalid from/to format. Both must be local datetime strings like 'YYYY-MM-DD HH:mm:ss'"
     });
   }
 
@@ -1439,7 +1439,7 @@ exports.fetchDevicePermittedLocationHistory = async (req, res) => {
   if (!moment.tz.zone(timezone)) {
     return res.status(400).json({
       status: "failed",
-      message: "Invalid timezone. Please provide a valid IANA timezone name (e.g. 'Europe/Athens', 'America/New_York')."
+      message: "Invalid timezone. Please provide a valid IANA timezone name (e.g. 'Europe/Athens', 'America/New_York')"
     });
   }
 
@@ -1486,7 +1486,7 @@ exports.fetchDevicePermittedLocationHistory = async (req, res) => {
 
     return res.status(200).json({
       status: "success",
-      message: "Device permitted location history retrieved.",
+      message: "Device permitted location history retrieved",
       permitted_location_history: convertedPermittedHistory
     });
 
@@ -1500,7 +1500,7 @@ exports.fetchDevicePermittedLocationHistory = async (req, res) => {
 
     return res.status(500).json({
       status: "failed",
-      message: "Error retrieving device permitted location history."
+      message: "Error retrieving device permitted location history"
     });
   }
 };
@@ -1536,7 +1536,7 @@ exports.fetchDeviceRestrictedLocationHistory = async (req, res) => {
   if (!didRequester || !from || !to || !timezone) {
     return res.status(400).json({
       status: "failed",
-      message: 'Missing required fields: didRequester, from, to, or timezone.'
+      message: 'Missing required fields: didRequester, from, to, or timezone'
     });
   }
 
@@ -1545,7 +1545,7 @@ exports.fetchDeviceRestrictedLocationHistory = async (req, res) => {
   if (!localDateTimeRegex.test(from) || !localDateTimeRegex.test(to)) {
     return res.status(400).json({
       status: "failed",
-      message: "Invalid from/to format. Both must be local datetime strings like 'YYYY-MM-DD HH:mm:ss'."
+      message: "Invalid from/to format. Both must be local datetime strings like 'YYYY-MM-DD HH:mm:ss'"
     });
   }
 
@@ -1553,7 +1553,7 @@ exports.fetchDeviceRestrictedLocationHistory = async (req, res) => {
   if (!moment.tz.zone(timezone)) {
     return res.status(400).json({
       status: "failed",
-      message: "Invalid timezone. Please provide a valid IANA timezone name (e.g. 'Europe/Athens', 'America/New_York')."
+      message: "Invalid timezone. Please provide a valid IANA timezone name (e.g. 'Europe/Athens', 'America/New_York')"
     });
   }
 
@@ -1607,7 +1607,7 @@ exports.fetchDeviceRestrictedLocationHistory = async (req, res) => {
 
     return res.status(200).json({
       status: "success",
-      message: "Device restricted location history retrieved.",
+      message: "Device restricted location history retrieved",
       location_history: convertedRestrictedHistory
     });
 
@@ -1621,7 +1621,7 @@ exports.fetchDeviceRestrictedLocationHistory = async (req, res) => {
 
     return res.status(500).json({
       status: "failed",
-      message: 'Error retrieving device restricted location history.'
+      message: 'Error retrieving device restricted location history'
     });
   }
 };
