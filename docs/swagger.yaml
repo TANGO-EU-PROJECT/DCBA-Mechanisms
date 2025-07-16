@@ -322,7 +322,7 @@ paths:
 
 
    # [4] POST /devices/behavioural-score
-  /resource/behavioural_score:
+  /resource/behavioural-score:
     post:
       tags:
         - Resource API Endpoints
