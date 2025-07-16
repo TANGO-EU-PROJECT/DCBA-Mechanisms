@@ -9,6 +9,45 @@ info:
 servers:
   - url: https://dcba-tango.riastone.eu/
 
+components:
+  responses:
+    GetNotFound:
+      description: Resource not found
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              status:
+                type: string
+              message:
+                type: string
+          examples:
+            ResourceNotFound:
+              summary: Resource not found (GET)
+              value:
+                status: "failed"
+                message: "Cannot GET. Resource not found"
+
+    PostNotFound:
+      description: Resource not found for POST
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              status:
+                type: string
+              message:
+                type: string
+          examples:
+            PostResourceNotFound:
+              summary: Resource not found (POST)
+              value:
+                status: "failed"
+                message: "Cannot POST. Resource not found"
+
+
 paths:
   # Resource API Endpoints #
 
@@ -33,7 +72,7 @@ paths:
                     example: "success"
                   message:
                     type: string
-                    example: "Devices fetched successfully."
+                    example: "Devices fetched successfully"
                   data:
                     type: array
                     items:
@@ -50,13 +89,13 @@ paths:
                   summary: Example with no devices fetched
                   value:
                     status: "success"
-                    message: "Devices fetched successfully."
+                    message: "Devices fetched successfully"
                     data: []
                 SingleDeviceFetched:
                   summary: Example list of a device
                   value:
                     status: "success"
-                    message: "Devices fetched successfully."
+                    message: "Devices fetched successfully"
                     data:
                       - device_id: "5c487cb4a62cb29d"
                         did: "urn:uuid:06e3f05a-51ce-46e9-a9b9-e2cf27fd10e7"
@@ -65,7 +104,7 @@ paths:
                   summary: Example list of devices
                   value:
                     status: "success"
-                    message: "Devices fetched successfully."
+                    message: "Devices fetched successfully"
                     data:
                       - device_id: "5c487cb4a62cb29d"
                         did: "urn:uuid:06e3f05a-51ce-46e9-a9b9-e2cf27fd10e7"
@@ -76,23 +115,6 @@ paths:
                       - device_id: "gi9b459o5333c612"
                         did: "urn:uuid:b115d2e6-03c9-3t7h-000a-125374ffp9ll"
                         sub: "did:my:wallet"
-        '404':
-          description: Resource not found
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  status:
-                    type: string
-                  message:
-                    type: string
-              examples:
-                Resource not found:
-                  summary: Resource not found
-                  value:
-                    status: "failed"
-                    message: "Resource not found."  
         '500':
           description: Internal server error while fetching devices
           content:
@@ -110,12 +132,12 @@ paths:
                   summary: Error fetching device data
                   value:
                     status: "failed"
-                    message: "Error fetching device data."
+                    message: "Error fetching device data"
                 Error fetching resource:
                   summary: Error fetching resource
                   value:
                     status: "failed"
-                    message: "Error fetching resource."
+                    message: "Error fetching resource"
 
 
 
@@ -141,7 +163,7 @@ paths:
                     example: "success"
                   message:
                     type: string
-                    example: "Fetched online devices successfully."
+                    example: "Fetched online devices successfully"
                   data:
                     type: array
                     items:
@@ -158,13 +180,13 @@ paths:
                   summary: Example with no online devices fetched
                   value:
                     status: "success"
-                    message: "Fetched online devices successfully."
+                    message: "Fetched online devices successfully"
                     data: []
                 SingleOnlineDeviceFetched:
                   summary: Example list of an online device
                   value:
                     status: "success"
-                    message: "Fetched online devices successfully."
+                    message: "Fetched online devices successfully"
                     data:
                       - device_id: "5c487cb4a62cb29d"
                         did: "urn:uuid:06e3f05a-51ce-46e9-a9b9-e2cf27fd10e7"
@@ -173,7 +195,7 @@ paths:
                   summary: Example list of online devices
                   value:
                     status: "success"
-                    message: "Fetched online devices successfully."
+                    message: "Fetched online devices successfully"
                     data:
                       - device_id: "5c487cb4a62cb29d"
                         did: "urn:uuid:06e3f05a-51ce-46e9-a9b9-e2cf27fd10e7"
@@ -201,20 +223,18 @@ paths:
                   summary: Error fetching online device data
                   value:
                     status: "failed"
-                    message: "Error fetching online devices."
+                    message: "Error fetching online devices"
                 Error fetching resource:
                   summary: Error fetching resource
                   value:
                     status: "failed"
-                    message: "Error fetching resource."
+                    message: "Error fetching resource"
 
   # [3] GET /resource/offline-devices
   /resource/offline-devices:
     get:
       tags:
         - Resource API Endpoints
-      security:
-        - CapabilityTokenAuth: []
       summary: Fetch offline devices
       description: >
         Retrieves devices that are currently offline.
@@ -231,7 +251,7 @@ paths:
                     example: "success"
                   message:
                     type: string
-                    example: "Fetched offline devices successfully."
+                    example: "Fetched offline devices successfully"
                   data:
                     type: array
                     items:
@@ -248,13 +268,13 @@ paths:
                   summary: Example with no offline devices fetched
                   value:
                     status: "success"
-                    message: "Fetched offline devices successfully."
+                    message: "Fetched offline devices successfully"
                     data: []
                 SingleOfflineDeviceFetched:
                   summary: Example list of an offline device
                   value:
                     status: "success"
-                    message: "Fetched offline devices successfully."
+                    message: "Fetched offline devices successfully"
                     data:
                       - device_id: "5c487cb4a62cb29d"
                         did: "urn:uuid:06e3f05a-51ce-46e9-a9b9-e2cf27fd10e7"
@@ -263,7 +283,7 @@ paths:
                   summary: Example list of offline devices
                   value:
                     status: "success"
-                    message: "Fetched offline devices successfully."
+                    message: "Fetched offline devices successfully"
                     data:
                       - device_id: "5c487cb4a62cb29d"
                         did: "urn:uuid:06e3f05a-51ce-46e9-a9b9-e2cf27fd10e7"
@@ -291,76 +311,49 @@ paths:
                   summary: Error fetching offline device data
                   value:
                     status: "failed"
-                    message: "Error fetching offline devices."
+                    message: "Error fetching offline devices"
                 Error fetching resource:
                   summary: Error fetching resource
                   value:
                     status: "failed"
-                    message: "Error fetching resource."
+                    message: "Error fetching resource"
 
 
 
 
   # [4] POST /resource/behavioural-score
-  /resource/behavioural-score:
+  /resource/behavioural_score:
     post:
       tags:
         - Resource API Endpoints
-      security:
-        - CapabilityTokenAuth: []
       summary: Retrieve device behavioural score
       description: >
         Returns the behavioural score of a device based on provided DIDs.
-
       requestBody:
         required: true
         content:
-          application/json:
+          application/x-www-form-urlencoded:
             schema:
               type: object
               required:
-                - sar
-                - jsonBody
+                - didSP
+                - didRequester
               properties:
-                sar:
-                  type: object
-                  required:
-                    - action
-                    - resource
-                  properties:
-                    action:
-                      type: string
-                      example: "POST"
-                    resource:
-                      type: string
-                      example: "https://dcba-tango.riastone.eu/resource/behavioural_score"
-                queryParameters:
-                  type: object
-                  description: Optional query parameters to filter or shape the request
-                jsonBody:
-                  type: object
-                  required:
-                    - didSP
-                    - didRequester
-                  properties:
-                    didSP:
-                      type: string
-                      example: "did:example:serviceprovider123"
-                    didRequester:
-                      type: string
-                      example: "did:jwk:eyJrdHkiOiJFQyIsImNydiI6..."
-            examples:
-              ValidRequest:
-                summary: Example valid behavioural score request
-                value:
-                  sar:
-                    action: "POST"
-                    resource: "https://dcba-tango.riastone.eu/resource/behavioural_score"
-                  queryParameters: {}
-                  jsonBody:
-                    didSP: "did:example:serviceprovider123"
-                    didRequester: "did:jwk:eyJrdHkiOiJFQyIsImNydiI6..."
+                didSP:
+                  type: string
+                  description: The Decentralized Identifier (DID) of the service provider initiating the request.
+                  example: "did:example:serviceprovider123"
+                didRequester:
+                  type: string
+                  description: The Decentralized Identifier (DID) of the requesting employee.
+                  example: "did:jwk:eyJrdHkiOiJFQyIsImNydiI6IlAtMjU2Iiwia2lkIjoiMDVhZ0UxdXZPcW1yVDRLY2NiZ1ZKenAwRmJ5SF9weXE4WE5mU2VoOHRkSSIsIngiOiJDRTVqODFybWxqV1JoM1FEOFlJQVNGb093SzRrMjRqU0pWVWEtdl9rSTVZIiwieSI6IjBRU29vbktGVXA4Y0ZLd0dwWHhLSjlSeEZJTk9BOHpWd0ZCTTloQzRKczgifQ"
 
+            examples:
+              validRequest:
+                summary: Valid request example
+                value:
+                  didSP: "did:example:serviceprovider123"
+                  didRequester: "did:jwk:eyJrdHkiOiJFQyIsImNydiI6IlAtMjU2Iiwia2lkIjoiMDVhZ0UxdXZPcW1yVDRLY2NiZ1ZKenAwRmJ5SF9weXE4WE5mU2VoOHRkSSIsIngiOiJDRTVqODFybWxqV1JoM1FEOFlJQVNGb093SzRrMjRqU0pWVWEtdl9rSTVZIiwieSI6IjBRU29vbktGVXA4Y0ZLd0dwWHhLSjlSeEZJTk9BOHpWd0ZCTTloQzRKczgifQ"
       responses:
         '200':
           description: Behavioural score retrieved successfully
@@ -374,13 +367,13 @@ paths:
                     example: "success"
                   message:
                     type: string
-                    example: "Device found."
+                    example: "Device found"
                   behaviouralScore:
                     type: number
                     format: float
                     example: 0.85
         '400':
-          description: Bad Request - Missing required fields or SAR
+          description: Bad Request - Missing required fields
           content:
             application/json:
               schema:
@@ -391,17 +384,6 @@ paths:
                     example: "failed"
                   message:
                     type: string
-              examples:
-                MissingSAR:
-                  summary: Missing 'sar.resource' in request
-                  value:
-                    status: "failed"
-                    message: "Missing 'sar.resource' in request body."
-                MissingFields:
-                  summary: Missing required fields in jsonBody
-                  value:
-                    status: "failed"
-                    message: "Missing required fields: didSP or didRequester."
         '404':
           description: Device not found
           content:
@@ -414,9 +396,9 @@ paths:
                     example: "failed"
                   message:
                     type: string
-                    example: "Device not found."
+                    example: "Device not found"
         '500':
-          description: Internal server error while retrieving behavioural score
+          description: Internal server error while retrieving behavioural score 
           content:
             application/json:
               schema:
@@ -427,26 +409,14 @@ paths:
                     example: "failed"
                   message:
                     type: string
-              examples:
-                Error retrieving behavioural score:
-                  summary: Server error while retrieving behavioural score
-                  value:
-                    status: "failed"
-                    message: "Error retrieving behavioural score."
-                Error fetching resource:
-                  summary: Error fetching resource
-                  value:
-                    status: "failed"
-                    message: "Error fetching resource."
+                    example: "Error retrieving behavioural score."
 
 
   # [5] POST /resource/last-location
   /resource/last-location:
     post:
       tags:
-        - Resource API Endpoints
-      security:
-        - bearerAuth: []
+        - Service API Endpoints
       summary: Retrieve device last location
       description: >
         Returns the last location of a device
@@ -454,36 +424,29 @@ paths:
       requestBody:
         required: true
         content:
-          application/json:   # changed from x-www-form-urlencoded to JSON
+          application/x-www-form-urlencoded:
             schema:
               type: object
               required:
                 - didRequester
                 - timezone
-                - sar.resource       # Added sar.resource as required
               properties:
                 didRequester:
                   type: string
                   description: The Decentralized Identifier (DID) of the requesting employee.
                   example: "did:jwk:eyJrdHkiOiJFQyIsImNydiI6IlAtMjU2Iiwia2lkIjoiMDVhZ0UxdXZPcW1yVDRLY2NiZ1ZKenAwRmJ5SF9weXE4WE5mU2VoOHRkSSIsIngiOiJDRTVqODFybWxqV1JoM1FEOFlJQVNGb093SzRrMjRqU0pWVWEtdl9rSTVZIiwieSI6IjBRU29vbktGVXA4Y0ZLd0dwWHhLSjlSeEZJTk9BOHpWd0ZCTTloQzRKczgifQ"
-                timezone:
+                timezone: 
                   type: string
                   description: >
                     Preferred IANA timezone name to interpret the 'from' and 'to' parameters for filtering location history, and to format the returned timestamps accordingly.
                     Example values include: Europe/Athens, Europe/Lisbon, Asia/Tokyo.
                   example: "Europe/Athens"
-                sar.resource:
-                  type: string
-                  description: >
-                    The resource name or identifier to specify the device or data requested.
-                  example: "last_location"
             examples:
               validRequest:
                 summary: Valid request example
                 value:
                   didRequester: "did:jwk:eyJrdHkiOiJFQyIsImNydiI6IlAtMjU2Iiwia2lkIjoiMDVhZ0UxdXZPcW1yVDRLY2NiZ1ZKenAwRmJ5SF9weXE4WE5mU2VoOHRkSSIsIngiOiJDRTVqODFybWxqV1JoM1FEOFlJQVNGb093SzRrMjRqU0pWVWEtdl9rSTVZIiwieSI6IjBRU29vbktGVXA4Y0ZLd0dwWHhLSjlSeEZJTk9BOHpWd0ZCTTloQzRKczgifQ"
                   timezone: "Europe/Athens"
-                  sar.resource: "last_location"
       responses:
         '200':
           description: Last known device location retrieved successfully
@@ -513,6 +476,7 @@ paths:
                     type: integer
                     example: 60
 
+
         '400':
           description: Bad Request - Missing required fields or invalid timezone
           content:
@@ -530,12 +494,12 @@ paths:
                   summary: Missing required fields
                   value:
                     status: "failed"
-                    message: "Missing required fields: didRequester, timezone, or sar.resource."
+                    message: "Missing required fields: didRequester or timezone"
                 invalidTimezone:
                   summary: Invalid timezone format
                   value:
                     status: "failed"
-                    message: "Invalid timezone. Please provide a valid IANA timezone name (e.g. 'Europe/Athens', 'America/New_York')."
+                    message: "Invalid timezone. Please provide a valid IANA timezone name (e.g. 'Europe/Athens', 'America/New_York')"
 
         '404':
           description: Device not found
@@ -549,7 +513,21 @@ paths:
                     example: "failed"
                   message:
                     type: string
-                    example: "Device not found."
+                    example: "Device not found"
+        '500':
+          description: Internal server error while retrieving last location
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: "failed"
+                  message:
+                    type: string
+                    example: "Error retrieving device last location"
+
 
         '500':
           description: Internal server error while retrieving last location
@@ -564,16 +542,16 @@ paths:
                   message:
                     type: string
               examples:
-                Error retrieving device last location:
-                  summary: Server error while retrieving device last location
+                Error retrieving retrieving last location:
+                  summary: Internal server error while retrieving last location
                   value:
                     status: "failed"
-                    message: "Error retrieving device last location."
+                    message: "Error retrieving device last location"
                 Error fetching resource:
                   summary: Error fetching resource
                   value:
                     status: "failed"
-                    message: "Error fetching resource."
+                    message: "Error fetching resource"
 
 
   # [6] POST /resource/location-history
@@ -1113,8 +1091,6 @@ paths:
     get:
       tags:
         - Resource API Endpoints
-      security:
-        - bearerAuth: []
       summary: Retrieve all history alert related to devices presence in Restricted Areas.
       description: >
         Returns the restricted location history of a device based on provided employee DIDs.
@@ -1148,7 +1124,7 @@ paths:
             example: "2025-07-30 12:15:00"
       responses:
         '200':
-          description: Alerts retrieved successfully.
+          description: Alerts retrieved successfully
           content:
             application/json:
               schema:
@@ -1159,7 +1135,7 @@ paths:
                     example: success
                   message:
                     type: string
-                    example: Alerts retrieved successfully.
+                    example: Alerts retrieved successfully
                   timezone:
                     type: string
                     example: Europe/Athens
@@ -1196,13 +1172,13 @@ paths:
                   summary: Empty alert list
                   value:
                     status: success
-                    message: Alerts retrieved successfully.
+                    message: Alerts retrieved successfully
                     alerts: []
                 singleAlert:
                   summary: History with one single alert
                   value:
                     status: success
-                    message: Alerts retrieved successfully.
+                    message: Alerts retrieved successfully
                     alerts:
                       - device_id: "5c487cb4a62cb29d"
                         did: "did:jwk:eyJrdHkiOiJFQyIsImNydiI6IlAtMjU2Iiwia2lkIjoiMDVhZ0UxdXZPcW1yVDRLY2NiZ1ZKenAwRmJ5SF9weXE4WE5mU2VoOHRkSSIsIngiOiJDRTVqODFybWxqV1JoM1FEOFlJQVNGb093SzRrMjRqU0pWVWEtdl9rSTVZIiwieSI6IjBRU29vbktGVXA4Y0ZLd0dwWHhLSjlSeEZJTk9BOHpWd0ZCTTloQzRKczgifQ"
@@ -1215,7 +1191,7 @@ paths:
                   summary: History with multiple alerts
                   value:
                     status: success
-                    message: Alerts retrieved successfully.
+                    message: Alerts retrieved successfully
                     alerts:
                       - device_id: "5c487cb4a62cb29d"
                         did: "did:jwk:eyJrdHkiOiJFQyIsImNydiI6IlAtMjU2Iiwia2lkIjoiMDVhZ0UxdXZPcW1yVDRLY2NiZ1ZKenAwRmJ5SF9weXE4WE5mU2VoOHRkSSIsIngiOiJDRTVqODFybWxqV1JoM1FEOFlJQVNGb093SzRrMjRqU0pWVWEtdl9rSTVZIiwieSI6IjBRU29vbktGVXA4Y0ZLd0dwWHhLSjlSeEZJTk9BOHpWd0ZCTTloQzRKczgifQ"
@@ -1248,52 +1224,17 @@ paths:
                   summary: Invalid or missing timezone
                   value:
                     status: "failed"
-                    message: "Invalid or missing 'timezone'. Please provide a valid IANA timezone (e.g. 'Europe/Athens')."
+                    message: "Invalid or missing 'timezone'. Please provide a valid IANA timezone (e.g. 'Europe/Athens')"
                 InvalidFrom:
                   summary: Invalid 'from' format
                   value:
                     status: "failed"
-                    message: "Invalid 'from' format. Use 'YYYY-MM-DD HH:mm:ss'."
+                    message: "Invalid 'from' format. Use 'YYYY-MM-DD HH:mm:ss'"
                 InvalidTo:
                   summary: Invalid 'to' format
                   value:
                     status: "failed"
-                    message: "Invalid 'to' format. Use 'YYYY-MM-DD HH:mm:ss'."
-                
-        '401':
-          description: Unauthorized - Authorization token is missing, invalid, expired, or malformed
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  status:
-                    type: string
-                    example: "failed"
-                  message:
-                    type: string
-                    example: "Authorization token is missing, invalid or expired."
-              examples:
-                MissingAuthorizationToken:
-                  summary: Missing Authorization header
-                  value:
-                    status: "failed"
-                    message: "Authorization token is missing."
-                TokenExpired:
-                  summary: Authorization token has expired
-                  value:
-                    status: "failed"
-                    message: "Authorization token has expired."
-                InvalidToken:
-                  summary: Authorization token is invalid
-                  value:
-                    status: "failed"
-                    message: "Invalid Authorization token."
-                MalformedToken:
-                  summary: Authorization header malformed
-                  value:
-                    status: "failed"
-                    message: "Authorization token is malformed. It should start with 'Bearer '."
+                    message: "Invalid 'to' format. Use 'YYYY-MM-DD HH:mm:ss'"
         '500':
           description: Internal server error while retrieving alert history
           content:
@@ -1306,8 +1247,20 @@ paths:
                     example: failed
                   message:
                     type: string
-                    example: Error retrieving alert history.
+              examples:
+                Error retrieving alert history:
+                  summary: Error retrieving alert history
+                  value:
+                    status: "failed"
+                    message: "Error retrieving alert history"
+                Error fetching resource:
+                  summary: Error fetching resource
+                  value:
+                    status: "failed"
+                    message: "Error fetching resource"
 
+
+       
   # [10] DELETE /resource/delete-employee
   /resource/delete-employee:
     delete:
