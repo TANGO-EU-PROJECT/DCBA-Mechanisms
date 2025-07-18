@@ -367,7 +367,7 @@ async function processSessionRequest(authToken, state, did, sub, givenName, fami
           /* Device associated with did not found to. So, create it */
           await createDeviceDocument(did, sub, givenName, familyName, ePassportId, device_id, log_file_uri);
           /* Notify the device via WebSocket */
-          notifyDevice(authToken, state, device_id, did, sub, log_file_uri, ePassportId, "session-request-valid");
+          notifyDevice(authToken, state, device_id, did, sub, log_file_uri, "session-request-valid");
           logEvent({
             event: 'DEVICE STATUS UPDATED',
             status: 'SUCCESS ✅',
@@ -382,7 +382,7 @@ async function processSessionRequest(authToken, state, did, sub, givenName, fami
         } else {
           /* Someone tried to log in from his/her device, using an existing DID */
           /* Notify the device via WebSocket */
-          notifyDevice(authToken, state, device_id, did, sub, log_file_uri, ePassportId, "potential-credential-sharing");
+          notifyDevice(authToken, state, device_id, did, sub, log_file_uri, "potential-credential-sharing");
           logEvent({
             event: 'UNAUTHORIZED ATTEMPT FROM USING CREDENTIALS FROM ANOTHER DEVICE',
             status: 'FAILED ❌',
@@ -411,7 +411,7 @@ async function processSessionRequest(authToken, state, did, sub, givenName, fami
               ip: req.ip
             });
             /* Notify the device via WebSocket */
-            notifyDevice(authToken, state, device_id, did, sub, log_file_uri, ePassportId, "session-request-valid");
+            notifyDevice(authToken, state, device_id, did, sub, log_file_uri, "session-request-valid");
             logEvent({
               event: 'DEVICE STATUS UPDATED',
               status: 'SUCCESS ✅',
@@ -432,7 +432,7 @@ async function processSessionRequest(authToken, state, did, sub, givenName, fami
               device_id: device_id,
               ip: req.ip
             });
-            notifyDevice(authToken, state, device_id, did, sub, log_file_uri, ePassportId, "device-already-online");
+            notifyDevice(authToken, state, device_id, did, sub, log_file_uri, "device-already-online");
             /* Authentication Failed */
             /* return { status: 409, message: "Device already online." }; */
             return;
@@ -440,7 +440,7 @@ async function processSessionRequest(authToken, state, did, sub, givenName, fami
           
         } else {
           /* Someone tried to log in to their device using another employee's credentials */
-          notifyDevice(authToken, state, device_id, did, sub, log_file_uri, ePassportId, "potential-credential-sharing");
+          notifyDevice(authToken, state, device_id, did, sub, log_file_uri, "potential-credential-sharing");
           logEvent({
             event: 'UNAUTHORIZED ATTEMPT USING CREDENTIALS FROM ANOTHER DEVICE',
             status: 'FAILED ❌',
@@ -455,7 +455,7 @@ async function processSessionRequest(authToken, state, did, sub, givenName, fami
       }
     } else {
       /* Notify the device that the session request is expired, in order to re-generate a new unique QR */
-      notifyDevice(authToken, state, "unknown", did, sub, "unknown", ePassportId, "session-request-expired");
+      notifyDevice(authToken, state, "unknown", did, sub, "unknown", "session-request-expired");
       logEvent({
         event: 'SEARCH FOR SESSION REQUEST FOR DEVICE',
         status: 'FAILED ❌',
@@ -567,7 +567,7 @@ function initializeWebSocketServer(wss) {
  * @param {string} log_file_uri             - The device local filepath in which the offline logs will be stored temporarily.
  * @param {string} message                  - Based on this message, the Authenticator app decides which alert to display.
  */
-function notifyDevice(authToken, state, device_id, did, sub, log_file_uri, ePassportId, message) {
+function notifyDevice(authToken, state, device_id, did, sub, log_file_uri, message) {
 
   /* Retrieve the WebSocket connection associated with the device_id */
   const device_id_ws_connection = WSS_CONNECTIONS_FROM_DEVICE_ID.get(device_id);
@@ -586,7 +586,6 @@ function notifyDevice(authToken, state, device_id, did, sub, log_file_uri, ePass
         logFileURI: log_file_uri,                                       /* The log file uri                                              */
         authToken: authToken,                                           /* The auth token                                                */
         message: message,                                               /* message: session-request-expired                              */
-        ePassportId: ePassportId
       };
   
       /* Send the data to the device as a JSON string */
@@ -611,7 +610,6 @@ function notifyDevice(authToken, state, device_id, did, sub, log_file_uri, ePass
         logFileURI: log_file_uri,                                       /* The log file uri                                              */
         authToken: authToken,                                           /* The auth token                                                */
         message: message,                                               /* message: session-request-valid                                */
-        ePassportId: ePassportId
       };
   
       /* Send the data to the device as a JSON string */
@@ -637,7 +635,6 @@ function notifyDevice(authToken, state, device_id, did, sub, log_file_uri, ePass
         logFileURI: log_file_uri,                                       /* The log file uri                                              */
         authToken: authToken,                                           /* The auth token                                                */
         message: message,                                               /* message: device-already-online                                */
-        ePassportId: ePassportId
       };
   
       /* Send the data to the device as a JSON string */
@@ -662,7 +659,6 @@ function notifyDevice(authToken, state, device_id, did, sub, log_file_uri, ePass
         logFileURI: log_file_uri,                                       /* The log file uri                                              */
         authToken: authToken,                                           /* The auth token                                                */
         message: message,                                                /* message: potential-credential-sharing                         */
-        ePassportId: ePassportId
       };
   
       /* Send the data to the device as a JSON string */
@@ -686,7 +682,6 @@ function notifyDevice(authToken, state, device_id, did, sub, log_file_uri, ePass
         logFileURI: log_file_uri,                                       /* The log file uri                                              */
         authToken: authToken,                                           /* The auth token                                                */
         message: message,                                               /* message: potential-credential-sharing                         */
-        ePassportId: ePassportId
       };
   
       /* Send the data to the device as a JSON string */
