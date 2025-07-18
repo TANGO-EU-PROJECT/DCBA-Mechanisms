@@ -977,6 +977,8 @@ exports.handleAuthCallback = async (req, res) => {
       try {
         const decoded = jwt.decode(vp_token, { complete: true });
 
+        console.log("DECODED: ", decoded)
+
         /* Extract the issuer (DID) and subject from the decoded token */
         const did = decoded.payload.iss;
         const sub = decoded.payload.sub;
