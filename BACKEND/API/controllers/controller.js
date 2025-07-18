@@ -858,7 +858,7 @@ exports.beginSession = async (req, res) => {
     /* Select the clientID based on the selected role */
     const clientId =
       role === 'customer'
-        ? 'smart-hospitality-epassport-service'
+        ? 'smart-hospitality-checkin-service'
         : 'smart-hospitality-employee-service';
 
     /* Make the post request to the auth init endpoint of the verifier */
