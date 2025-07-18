@@ -1,12 +1,67 @@
-<!-- FRONTEND/access-map.html -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
   <title>Access Map</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
+      background-color: #f4f4f4;
+    }
+
+    .container {
+      background: #fff;
+      padding: 40px;
+      border-radius: 8px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+      display: flex;
+      gap: 40px;
+    }
+
+    .left, .right {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .left input {
+      padding: 8px;
+      font-size: 16px;
+      width: 250px;
+    }
+
+    .right label {
+      margin-bottom: 8px;
+      font-size: 15px;
+    }
+
+    h2 {
+      margin-bottom: 10px;
+    }
+  </style>
 </head>
 <body>
-  <h1>Access Map</h1>
-  <p>This page will allow input of a passport ID and selection of restricted areas.</p>
+  <div class="container">
+    <!-- Left section: passport ID -->
+    <div class="left">
+      <h2>Passport ID</h2>
+      <input type="text" placeholder="Enter passport ID" id="passportId" />
+    </div>
+
+    <!-- Right section: location checkboxes -->
+    <div class="right">
+      <h2>Restricted Areas</h2>
+      <label><input type="checkbox" value="WAREHOUSE"> WAREHOUSE</label>
+      <label><input type="checkbox" value="PACKAGING_LINES"> PACKAGING_LINES</label>
+      <label><input type="checkbox" value="PERMITTED_AREA"> PERMITTED_AREA</label>
+      <label><input type="checkbox" value="SORTING_LINES_1_TO_3"> SORTING_LINES_1_TO_3</label>
+      <label><input type="checkbox" value="SORTING_LINES_4_AND_5"> SORTING_LINES_4_AND_5</label>
+      <label><input type="checkbox" value="SORTING_LINES_6_TO_8"> SORTING_LINES_6_TO_8</label>
+    </div>
+  </div>
 </body>
 </html>
