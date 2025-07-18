@@ -767,8 +767,9 @@ async function handleDeviceLocationUpdate(device, currentLocation, now, req) {
   try {
     /* Default access status is permitted unless proven otherwise */
     let accessStatus = 'ACCESS_PERMITTED';
+    const ePassportId = device.ePassportId;
 
-    const deviceAccessMap = await DEVICE_ACCESS_MAP.findOne({ device.ePassportId });
+    const deviceAccessMap = await DEVICE_ACCESS_MAP.findOne({ ePassportId });
     if (!deviceAccessMap) {
        logEvent({
         event: 'UPDATING LOCATION',
