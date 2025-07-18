@@ -7,7 +7,6 @@ const frontendControllers = {
   /** [X] TODO
    * @route   POST /frontend/access-map
    * @desc    Create or update device access map (passport ID + permitted + restricted areas)
-   * @middleware verifyToken
    */
   "device-access-map": controller.createOrUpdateDeviceAccessMap,
 };
