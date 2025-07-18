@@ -120,6 +120,8 @@ async function startServer() {
     res.sendFile(path.join(__dirname, '/FRONTEND/access-map.html'));
   });
   DCBA_SERVER.use('/frontend', frontendRoutes);
+  // Serve static files from the frontend folder
+  DCBA_SERVER.use('/frontend', express.static(path.join(__dirname, 'FRONTEND')));
 
 
   // Start the Express server
