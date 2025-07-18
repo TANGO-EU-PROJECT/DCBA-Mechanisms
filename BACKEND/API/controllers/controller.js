@@ -433,6 +433,8 @@ const processRequest = async (req, res, did, deviceID, ePassportId) => {
           const currentLocation = Array.isArray(estimatedLocation)
             ? estimatedLocation.join(' | ')
             : estimatedLocation;
+
+          console.log("ESTIMATED LOCATION (MOCK): ", currentLocation)
         
           const device = await DEVICE.findOne({ did: did, device_id: deviceID });
           // if (accessStatus === "ACCESS_RESTRICTED") {
