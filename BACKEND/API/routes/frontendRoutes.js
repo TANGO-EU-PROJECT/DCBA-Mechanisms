@@ -5,7 +5,7 @@ const controller = require('../controllers/controller');
 const frontendControllers = {
   /************************************************** POST REQUESTS **************************************************/
   /** [X] TODO
-   * @route   POST /resource/device-access-map
+   * @route   POST /frontend/access-map
    * @desc    Create or update device access map (passport ID + permitted + restricted areas)
    * @middleware verifyToken
    */
