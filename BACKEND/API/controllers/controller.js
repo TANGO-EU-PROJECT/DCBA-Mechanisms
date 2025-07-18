@@ -1449,9 +1449,13 @@ exports.fetchDevicePermittedLocationHistory = async (req, res) => {
     if (!device) {
       return res.status(404).json({
         status: "failed",
-        message: 'Device not found.'
+        message: 'Device not found'
       });
     }
+
+    const ePassportId = device.ePassportId;
+    const deviceAccessMap = await DEVICE_ACCESS_MAP.findOne({ ePassportId });
+    const devicePermittedAreas = deviceAccessMap.permittedAreas || [];
 
     /* Filter permitted entries by timeframe and location using UTC timestamps */
     const permittedHistory = device.location_history.filter(entry => {
@@ -1459,7 +1463,7 @@ exports.fetchDevicePermittedLocationHistory = async (req, res) => {
       return (
         entryTime >= fromTimestamp &&
         entryTime <= toTimestamp &&
-        (entry.estimated_location === 'PERMITTED_AREA' || entry.estimated_location === 'UNKNOWN')
+        permittedAreas.includes(entry.estimated_location)
       );
     });
 
@@ -1566,15 +1570,22 @@ exports.fetchDeviceRestrictedLocationHistory = async (req, res) => {
       });
     }
 
-    /* Filter entries by UTC timestamp and estimated_location !== 'PERMITTED_AREA' */
+    const ePassportId = device.ePassportId;
+    const deviceAccessMap = await DEVICE_ACCESS_MAP.findOne({ ePassportId });
+    const deviceRestrictedAreas = deviceAccessMap.restrictedAreas || [];
+
+
+
+    /* Filter entries by UTC timestamp  */
     const restrictedHistory = device.location_history.filter(entry => {
-      const entryTime = new Date(entry.first_seen_at).getTime(); 
+      const entryTime = new Date(entry.first_seen_at).getTime();
       return (
         entryTime >= fromTimestamp &&
         entryTime <= toTimestamp &&
-        entry.estimated_location !== 'PERMITTED_AREA'
+        deviceRestrictedAreas.includes(entry.estimated_location)
       );
     });
+
 
     /* Convert filtered entries to requested timezone and format */
     const convertedRestrictedHistory = restrictedHistory.map(entry => {
@@ -1603,7 +1614,7 @@ exports.fetchDeviceRestrictedLocationHistory = async (req, res) => {
     return res.status(200).json({
       status: "success",
       message: "Device restricted location history retrieved",
-      location_history: convertedRestrictedHistory
+      restricted_location_history: convertedRestrictedHistory
     });
 
   } catch (err) {
