@@ -189,6 +189,7 @@
         .then(data => {
             if (data.message) {
             showMessage(data.message, 'success');
+            resetForm();
             } else {
             showMessage('Unexpected response from the server.', 'error');
             }
@@ -205,6 +206,19 @@
         messageBox.classList.add(type);
         messageBox.style.display = 'block';
     }
+
+    function resetForm() {
+      // Clear the passport ID input
+      passportInput.value = '';
+
+      // Uncheck all checkboxes except the disabled one
+      checkboxes.forEach(chk => {
+        if (!chk.disabled) {
+          chk.checked = false;
+        }
+      });
+    }
+
   </script>
 
 
