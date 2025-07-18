@@ -186,6 +186,12 @@
       messageBox.style.display = 'none';
       messageBox.className = 'message';
 
+      // New condition: Neither password nor passport ID entered
+      if (!authPassword && !passportId) {
+        showMessage('Please enter both Authorization Password and Passport ID.', 'error');
+        return;
+      }
+
       if (!authPassword) {
         showMessage('Please enter the Authorization Password.', 'error');
         return;
@@ -229,6 +235,7 @@
         });
       }
     });
+
 
     function showMessage(msg, type) {
       messageBox.textContent = msg;
