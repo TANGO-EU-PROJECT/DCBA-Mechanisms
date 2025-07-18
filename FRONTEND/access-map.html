@@ -202,10 +202,17 @@
     });
 
     function showMessage(msg, type) {
-        messageBox.textContent = msg;
-        messageBox.classList.add(type);
-        messageBox.style.display = 'block';
+      messageBox.textContent = msg;
+      messageBox.classList.add(type);
+      messageBox.style.display = 'block';
+
+      // Hide the message after 5 seconds (5000 ms)
+      setTimeout(() => {
+          messageBox.style.display = 'none';
+          messageBox.className = 'message'; // reset classes
+      }, 5000);
     }
+
 
     function resetForm() {
       // Clear the passport ID input
