@@ -6,7 +6,8 @@
   <style>
     body {
       font-family: Arial, sans-serif;
-      background: linear-gradient(to right, #eef1f5, #dbe2ea);
+      background: url('background.jpg') no-repeat center center fixed;
+      background-size: cover;
       margin: 0;
       padding: 0;
       display: flex;
@@ -133,8 +134,8 @@
 </head>
 <body>
   <div class="wrapper">
-    <h1>Access Map</h1>
-    <p class="description">Enter the Authorization Password, the Passport ID and permitted areas.</p>
+    <h1>EMPLOYEE ACCESS MAP</h1>
+    <p class="description">Provide the Authorization Password, Passport ID, and select the areas the employee is permitted to access.</p>
 
     <div class="container">
       <!-- Left section -->
@@ -211,17 +212,16 @@
             authPassword: authPassword
           })
         })
-        .then(response => response.json())
-        .then(data => {
-          setTimeout(() => {
-            spinner.style.display = 'none'; 
-            if (data.message) {
-              showMessage(data.message, 'success');
-              resetForm(); // Will not clear authPassword
-            } else {
-              showMessage('Unexpected response from the server.', 'error');
-            }
-          }, 1000);
+        .then(async response => {
+          const data = await response.json();
+          spinner.style.display = 'none'; 
+
+          if (response.ok) {
+            showMessage(data.message || 'Success', 'success');
+            resetForm();
+          } else {
+            showMessage(data.message || 'An error occurred.', 'error');
+          }
         })
         .catch(err => {
           console.error(err);
