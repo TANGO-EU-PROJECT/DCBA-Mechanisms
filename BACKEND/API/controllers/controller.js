@@ -959,24 +959,17 @@ exports.handleAuthCallback = async (req, res) => {
       { headers: { 'Content-Type': 'application/x-www-form-urlencoded' } }
     );
 
-    console.log("RESPONSE: ",response)
-
     /* If authentication is successful, proceed to decode the vp_token */
     if (response.status === 200 && response.statusText === 'OK') {
       try {
         const decoded = jwt.decode(vp_token);
-
-        console.log("DECODED: ", decoded)
-
-
         const VC = jwt.decode(decoded.vp.verifiableCredential[0])
-
         console.log("VC: ", VC)
 
 
         /* Extract the issuer (DID) and subject from the decoded token */
-        const did = decoded.payload.iss;
-        const sub = decoded.payload.sub;
+        const did = VC.iss;
+        const sub = VC.sub;
 
         console.log(did, sub)
 
