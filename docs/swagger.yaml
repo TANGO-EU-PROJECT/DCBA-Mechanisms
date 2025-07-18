@@ -525,7 +525,17 @@ paths:
                     example: "failed"
                   message:
                     type: string
-                    example: "Device not found"
+              examples:
+                deviceNotFound:
+                  summary: Device not found message
+                  value:
+                    status: "failed"
+                    message: "Device not found"
+                accessMapNotFound:
+                  summary: Access map missing for device with ePassportId
+                  value:
+                    status: "failed"
+                    message: "Access map for device associated with ePassportId 123456789 not found"
         '500':
           description: Internal server error while retrieving last location
           content:
@@ -686,7 +696,17 @@ paths:
                     example: "failed"
                   message:
                     type: string
-                    example: "Device not found"
+              examples:
+                deviceNotFound:
+                  summary: Device not found message
+                  value:
+                    status: "failed"
+                    message: "Device not found"
+                accessMapNotFound:
+                  summary: Access map missing for device with ePassportId
+                  value:
+                    status: "failed"
+                    message: "Access map for device associated with ePassportId 123456789 not found"
         '500':
           description: Internal server error while retrieving device location history
           content:
