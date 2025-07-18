@@ -1789,7 +1789,7 @@ exports.deleteDeviceByDID = async (req, res) => {
     if (!did) {
       return res.status(400).json({
         status: 'failed',
-        message: "Missing 'did'. Please provide a valid employee 'did' in the query parameters.",
+        message: "Missing 'did'. Please provide a valid employee 'did' in the query parameters",
       });
     }
 
@@ -1798,14 +1798,14 @@ exports.deleteDeviceByDID = async (req, res) => {
     if (!deletedDevice) {
       return res.status(404).json({
         status: 'failed',
-        message: `No device found associated with this 'did'.`,
+        message: `No device found associated with this 'did'`,
         did
       });
     }
 
     return res.status(200).json({
       status: 'success',
-      message: `Device deleted successfully.`,
+      message: `Device deleted successfully`,
       did
     });
 
@@ -1813,7 +1813,7 @@ exports.deleteDeviceByDID = async (req, res) => {
     console.error('[deleteDeviceByDID] Error:', error);
     return res.status(500).json({
       status: 'failed',
-      message: "Internal server error while deleting the device associated with this 'did'.",
+      message: "Internal server error while deleting the device associated with this 'did'",
     });
   }
 };
