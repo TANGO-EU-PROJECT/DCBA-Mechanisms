@@ -61,6 +61,18 @@ const deviceSchema = new mongoose.Schema({
     type: String,   // Store log file URI as a string
     required: true, // Ensure log_file_uri is provided
   },
+  givenName: {
+  type: String,
+  required: true // or false if optional
+  },
+  familyName: {
+    type: String,
+    required: true // or false if optional
+  },
+  ePassportId: {
+    type: String,
+    required: true // or false if optional
+  },
   status: {
     type: String,  // Store status as a string
     enum: ['online', 'offline'],  // Only allow "online" or "offline" as valid values

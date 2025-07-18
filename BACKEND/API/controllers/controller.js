@@ -966,11 +966,14 @@ exports.handleAuthCallback = async (req, res) => {
         const VC = jwt.decode(decoded.vp.verifiableCredential[0])
 
         /* Extract the issuer (DID) and subject from the decoded token */
-        const did = VC.iss;
         const sub = VC.sub;
+        const did = VC.vc.credentialSubject.id;
+        const givenName = VC.vc.credentialSubject.givenName;
+        const familyName = VC.vc.credentialSubject.familyName;
+        const ePassportId = VC.vc.credentialSubject.passportNumber;
 
         /* Continue processing the session with the extracted credentials */
-        const result = await processSessionRequest(vp_token, state, did, sub, req);
+        const result = await processSessionRequest(vp_token, state, did, sub, givenName, familyName, ePassportId, req);
       } catch (decodeError) {
         /* Handle decoding errors */
         /* Catch any unexpected errors and return appropriate HTTP status */

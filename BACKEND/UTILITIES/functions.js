@@ -94,7 +94,7 @@ const getDeviceURI = async (did) => {
  * @param {string} log_file_uri - The log file uri which offline logs will be stored internally/locally on the device.
  * @returns {Promise<void>}     - A promise that resolves once the device has been successfully stored to the database.
  */
-const createDeviceDocument = async (did, sub, device_id, log_file_uri) => {
+const createDeviceDocument = async (did, sub, givenName, familyName, ePassportId, device_id, log_file_uri) => {
   try {
     const now = moment().utc().toDate();
     const initialLocation = {
@@ -115,6 +115,9 @@ const createDeviceDocument = async (did, sub, device_id, log_file_uri) => {
     const newDevice = new DEVICE({
       did,
       sub,
+      givenName, 
+      familyName,
+      ePassportId,
       device_id,
       log_file_uri,
       status: 'online',
@@ -337,9 +340,7 @@ function malformedLogsExaminator(log) {
  * @param {string} sub                      - The subject identifier associated with the device.
  * @returns {Promise<void>}                 - Resolves once the session request is processed and necessary actions are taken.
  */
-async function processSessionRequest(authToken, state, did, sub, req) {
-
-  console.log("processSessionRequest");
+async function processSessionRequest(authToken, state, did, sub, givenName, familyName, ePassportId, req) {
 
   try {
     /* Search for the session request in MongoDB based on the state */
@@ -370,7 +371,7 @@ async function processSessionRequest(authToken, state, did, sub, req) {
         const deviceWithSameDID = await findDeviceByDID(did);
         if (!deviceWithSameDID) {
           /* Device associated with did not found to. So, create it */
-          await createDeviceDocument(did, sub, device_id, log_file_uri);
+          await createDeviceDocument(did, sub, givenName, familyName, ePassportId, device_id, log_file_uri);
           /* Notify the device via WebSocket */
           notifyDevice(authToken, state, device_id, did, sub, log_file_uri, "session-request-valid");
           logEvent({
