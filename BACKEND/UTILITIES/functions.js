@@ -782,7 +782,6 @@ async function handleDeviceLocationUpdate(device, currentLocation, now, req) {
       return;
     }
 
-
     /* Get the last known location entry from the device's location history (most recent entry) */
     const lastLocationEntry = device.location_history[0] || null;
 
