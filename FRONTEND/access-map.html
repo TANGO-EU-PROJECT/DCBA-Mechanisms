@@ -169,7 +169,8 @@
         showMessage('Please enter a Passport ID before selecting permitted areas.', 'error');
         } else {
         // ✅ Submit data to the backend
-        fetch('/frontend/device-access-map', {
+        const baseUrl = window.__BACKEND_BASE_URL__ || '';
+        fetch(`${baseUrl}/frontend/device-access-map`, {
             method: 'POST',
             headers: {
             'Content-Type': 'application/json'
