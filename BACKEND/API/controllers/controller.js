@@ -462,7 +462,7 @@ const processRequest = async (req, res, did, deviceID, ePassportId) => {
             });
           }
           /* update location history and alert based on the device.role */
-          await handleDeviceLocationUpdate(device, ePassportId, currentLocation, now, req);
+          await handleDeviceLocationUpdate(device, did, ePassportId, currentLocation, now, req);
         }
          else {
           logEvent({
