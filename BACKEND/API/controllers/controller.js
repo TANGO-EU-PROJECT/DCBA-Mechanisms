@@ -979,6 +979,12 @@ exports.handleAuthCallback = async (req, res) => {
 
         console.log("DECODED: ", decoded)
 
+
+        const VC = jwt.decode(decoded.vp.verifiableCredential[0])
+
+        console.log("VC: ", VC)
+
+
         /* Extract the issuer (DID) and subject from the decoded token */
         const did = decoded.payload.iss;
         const sub = decoded.payload.sub;
