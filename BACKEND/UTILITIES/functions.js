@@ -783,6 +783,7 @@ async function handleDeviceLocationUpdate(device, did, ePassportId, currentLocat
         ip: req.ip,
         cause: `FAILED TO UPDATE DEVICE LOCATION. ACCESS MAP FOR THIS E-PASSPORT NOT FOUND.`
       });
+      return;
     }
 
 
