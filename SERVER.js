@@ -116,6 +116,9 @@ async function startServer() {
   DCBA_SERVER.use('/authenticator', authenticatorRoutes);
   DCBA_SERVER.use('/resource', resourceRoutes);
   DCBA_SERVER.get('/health', controller.getHealthStatus);
+  DCBA_SERVER.get('/frontend/access-map', (req, res) => {
+    res.sendFile(path.join(__dirname, '/FRONTEND/access-map.html'));
+  });
   DCBA_SERVER.use('/frontend', frontendRoutes);
 
 

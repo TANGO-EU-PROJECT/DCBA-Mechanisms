@@ -1821,13 +1821,22 @@ exports.deleteDeviceByDID = async (req, res) => {
 
 exports.createOrUpdateDeviceAccessMap = async (req, res) => {
   try {
-    const { ePassportId, permittedAreas, restrictedAreas } = req.body;
+    const { ePassportId, permittedAreas, restrictedAreas, authPassword } = req.body;
 
-    console.log('Received Device Access Map Submission:');
+    // 🔒 STEP 1: Validate the authorization password
+    const expectedPassword = process.env.FRONTEND_AUTH_PASSWORD; // Change this to your actual secret
+
+    if (authPassword !== expectedPassword) {
+      console.warn('Unauthorized access attempt with invalid password');
+      return res.status(401).json({ message: 'Invalid authorization password' });
+    }
+
+    console.log('✅ Authorized access');
     console.log('ePassportId:', ePassportId);
     console.log('permittedAreas:', permittedAreas);
     console.log('restrictedAreas:', restrictedAreas);
 
+    // STEP 2: Perform upsert
     const result = await DEVICE_ACCESS_MAP.findOneAndUpdate(
       { ePassportId },
       { permittedAreas, restrictedAreas },
@@ -1835,8 +1844,9 @@ exports.createOrUpdateDeviceAccessMap = async (req, res) => {
     );
 
     return res.status(200).json({ message: 'Device access map updated successfully', data: result });
+
   } catch (err) {
-    console.error('Error saving device access map:', err);
+    console.error('❌ Error saving device access map:', err);
     return res.status(500).json({ message: 'Failed to update device access map' });
   }
 };
