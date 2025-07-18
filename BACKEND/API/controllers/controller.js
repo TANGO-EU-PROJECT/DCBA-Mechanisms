@@ -1778,6 +1778,18 @@ exports.deleteDeviceByDID = async (req, res) => {
 };
 
 
+exports.createOrUpdateDeviceAccessMap = (req, res) => {
+  const { ePassportId, permittedAreas } = req.body;
+
+  console.log('Received Device Access Map Submission:');
+  console.log('ePassportId:', ePassportId);
+  console.log('permittedAreas:', permittedAreas);
+
+  return res.status(200).json({ message: 'Device access map updated successfully' });
+};
+
+
+
 
 
 

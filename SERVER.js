@@ -13,6 +13,7 @@ const moment = require('moment-timezone');
 const cors = require('cors');
 const authenticatorRoutes = require('./BACKEND/API/routes/authenticatorRoutes'); /* Import AUTHENTICATOR routes */
 const resourceRoutes = require('./BACKEND/API/routes/resourceRoutes'); /* Import resource SERVICES routes */
+const frontendRoutes = require('./BACKEND/API/routes/frontendRoutes'); /* Import frontend routes */
 const path = require('path');
 const cookieParser = require('cookie-parser');
 
@@ -118,6 +119,8 @@ async function startServer() {
   DCBA_SERVER.get('/frontend/access-map', (req, res) => {
     res.sendFile(path.join(__dirname, '/FRONTEND/access-map.html'));
   });
+  DCBA_SERVER.use('/frontend', frontendRoutes);
+
 
   // Start the Express server
   server.listen(internalPort, ip, () => {
