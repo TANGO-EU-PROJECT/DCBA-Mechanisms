@@ -1662,7 +1662,6 @@ exports.fetchDeviceRestrictedLocationHistory = async (req, res) => {
 
 
 
-
 /** [22]
  * Retrieves the alert history of all devices related to unauthorized presence in restricted areas.
  * 
