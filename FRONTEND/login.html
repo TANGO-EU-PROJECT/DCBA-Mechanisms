@@ -101,39 +101,38 @@
   </footer>
 
   <script>
-    async function handleLogin() {
-        const username = document.getElementById("username").value.trim();
-        const password = document.getElementById("password").value.trim();
-        const loginMessage = document.getElementById("loginMessage");
+  async function handleLogin() {
+    const username = document.getElementById("username").value.trim();
+    const password = document.getElementById("password").value.trim();
+    const loginMessage = document.getElementById("loginMessage");
 
-        try {
-        const response = await fetch('/frontend/login', {
-            method: 'POST',
-            headers: {
-            'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({ username, password })
-        });
+    try {
+      const response = await fetch('/login-credentials', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username, password })
+      });
 
-        if (response.redirected) {
-            // Redirect to the redirected URL (e.g., /frontend/access-map)
-            window.location.href = response.url;
-        } else {
-            // Login failed, show message
-            loginMessage.style.display = "block";
-            setTimeout(() => loginMessage.style.display = "none", 4000);
-        }
-        } catch (error) {
-        console.error('Error during login:', error);
+      if (response.ok) {
+        // Login success: redirect to access-map page
+        window.location.href = "/frontend/access-map";
+      } else {
+        // Login failed: show error
         loginMessage.style.display = "block";
-        loginMessage.textContent = "Server error. Please try again later.";
-        setTimeout(() => {
-            loginMessage.style.display = "none";
-            loginMessage.textContent = "Invalid credentials";
-        }, 4000);
-        }
+        setTimeout(() => loginMessage.style.display = "none", 4000);
+      }
+    } catch (error) {
+      console.error('Login error:', error);
+      loginMessage.style.display = "block";
+      loginMessage.textContent = "Server error, please try again.";
+      setTimeout(() => {
+        loginMessage.style.display = "none";
+        loginMessage.textContent = "Invalid credentials"; // Reset message
+      }, 4000);
     }
-  </script>
+  }
+</script>
+
 
 
 </body>
