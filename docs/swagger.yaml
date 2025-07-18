@@ -1282,7 +1282,7 @@ paths:
                     example: success
                   message:
                     type: string
-                    example: Device deleted successfully.
+                    example: Device deleted successfully
                   did:
                     type: string
                     example: "did:jwk:eyJrdHkiOiJFQyIsImNydiI6IlAtMjU2Iiwia2lkIjoiMDVhZ0UxdXZPcW1yVDRLY2NiZ1ZKenAwRmJ5SF9weXE4WE5mU2VoOHRkSSIsIngiOiJDRTVqODFybWxqV1JoM1FEOFlJQVNGb093SzRrMjRqU0pWVWEtdl9rSTVZIiwieSI6IjBRU29vbktGVXA4Y0ZLd0dwWHhLSjlSeEZJTk9BOHpWd0ZCTTloQzRKczgifQ"
@@ -1298,41 +1298,7 @@ paths:
                     example: failed
                   message:
                     type: string
-                    example: Missing 'did'. Please provide a valid employee 'did' in the query parameters.
-        '401':
-          description: Unauthorized - Authorization token is missing, invalid, expired, or malformed
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  status:
-                    type: string
-                    example: "failed"
-                  message:
-                    type: string
-                    example: "Authorization token is missing, invalid or expired."
-              examples:
-                MissingAuthorizationToken:
-                  summary: Missing Authorization header
-                  value:
-                    status: "failed"
-                    message: "Authorization token is missing."
-                TokenExpired:
-                  summary: Authorization token has expired
-                  value:
-                    status: "failed"
-                    message: "Authorization token has expired."
-                InvalidToken:
-                  summary: Authorization token is invalid
-                  value:
-                    status: "failed"
-                    message: "Invalid Authorization token."
-                MalformedToken:
-                  summary: Authorization header malformed
-                  value:
-                    status: "failed"
-                    message: "Authorization token is malformed. It should start with 'Bearer '."
+                    example: Missing 'did'. Please provide a valid employee 'did' in the query parameters
         '404':
           description: No device found with the given did
           content:
@@ -1345,7 +1311,7 @@ paths:
                     example: failed
                   message:
                     type: string
-                    example: No device found associated with this 'did'.
+                    example: No device found associated with this 'did'
                   did:
                     type: string
                     example: "did:jwk:eyJrdHkiOiJFQyIsImNydiI6IlAtMjU2Iiwia2lkIjoiMDVhZ0UxdXZPcW1yVDRLY2NiZ1ZKenAwRmJ5SF9weXE4WE5mU2VoOHRkSSIsIngiOiJDRTVqODFybWxqV1JoM1FEOFlJQVNGb093SzRrMjRqU0pWVWEtdl9rSTVZIiwieSI6IjBRU29vbktGVXA4Y0ZLd0dwWHhLSjlSeEZJTk9BOHpWd0ZCTTloQzRKczgifQ"
@@ -1361,7 +1327,7 @@ paths:
                     example: failed
                   message:
                     type: string
-                    example: Internal server error while deleting the device associated with this 'did'.
+                    example: Internal server error while deleting the device associated with this 'did'
   # Resource API Endpoints # 
 
 
