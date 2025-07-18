@@ -16,7 +16,6 @@ const resourceRoutes = require('./BACKEND/API/routes/resourceRoutes'); /* Import
 const frontendRoutes = require('./BACKEND/API/routes/frontendRoutes'); /* Import frontend routes */
 const path = require('path');
 const cookieParser = require('cookie-parser');
-const fs = require('fs');
 
 /* Define ANSI escape codes for colored console output */                                                                     
 const green = '\x1b[32m';     /* Green color                         */
@@ -118,16 +117,7 @@ async function startServer() {
   DCBA_SERVER.use('/resource', resourceRoutes);
   DCBA_SERVER.get('/health', controller.getHealthStatus);
   DCBA_SERVER.get('/frontend/access-map', (req, res) => {
-    const filePath = path.join(__dirname, '/FRONTEND/access-map.html');
-    fs.readFile(filePath, 'utf8', (err, data) => {
-      if (err) return res.status(500).send('Error loading page.');
-
-      const backendUrl = process.env.HOSTNAME_DNS_INTRASOFT_DCBA_BACKEND_SERVICE || '';
-      const injectedScript = `<script>window.__BACKEND_BASE_URL__ = "https://${backendUrl}/development/dcba-backend";</script>`;
-
-      const modifiedHtml = data.replace('</head>', `${injectedScript}\n</head>`);
-      res.send(modifiedHtml);
-    });
+    res.sendFile(path.join(__dirname, '/FRONTEND/access-map.html'));
   });
   DCBA_SERVER.use('/frontend', frontendRoutes);
 
