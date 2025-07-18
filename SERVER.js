@@ -117,7 +117,16 @@ async function startServer() {
   DCBA_SERVER.use('/resource', resourceRoutes);
   DCBA_SERVER.get('/health', controller.getHealthStatus);
   DCBA_SERVER.get('/frontend/access-map', (req, res) => {
-    res.sendFile(path.join(__dirname, '/FRONTEND/access-map.html'));
+    const filePath = path.join(__dirname, '/FRONTEND/access-map.html');
+    fs.readFile(filePath, 'utf8', (err, data) => {
+      if (err) return res.status(500).send('Error loading page.');
+
+      const backendUrl = process.env.HOSTNAME_DNS_INTRASOFT_DCBA_BACKEND_SERVICE || '';
+      const injectedScript = `<script>window.__BACKEND_BASE_URL__ = "https://${backendUrl}/development/dcba-backend";</script>`;
+
+      const modifiedHtml = data.replace('</head>', `${injectedScript}\n</head>`);
+      res.send(modifiedHtml);
+    });
   });
   DCBA_SERVER.use('/frontend', frontendRoutes);
 
