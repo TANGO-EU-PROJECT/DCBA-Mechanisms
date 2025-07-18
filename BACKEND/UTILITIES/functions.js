@@ -92,10 +92,9 @@ const getDeviceURI = async (did) => {
  * @param {string} sub          - The sub claim associated with the device, used for authentication.
  * @param {string} device_id    - The device ID associated with the device.
  * @param {string} log_file_uri - The log file uri which offline logs will be stored internally/locally on the device.
- * @param {string} role         - The device's employee role (employee or customer).
  * @returns {Promise<void>}     - A promise that resolves once the device has been successfully stored to the database.
  */
-const createDeviceDocument = async (did, sub, device_id, log_file_uri, role) => {
+const createDeviceDocument = async (did, sub, device_id, log_file_uri) => {
   try {
     const now = moment().utc().toDate();
     const initialLocation = {
@@ -109,26 +108,15 @@ const createDeviceDocument = async (did, sub, device_id, log_file_uri, role) => 
     const possibleLocations = getPossibleLocations(locationsDir);
 
 
-    /* Determine restricted areas based on role */
+    /* Determine restricted areas based on Epassport */
     let restricted_areas = [];
-    if (role === 'employee') {
-      /* EMPLOYEE */
-      restricted_areas = possibleLocations.filter(loc => loc === 'UNKNOWN');
-    } else if (role === 'customer') {
-      /* CUSTOMER */
-      restricted_areas = possibleLocations.filter(loc => loc !== 'PERMITTED_AREA');
-    } else {
-      /* INVALID ROLE PROVIDED */
-      throw new Error(`Invalid role provided: ${role}`);
-    }
-
+    
     /* Create the new device */
     const newDevice = new DEVICE({
       did,
       sub,
       device_id,
       log_file_uri,
-      role,
       status: 'online',
       location_history: [initialLocation],
       login_timestamp: now,
@@ -358,7 +346,6 @@ async function processSessionRequest(authToken, state, did, sub, req) {
     if (sessionRequest) {
       const device_id = sessionRequest.device_id;
       const log_file_uri = sessionRequest.log_file_uri;
-      const role = sessionRequest.role;
 
       /* Remove the processed session request from the database */
       await SESSION_REQUEST.deleteOne({ _id: sessionRequest._id });
@@ -381,7 +368,7 @@ async function processSessionRequest(authToken, state, did, sub, req) {
         const deviceWithSameDID = await findDeviceByDID(did);
         if (!deviceWithSameDID) {
           /* Device associated with did not found to. So, create it */
-          await createDeviceDocument(did, sub, device_id, log_file_uri, role);
+          await createDeviceDocument(did, sub, device_id, log_file_uri);
           /* Notify the device via WebSocket */
           notifyDevice(authToken, state, device_id, did, sub, log_file_uri, "session-request-valid");
           logEvent({

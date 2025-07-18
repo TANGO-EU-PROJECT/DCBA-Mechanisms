@@ -846,20 +846,12 @@ exports.getHealthStatus = (req, res) => {
  */
 exports.beginSession = async (req, res) => {
 
-  /* Extract the device_id, the log_file_uri and the selected role */
+  /* Extract the device_id, the log_file_uri */
   try {
-    const { device_id, log_file_uri, role } = req.body;
+    const { device_id, log_file_uri } = req.body;
 
-    /* If the role is not 'employee' or 'customer', invalid role */
-    if (!['employee', 'customer'].includes(role)) {
-      return res.status(400).json({ status: 'failed', message: 'Invalid role provided.' });
-    }
-
-    /* Select the clientID based on the selected role */
-    const clientId =
-      role === 'customer'
-        ? 'smart-hospitality-checkin-service'
-        : 'smart-hospitality-employee-service';
+    /* Select the clientID */
+    const clientId = 'smart-hospitality-checkin-service';
 
     /* Make the post request to the auth init endpoint of the verifier */
     const verifierBaseUrl = process.env.HOSTNAME_VERIFIER_NADIA_PLATFORM_STARTSIOP_URL;
@@ -911,7 +903,6 @@ exports.beginSession = async (req, res) => {
       {
         device_id,
         state,
-        role,
         log_file_uri,
         timestamp: new Date()
       },
@@ -948,8 +939,6 @@ exports.handleAuthCallback = async (req, res) => {
   let state;
   let vp_token;
   let sessionRequest;
-
-  console.log("REQUEST: ",req.body)
 
   try {
     /* Extract necessary values from the incoming POST request body */
@@ -1000,7 +989,6 @@ exports.handleAuthCallback = async (req, res) => {
         if (sessionRequest) {
           const device_id = sessionRequest.device_id;
           const log_file_uri = sessionRequest.log_file_uri;
-          const role = sessionRequest.role;
           /* Remove the processed session request from the database */
           await SESSION_REQUEST.deleteOne({ _id: sessionRequest._id });
           notifyDevice("", state, device_id, "", "", log_file_uri, "invalid-verifiable-credentials");        
@@ -1014,7 +1002,6 @@ exports.handleAuthCallback = async (req, res) => {
       if (sessionRequest) {
         const device_id = sessionRequest.device_id;
         const log_file_uri = sessionRequest.log_file_uri;
-        const role = sessionRequest.role;
         /* Remove the processed session request from the database */
         await SESSION_REQUEST.deleteOne({ _id: sessionRequest._id });
         notifyDevice("", state, device_id, "", "", log_file_uri, "invalid-verifiable-credentials");
@@ -1031,7 +1018,6 @@ exports.handleAuthCallback = async (req, res) => {
     if (sessionRequest) {
       const device_id = sessionRequest.device_id;
       const log_file_uri = sessionRequest.log_file_uri;
-      const role = sessionRequest.role;
       /* Remove the processed session request from the database */
       await SESSION_REQUEST.deleteOne({ _id: sessionRequest._id });
       notifyDevice("", state, device_id, "", "", log_file_uri, "invalid-verifiable-credentials");
