@@ -38,6 +38,17 @@ router.get('/logout', (req, res) => {
   });
 });
 
+router.post('/login-credentials', (req, res) => {
+  const { username, password } = req.body;
+  if (username === 'RIAS-ADMIN' && password === 'RIAS-ADMIN') {
+    req.session.loggedIn = true;
+    res.sendStatus(200);  // OK
+  } else {
+    res.sendStatus(401);  // Unauthorized
+  }
+});
+
+
 /************************************************** POST REQUESTS **************************************************/
 router.post('/device-access-map', controller.createOrUpdateDeviceAccessMap);
 
