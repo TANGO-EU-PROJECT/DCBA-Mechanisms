@@ -568,9 +568,6 @@ function initializeWebSocketServer(wss) {
   }
 }
 
-
-
-
 /** [9]
  * Notifies a specific client (device) via WebSocket when certain events occur.
  * This function checks if the WebSocket connection for the given device_id is open,
