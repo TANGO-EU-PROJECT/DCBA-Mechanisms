@@ -206,14 +206,17 @@
         })
         .then(response => response.json())
         .then(data => {
+          setTimeout(() => {
             spinner.style.display = 'none'; 
             if (data.message) {
-            showMessage(data.message, 'success');
-            resetForm();
+              showMessage(data.message, 'success');
+              resetForm();
             } else {
-            showMessage('Unexpected response from the server.', 'error');
+              showMessage('Unexpected response from the server.', 'error');
             }
+          }, 2000); // 1000ms = 1 second delay
         })
+
         .catch(err => {
             console.error(err);
             showMessage('Failed to submit data. Please try again later.', 'error');
