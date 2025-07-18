@@ -13,7 +13,6 @@ const moment = require('moment-timezone');
 const cors = require('cors');
 const authenticatorRoutes = require('./BACKEND/API/routes/authenticatorRoutes'); /* Import AUTHENTICATOR routes */
 const resourceRoutes = require('./BACKEND/API/routes/resourceRoutes'); /* Import resource SERVICES routes */
-const { router: accessControlRoutes } = require('./BACKEND/API/routes/accessControlRoutes');
 
 const cookieParser = require('cookie-parser');
 
@@ -116,7 +115,9 @@ async function startServer() {
   DCBA_SERVER.use('/authenticator', authenticatorRoutes);
   DCBA_SERVER.use('/resource', resourceRoutes);
   DCBA_SERVER.get('/health', controller.getHealthStatus);
-  DCBA_SERVER.use('/api', accessControlRoutes);  
+  DCBA_SERVER.get('/frontend/access-map', (req, res) => {
+    res.sendFile(path.join(__dirname, '/FRONTEND/access-map.html'));
+  });
 
   // Start the Express server
   server.listen(internalPort, ip, () => {
