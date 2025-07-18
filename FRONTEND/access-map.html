@@ -83,6 +83,28 @@
       transform: translateY(3px);
     }
 
+    .message {
+      margin-top: 20px;
+      font-size: 15px;
+      padding: 12px 20px;
+      border-radius: 6px;
+      width: 320px;
+      text-align: center;
+      display: none;
+    }
+
+    .message.error {
+      background-color: #f8d7da;
+      color: #721c24;
+      border: 1px solid #f5c6cb;
+    }
+
+    .message.success {
+      background-color: #d4edda;
+      color: #155724;
+      border: 1px solid #c3e6cb;
+    }
+
     footer {
       text-align: center;
       padding: 20px 0;
@@ -116,11 +138,48 @@
       </div>
     </div>
 
-    <button class="submit-btn">Apply Changes</button>
+    <button class="submit-btn" id="applyBtn">Apply Changes</button>
+
+    <div class="message" id="messageBox"></div>
   </div>
 
   <footer>
     For support, please contact IT at <a href="mailto:nitlab@inf.uth.gr">nitlab@inf.uth.gr</a>
   </footer>
+
+  <script>
+    const applyBtn = document.getElementById('applyBtn');
+    const passportInput = document.getElementById('passportId');
+    const checkboxes = document.querySelectorAll('.right input[type="checkbox"]');
+    const messageBox = document.getElementById('messageBox');
+
+    applyBtn.addEventListener('click', () => {
+      const passportId = passportInput.value.trim();
+      const selectedAreas = Array.from(checkboxes).filter(chk => chk.checked);
+
+      // Reset message
+      messageBox.style.display = 'none';
+      messageBox.className = 'message';
+
+      if (!passportId && selectedAreas.length === 0) {
+        showMessage('Please enter a Passport ID and select at least one permitted area.', 'error');
+      } else if (passportId && selectedAreas.length === 0) {
+        showMessage('Please select at least one permitted area for the entered Passport ID.', 'error');
+      } else if (!passportId && selectedAreas.length > 0) {
+        showMessage('Please enter a Passport ID before selecting permitted areas.', 'error');
+      } else {
+        // All good: for now, just show success message
+        showMessage('Changes applied successfully!', 'success');
+
+        // TODO: here you can add the backend submission logic
+      }
+    });
+
+    function showMessage(msg, type) {
+      messageBox.textContent = msg;
+      messageBox.classList.add(type);
+      messageBox.style.display = 'block';
+    }
+  </script>
 </body>
 </html>
