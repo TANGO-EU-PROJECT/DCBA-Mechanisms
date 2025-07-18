@@ -30,7 +30,6 @@
       100% { transform: rotate(360deg); }
     }
 
-
     .wrapper {
       display: flex;
       flex-direction: column;
@@ -71,6 +70,7 @@
       width: 260px;
       border-radius: 5px;
       border: 1px solid #ccc;
+      margin-bottom: 16px;
     }
 
     .right label {
@@ -134,16 +134,19 @@
 <body>
   <div class="wrapper">
     <h1>Access Map</h1>
-    <p class="description">Enter passport ID and the corresponding permitted areas of the employee.</p>
+    <p class="description">Enter the Authorization Password, the Passport ID and permitted areas.</p>
 
     <div class="container">
-      <!-- Left section: passport ID -->
+      <!-- Left section -->
       <div class="left">
-        <h2>Passport ID</h2>
+        <h2>Authorization Password</h2>
+        <input type="password" placeholder="Enter authorization password" id="authPassword" />
+
+        <h2 style="margin-top: 20px;">Passport ID</h2>
         <input type="text" placeholder="Enter passport ID" id="passportId" />
       </div>
 
-      <!-- Right section: location checkboxes -->
+      <!-- Right section -->
       <div class="right">
         <h2>Permitted Areas</h2>
         <label><input type="checkbox" value="PERMITTED_AREA" checked disabled> PERMITTED_AREA</label>
@@ -167,42 +170,46 @@
   <script>
     const applyBtn = document.getElementById('applyBtn');
     const passportInput = document.getElementById('passportId');
+    const authPasswordInput = document.getElementById('authPassword');
     const checkboxes = document.querySelectorAll('.right input[type="checkbox"]');
     const messageBox = document.getElementById('messageBox');
     const spinner = document.getElementById('spinner');
 
     applyBtn.addEventListener('click', () => {
-        const passportId = passportInput.value.trim();
-        const permittedAreas = Array.from(checkboxes)
-        .filter(chk => chk.checked)
-        .map(chk => chk.value);
-        const restrictedAreas = Array.from(checkboxes)
-        .filter(chk => !chk.checked)
-        .map(chk => chk.value);
+      const passportId = passportInput.value.trim();
+      const authPassword = authPasswordInput.value.trim();
+      const permittedAreas = Array.from(checkboxes).filter(chk => chk.checked).map(chk => chk.value);
+      const restrictedAreas = Array.from(checkboxes).filter(chk => !chk.checked).map(chk => chk.value);
 
-        // Reset message
-        messageBox.style.display = 'none';
-        messageBox.className = 'message';
+      // Reset message
+      messageBox.style.display = 'none';
+      messageBox.className = 'message';
 
-        if (!passportId && permittedAreas.length === 0) {
+      if (!authPassword) {
+        showMessage('Please enter the Authorization Password.', 'error');
+        return;
+      }
+
+      if (!passportId && permittedAreas.length === 0) {
         showMessage('Please enter a Passport ID and select at least one permitted area.', 'error');
-        } else if (passportId && permittedAreas.length === 0) {
+      } else if (passportId && permittedAreas.length === 0) {
         showMessage('Please select at least one permitted area for the entered Passport ID.', 'error');
-        } else if (!passportId && permittedAreas.length > 0) {
+      } else if (!passportId && permittedAreas.length > 0) {
         showMessage('Please enter a Passport ID before selecting permitted areas.', 'error');
-        } else {
+      } else {
         // ✅ Submit data to the backend
         spinner.style.display = 'block';
         fetch('https://dcba-tango.riastone.eu/frontend/device-access-map', {
-            method: 'POST',
-            headers: {
+          method: 'POST',
+          headers: {
             'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
+          },
+          body: JSON.stringify({
             ePassportId: passportId,
             permittedAreas: permittedAreas,
-            restrictedAreas: restrictedAreas
-            })
+            restrictedAreas: restrictedAreas,
+            authPassword: authPassword
+          })
         })
         .then(response => response.json())
         .then(data => {
@@ -210,18 +217,17 @@
             spinner.style.display = 'none'; 
             if (data.message) {
               showMessage(data.message, 'success');
-              resetForm();
+              resetForm(); // Will not clear authPassword
             } else {
               showMessage('Unexpected response from the server.', 'error');
             }
-          }, 1000); // 1000ms = 1 second delay
+          }, 1000);
         })
-
         .catch(err => {
-            console.error(err);
-            showMessage('Failed to submit data. Please try again later.', 'error');
+          console.error(err);
+          showMessage('Failed to submit data. Please try again later.', 'error');
         });
-        }
+      }
     });
 
     function showMessage(msg, type) {
@@ -229,28 +235,21 @@
       messageBox.classList.add(type);
       messageBox.style.display = 'block';
 
-      // Hide the message after 5 seconds (5000 ms)
       setTimeout(() => {
-          messageBox.style.display = 'none';
-          messageBox.className = 'message'; // reset classes
+        messageBox.style.display = 'none';
+        messageBox.className = 'message';
       }, 5000);
     }
 
-
     function resetForm() {
-      // Clear the passport ID input
       passportInput.value = '';
-
-      // Uncheck all checkboxes except the disabled one
       checkboxes.forEach(chk => {
         if (!chk.disabled) {
           chk.checked = false;
         }
       });
+      // 🔐 Don't clear the authPassword field
     }
-
   </script>
-
-
 </body>
 </html>
