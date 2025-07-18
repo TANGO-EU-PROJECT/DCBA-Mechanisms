@@ -2,12 +2,11 @@ const express = require('express');
 const router = express.Router();
 const controller = require('../controllers/controller');
 
-const frontendControllers = {
-  /************************************************** POST REQUESTS **************************************************/
-  /** [X] TODO
-   * @route   POST /frontend/access-map
-   * @desc    Create or update device access map (passport ID + permitted + restricted areas)
-   */
-  "device-access-map": controller.createOrUpdateDeviceAccessMap,
-};
+/************************************************** POST REQUESTS **************************************************/
+/**
+ * @route   POST /frontend/device-access-map
+ * @desc    Create or update device access map (passport ID + permitted + restricted areas)
+ */
+router.post('/device-access-map', controller.createOrUpdateDeviceAccessMap);
+
 module.exports = router;
