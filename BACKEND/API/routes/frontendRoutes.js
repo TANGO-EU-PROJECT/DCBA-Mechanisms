@@ -9,6 +9,6 @@ const frontendControllers = {
    * @desc    Create or update device access map (passport ID + permitted + restricted areas)
    * @middleware verifyToken
    */
-  "access-map": controller.createOrUpdateDeviceAccessMap,
+  "device-access-map": controller.createOrUpdateDeviceAccessMap,
 };
 module.exports = router;
