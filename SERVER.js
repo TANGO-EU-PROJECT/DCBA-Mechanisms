@@ -116,7 +116,6 @@ async function startServer() {
   DCBA_SERVER.use('/authenticator', authenticatorRoutes);
   DCBA_SERVER.use('/resource', resourceRoutes);
   DCBA_SERVER.get('/health', controller.getHealthStatus);
-  DCBA_SERVER.use('/frontend', express.static(path.join(__dirname, 'FRONTEND')));
   DCBA_SERVER.use('/frontend', frontendRoutes);
 
 
