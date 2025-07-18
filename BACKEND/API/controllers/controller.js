@@ -970,6 +970,8 @@ exports.handleAuthCallback = async (req, res) => {
       { headers: { 'Content-Type': 'application/x-www-form-urlencoded' } }
     );
 
+    console.log("RESPONSE: ",response)
+
     /* If authentication is successful, proceed to decode the vp_token */
     if (response.status === 200 && response.statusText === 'OK') {
       try {
