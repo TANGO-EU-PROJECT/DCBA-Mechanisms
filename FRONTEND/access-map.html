@@ -155,28 +155,34 @@
 
     applyBtn.addEventListener('click', () => {
         const passportId = passportInput.value.trim();
-        const selectedAreas = Array.from(checkboxes).filter(chk => chk.checked).map(chk => chk.value);
+        const permittedAreas = Array.from(checkboxes)
+        .filter(chk => chk.checked)
+        .map(chk => chk.value);
+        const restrictedAreas = Array.from(checkboxes)
+        .filter(chk => !chk.checked)
+        .map(chk => chk.value);
 
         // Reset message
         messageBox.style.display = 'none';
         messageBox.className = 'message';
 
-        if (!passportId && selectedAreas.length === 0) {
+        if (!passportId && permittedAreas.length === 0) {
         showMessage('Please enter a Passport ID and select at least one permitted area.', 'error');
-        } else if (passportId && selectedAreas.length === 0) {
+        } else if (passportId && permittedAreas.length === 0) {
         showMessage('Please select at least one permitted area for the entered Passport ID.', 'error');
-        } else if (!passportId && selectedAreas.length > 0) {
+        } else if (!passportId && permittedAreas.length > 0) {
         showMessage('Please enter a Passport ID before selecting permitted areas.', 'error');
         } else {
         // ✅ Submit data to the backend
-        fetch(`https://k8s-cluster.tango.rid-intrasoft.eu/development/dcba-backend/frontend/device-access-map`, {
+        fetch('https://k8s-cluster.tango.rid-intrasoft.eu/development/dcba-backend/frontend/device-access-map', {
             method: 'POST',
             headers: {
             'Content-Type': 'application/json'
             },
             body: JSON.stringify({
             ePassportId: passportId,
-            permittedAreas: selectedAreas
+            permittedAreas: permittedAreas,
+            restrictedAreas: restrictedAreas
             })
         })
         .then(response => response.json())
@@ -200,6 +206,7 @@
         messageBox.style.display = 'block';
     }
   </script>
+
 
 </body>
 </html>
