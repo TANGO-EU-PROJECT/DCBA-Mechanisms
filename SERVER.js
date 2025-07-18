@@ -16,6 +16,7 @@ const resourceRoutes = require('./BACKEND/API/routes/resourceRoutes'); /* Import
 const frontendRoutes = require('./BACKEND/API/routes/frontendRoutes'); /* Import frontend routes */
 const path = require('path');
 const cookieParser = require('cookie-parser');
+const fs = require('fs');
 
 /* Define ANSI escape codes for colored console output */                                                                     
 const green = '\x1b[32m';     /* Green color                         */
