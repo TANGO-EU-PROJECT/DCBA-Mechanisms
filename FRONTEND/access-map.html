@@ -14,6 +14,23 @@
       min-height: 100vh;
     }
 
+    .spinner {
+      margin-top: 20px;
+      border: 4px solid #f3f3f3;
+      border-top: 4px solid #4CAF50;
+      border-radius: 50%;
+      width: 30px;
+      height: 30px;
+      animation: spin 1s linear infinite;
+      display: none;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+
     .wrapper {
       display: flex;
       flex-direction: column;
@@ -139,7 +156,7 @@
     </div>
 
     <button class="submit-btn" id="applyBtn">Apply Changes</button>
-
+    <div class="spinner" id="spinner"></div>
     <div class="message" id="messageBox"></div>
   </div>
 
@@ -152,6 +169,7 @@
     const passportInput = document.getElementById('passportId');
     const checkboxes = document.querySelectorAll('.right input[type="checkbox"]');
     const messageBox = document.getElementById('messageBox');
+    const spinner = document.getElementById('spinner');
 
     applyBtn.addEventListener('click', () => {
         const passportId = passportInput.value.trim();
@@ -174,6 +192,7 @@
         showMessage('Please enter a Passport ID before selecting permitted areas.', 'error');
         } else {
         // ✅ Submit data to the backend
+        spinner.style.display = 'block';
         fetch('https://k8s-cluster.tango.rid-intrasoft.eu/development/dcba-backend/frontend/device-access-map', {
             method: 'POST',
             headers: {
@@ -187,6 +206,7 @@
         })
         .then(response => response.json())
         .then(data => {
+            spinner.style.display = 'none'; 
             if (data.message) {
             showMessage(data.message, 'success');
             resetForm();
