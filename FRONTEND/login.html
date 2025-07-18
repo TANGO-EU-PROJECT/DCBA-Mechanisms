@@ -107,7 +107,7 @@
     const loginMessage = document.getElementById("loginMessage");
 
     try {
-      const response = await fetch('/login-credentials', {
+      const response = await fetch('https://dcba-tango.riastone.eu/frontend/login-credentials', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ username, password })
