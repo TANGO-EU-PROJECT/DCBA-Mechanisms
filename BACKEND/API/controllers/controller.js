@@ -1455,6 +1455,12 @@ exports.fetchDevicePermittedLocationHistory = async (req, res) => {
 
     const ePassportId = device.ePassportId;
     const deviceAccessMap = await DEVICE_ACCESS_MAP.findOne({ ePassportId });
+    if (!deviceAccessMap) {
+      return res.status(404).json({
+        status: "failed",
+        message: `Access map for device associated with ePassportId ${ePassportId} not found`
+      });
+    }
     const devicePermittedAreas = deviceAccessMap.permittedAreas || [];
 
     /* Filter permitted entries by timeframe and location using UTC timestamps */
@@ -1463,7 +1469,7 @@ exports.fetchDevicePermittedLocationHistory = async (req, res) => {
       return (
         entryTime >= fromTimestamp &&
         entryTime <= toTimestamp &&
-        permittedAreas.includes(entry.estimated_location)
+        devicePermittedAreas.includes(entry.estimated_location)
       );
     });
 
@@ -1572,8 +1578,13 @@ exports.fetchDeviceRestrictedLocationHistory = async (req, res) => {
 
     const ePassportId = device.ePassportId;
     const deviceAccessMap = await DEVICE_ACCESS_MAP.findOne({ ePassportId });
+    if (!deviceAccessMap) {
+      return res.status(404).json({
+        status: "failed",
+        message: `Access map for device associated with ePassportId ${ePassportId} not found`
+      });
+    }
     const deviceRestrictedAreas = deviceAccessMap.restrictedAreas || [];
-
 
 
     /* Filter entries by UTC timestamp  */
