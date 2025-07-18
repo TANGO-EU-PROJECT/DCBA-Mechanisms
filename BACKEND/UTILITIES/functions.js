@@ -768,18 +768,18 @@ const findDeviceByDeviceID = async (device_id) => {
  *
  * @returns {Promise<string>}             - The access status after the location update ('ACCESS_PERMITTED' or 'ACCESS_RESTRICTED')
  */
-async function handleDeviceLocationUpdate(device, did, ePassportId, currentLocation, now, req) {
+async function handleDeviceLocationUpdate(device, currentLocation, now, req) {
   try {
     /* Default access status is permitted unless proven otherwise */
     let accessStatus = 'ACCESS_PERMITTED';
 
-    const deviceAccessMap = await DEVICE_ACCESS_MAP.findOne({ ePassportId });
+    const deviceAccessMap = await DEVICE_ACCESS_MAP.findOne({ device.ePassportId });
     if (!deviceAccessMap) {
        logEvent({
         event: 'UPDATING LOCATION',
         status: 'FAILED ❌',
-        did,
-        device_id: deviceID,
+        did: device.did,
+        device_id: device.device_id,
         ip: req.ip,
         cause: `FAILED TO UPDATE DEVICE LOCATION. ACCESS MAP FOR THIS E-PASSPORT NOT FOUND.`
       });
