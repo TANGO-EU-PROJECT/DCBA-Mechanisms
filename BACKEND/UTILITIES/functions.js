@@ -21,10 +21,12 @@ const moment = require('moment-timezone');                           /* For hand
 /* Retrieve the paths to MongoDB schema models from the environment variables */
 const deviceModelPath = process.env.MONGO_DB_DEVICE_SCHEME_PATH;
 const sessionRequestModelPath = process.env.MONGO_DB_SESSION_REQUEST_SCHEME_PATH;
+const deviceAccessMap = process.env.MONGO_DB_DEVICE_ACCESS_MAP_SCHEME_PATH;
 
 /* Dynamically load the MongoDB schema models based on the paths specified in .env */
 const DEVICE = require(path.resolve(deviceModelPath));
 const SESSION_REQUEST = require(path.resolve(sessionRequestModelPath));
+const DEVICE_ACCESS_MAP = require(path.resolve(deviceAccessMap));
 
 /* Returns the wss connections associated with their qr_state_requests */
 const WSS_CONNECTIONS_FROM_DEVICE_ID = new Map(); 
@@ -103,14 +105,7 @@ const createDeviceDocument = async (did, sub, givenName, familyName, ePassportId
       last_seen_at: now,
       duration_s: 0
     };
-
-    const locationsDir = path.join(__dirname, '../SCRIPTS/LOCALIZATION/RIASTONE');
-    const possibleLocations = getPossibleLocations(locationsDir);
-
-
-    /* Determine restricted areas based on Epassport */
-    let restricted_areas = [];
-    
+ 
     /* Create the new device */
     const newDevice = new DEVICE({
       did,
@@ -123,7 +118,6 @@ const createDeviceDocument = async (did, sub, givenName, familyName, ePassportId
       status: 'online',
       location_history: [initialLocation],
       login_timestamp: now,
-      restricted_areas
     });
 
     /* Save it as document */
@@ -373,7 +367,7 @@ async function processSessionRequest(authToken, state, did, sub, givenName, fami
           /* Device associated with did not found to. So, create it */
           await createDeviceDocument(did, sub, givenName, familyName, ePassportId, device_id, log_file_uri);
           /* Notify the device via WebSocket */
-          notifyDevice(authToken, state, device_id, did, sub, log_file_uri, "session-request-valid");
+          notifyDevice(authToken, state, device_id, did, sub, log_file_uri, ePassportId, "session-request-valid");
           logEvent({
             event: 'DEVICE STATUS UPDATED',
             status: 'SUCCESS ✅',
@@ -388,7 +382,7 @@ async function processSessionRequest(authToken, state, did, sub, givenName, fami
         } else {
           /* Someone tried to log in from his/her device, using an existing DID */
           /* Notify the device via WebSocket */
-          notifyDevice(authToken, state, device_id, did, sub, log_file_uri, "potential-credential-sharing");
+          notifyDevice(authToken, state, device_id, did, sub, log_file_uri, ePassportId, "potential-credential-sharing");
           logEvent({
             event: 'UNAUTHORIZED ATTEMPT FROM USING CREDENTIALS FROM ANOTHER DEVICE',
             status: 'FAILED ❌',
@@ -417,7 +411,7 @@ async function processSessionRequest(authToken, state, did, sub, givenName, fami
               ip: req.ip
             });
             /* Notify the device via WebSocket */
-            notifyDevice(authToken, state, device_id, did, sub, log_file_uri, "session-request-valid");
+            notifyDevice(authToken, state, device_id, did, sub, log_file_uri, ePassportId, "session-request-valid");
             logEvent({
               event: 'DEVICE STATUS UPDATED',
               status: 'SUCCESS ✅',
@@ -438,7 +432,7 @@ async function processSessionRequest(authToken, state, did, sub, givenName, fami
               device_id: device_id,
               ip: req.ip
             });
-            notifyDevice(authToken, state, device_id, did, sub, log_file_uri, "device-already-online");
+            notifyDevice(authToken, state, device_id, did, sub, log_file_uri, ePassportId, "device-already-online");
             /* Authentication Failed */
             /* return { status: 409, message: "Device already online." }; */
             return;
@@ -446,7 +440,7 @@ async function processSessionRequest(authToken, state, did, sub, givenName, fami
           
         } else {
           /* Someone tried to log in to their device using another employee's credentials */
-          notifyDevice(authToken, state, device_id, did, sub, log_file_uri, "potential-credential-sharing");
+          notifyDevice(authToken, state, device_id, did, sub, log_file_uri, ePassportId, "potential-credential-sharing");
           logEvent({
             event: 'UNAUTHORIZED ATTEMPT USING CREDENTIALS FROM ANOTHER DEVICE',
             status: 'FAILED ❌',
@@ -461,7 +455,7 @@ async function processSessionRequest(authToken, state, did, sub, givenName, fami
       }
     } else {
       /* Notify the device that the session request is expired, in order to re-generate a new unique QR */
-      notifyDevice(authToken, state, "unknown", did, sub, "unknown", "session-request-expired");
+      notifyDevice(authToken, state, "unknown", did, sub, "unknown", ePassportId, "session-request-expired");
       logEvent({
         event: 'SEARCH FOR SESSION REQUEST FOR DEVICE',
         status: 'FAILED ❌',
@@ -573,7 +567,7 @@ function initializeWebSocketServer(wss) {
  * @param {string} log_file_uri             - The device local filepath in which the offline logs will be stored temporarily.
  * @param {string} message                  - Based on this message, the Authenticator app decides which alert to display.
  */
-function notifyDevice(authToken, state, device_id, did, sub, log_file_uri, message) {
+function notifyDevice(authToken, state, device_id, did, sub, log_file_uri, ePassportId, message) {
 
   /* Retrieve the WebSocket connection associated with the device_id */
   const device_id_ws_connection = WSS_CONNECTIONS_FROM_DEVICE_ID.get(device_id);
@@ -591,7 +585,8 @@ function notifyDevice(authToken, state, device_id, did, sub, log_file_uri, messa
         sub: sub,                                                       /* The subscription or other relevant information                */
         logFileURI: log_file_uri,                                       /* The log file uri                                              */
         authToken: authToken,                                           /* The auth token                                                */
-        message: message                                                /* message: session-request-expired                              */
+        message: message,                                               /* message: session-request-expired                              */
+        ePassportId: ePassportId
       };
   
       /* Send the data to the device as a JSON string */
@@ -615,7 +610,8 @@ function notifyDevice(authToken, state, device_id, did, sub, log_file_uri, messa
         sub: sub,                                                       /* The subscription or other relevant information                */
         logFileURI: log_file_uri,                                       /* The log file uri                                              */
         authToken: authToken,                                           /* The auth token                                                */
-        message: message                                                /* message: session-request-valid                                */
+        message: message,                                               /* message: session-request-valid                                */
+        ePassportId: ePassportId
       };
   
       /* Send the data to the device as a JSON string */
@@ -640,7 +636,8 @@ function notifyDevice(authToken, state, device_id, did, sub, log_file_uri, messa
         sub: sub,                                                       /* The subscription or other relevant information                */
         logFileURI: log_file_uri,                                       /* The log file uri                                              */
         authToken: authToken,                                           /* The auth token                                                */
-        message: message                                                /* message: device-already-online                                */
+        message: message,                                               /* message: device-already-online                                */
+        ePassportId: ePassportId
       };
   
       /* Send the data to the device as a JSON string */
@@ -664,7 +661,8 @@ function notifyDevice(authToken, state, device_id, did, sub, log_file_uri, messa
         sub: sub,                                                       /* The subscription or other relevant information                */ 
         logFileURI: log_file_uri,                                       /* The log file uri                                              */
         authToken: authToken,                                           /* The auth token                                                */
-        message: message                                                /* message: potential-credential-sharing                         */
+        message: message,                                                /* message: potential-credential-sharing                         */
+        ePassportId: ePassportId
       };
   
       /* Send the data to the device as a JSON string */
@@ -687,7 +685,8 @@ function notifyDevice(authToken, state, device_id, did, sub, log_file_uri, messa
         sub: sub,                                                       /* The subscription or other relevant information                */ 
         logFileURI: log_file_uri,                                       /* The log file uri                                              */
         authToken: authToken,                                           /* The auth token                                                */
-        message: message                                                /* message: potential-credential-sharing                         */
+        message: message,                                               /* message: potential-credential-sharing                         */
+        ePassportId: ePassportId
       };
   
       /* Send the data to the device as a JSON string */
@@ -769,10 +768,23 @@ const findDeviceByDeviceID = async (device_id) => {
  *
  * @returns {Promise<string>}             - The access status after the location update ('ACCESS_PERMITTED' or 'ACCESS_RESTRICTED')
  */
-async function handleDeviceLocationUpdate(device, currentLocation, now, req) {
+async function handleDeviceLocationUpdate(device, ePassportId, currentLocation, now, req) {
   try {
     /* Default access status is permitted unless proven otherwise */
     let accessStatus = 'ACCESS_PERMITTED';
+
+    const deviceAccessMap = await DEVICE_ACCESS_MAP.findOne({ ePassportId });
+    if (!deviceAccessMap) {
+       logEvent({
+        event: 'UPDATING LOCATION',
+        status: 'FAILED ❌',
+        did,
+        device_id: deviceID,
+        ip: req.ip,
+        cause: `FAILED TO UPDATE DEVICE LOCATION. ACCESS MAP FOR THIS E-PASSPORT NOT FOUND.`
+      });
+    }
+
 
     /* Get the last known location entry from the device's location history (most recent entry) */
     const lastLocationEntry = device.location_history[0] || null;
@@ -801,7 +813,7 @@ async function handleDeviceLocationUpdate(device, currentLocation, now, req) {
       );
 
       /* If this location is restricted, update the latest alert accordingly */
-      if (device.restricted_areas.includes(currentLocation)) {
+      if (deviceAccessMap.restrictedAreas.includes(currentLocation)) {
         accessStatus = 'ACCESS_RESTRICTED';
 
         /* Retrieve the latest alert for this device and did, sorted by most recent first_seen_at */
@@ -851,11 +863,11 @@ async function handleDeviceLocationUpdate(device, currentLocation, now, req) {
           );
 
           /* If the current location is restricted, handle alert updates and creation */
-          if (device.restricted_areas.includes(currentLocation)) {
+          if (deviceAccessMap.restrictedAreas.includes(currentLocation)) {
             accessStatus = 'ACCESS_RESTRICTED';
 
             /* If the previous location was also restricted, update its latest alert */
-            if (device.restricted_areas.includes(lastLocationEntry.estimated_location)) {
+            if (deviceAccessMap.restrictedAreas.includes(lastLocationEntry.estimated_location)) {
               const latestAlert = await ALERT.findOne({ device_id: device.device_id, did: device.did }).sort({ 'alert_info.first_seen_at': -1 });
 
               if (latestAlert) {

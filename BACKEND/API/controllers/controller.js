@@ -123,6 +123,7 @@ exports.handlePostLogs = async (req, res) => {
   const deviceID = req.body.deviceID;
   const logData = req.body.log;
   const authToken = req.body.authToken;
+  const ePassportId = req.body.ePassportId;
 
 
   /* First check: if req.body.log is missing */
@@ -239,7 +240,7 @@ exports.handlePostLogs = async (req, res) => {
 
   /* Append the log for examination, associated with the queue of this specific device */
   const deviceQueue = getDeviceQueue(deviceID);
-  deviceQueue.enqueue({ req, res, timestamp, did, deviceID});
+  deviceQueue.enqueue({ req, res, timestamp, did, deviceID, ePassportId});
   processDeviceQueue(deviceID);
 };
 
@@ -341,10 +342,10 @@ const processDeviceQueue = async (deviceID) => {
     /* Process all requests in the queue, one at a time */
     while (!deviceQueue.isEmpty()) {  
       /* Dequeue the next request; it includes the request, response, and did token and the deviceID */
-      const { req, res, timestamp, did, deviceID } = deviceQueue.dequeue();
+      const { req, res, timestamp, did, deviceID, ePassportId } = deviceQueue.dequeue();
       try {
         /* Process the request with the previously verified token */
-        await processRequest(req, res, did, deviceID);
+        await processRequest(req, res, did, deviceID, ePassportId);
       } catch (error) {
         /* Handle any errors during request processing and return a 200 response to the Authenticator, but indicating the failure in the "message" field */
         logEvent({
@@ -375,7 +376,7 @@ const processDeviceQueue = async (deviceID) => {
  * @param {Object} res - The Express response object used to send a response.
  * @param {Object} decodedToken - The decoded authentication token containing device details.
  */
-const processRequest = async (req, res, did, deviceID) => {
+const processRequest = async (req, res, did, deviceID, ePassportId) => {
   const logData = req.body.log;
 
   /* Store the log to the influx, associate with the deviceID and the did */
@@ -461,7 +462,7 @@ const processRequest = async (req, res, did, deviceID) => {
             });
           }
           /* update location history and alert based on the device.role */
-          await handleDeviceLocationUpdate(device, currentLocation, now, req);
+          await handleDeviceLocationUpdate(device, ePassportId, currentLocation, now, req);
         }
          else {
           logEvent({
@@ -681,7 +682,7 @@ exports.handleAuthTokenValidation = async (req, res) => {
 exports.handleLogout = async (req, res) => {
   try {
     /* Extract the auth token and did from the request body */
-    const { authToken, did: clientDid, deviceID: deviceID } = req.body;
+    const { authToken, did: clientDid, deviceID: deviceID, ePassportId: ePassportId } = req.body;
 
     /* Check if the authToken exists */
     if (!authToken) {
