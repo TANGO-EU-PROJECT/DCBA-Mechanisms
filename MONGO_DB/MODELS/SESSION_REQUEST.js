@@ -16,11 +16,6 @@ const sessionRequestSchema = new mongoose.Schema({
     type: String,   // Store QR unique state as a string
     required: true, // Ensure QR unique state is provided
   },
-  role: {
-    type: String,
-    enum: ['employee', 'customer'],
-    required: true
-  },
   log_file_uri: {
     type: String,   // Store log file URI as a string
     required: true, // Ensure log_file_uri is provided
