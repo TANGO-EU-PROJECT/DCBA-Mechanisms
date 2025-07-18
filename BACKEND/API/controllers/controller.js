@@ -975,7 +975,7 @@ exports.handleAuthCallback = async (req, res) => {
     /* If authentication is successful, proceed to decode the vp_token */
     if (response.status === 200 && response.statusText === 'OK') {
       try {
-        const decoded = jwt.decode(vp_token, { complete: true });
+        const decoded = jwt.decode(vp_token);
 
         console.log("DECODED: ", decoded)
 
