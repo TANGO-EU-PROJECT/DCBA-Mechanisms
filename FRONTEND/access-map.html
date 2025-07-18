@@ -154,32 +154,52 @@
     const messageBox = document.getElementById('messageBox');
 
     applyBtn.addEventListener('click', () => {
-      const passportId = passportInput.value.trim();
-      const selectedAreas = Array.from(checkboxes).filter(chk => chk.checked);
+        const passportId = passportInput.value.trim();
+        const selectedAreas = Array.from(checkboxes).filter(chk => chk.checked).map(chk => chk.value);
 
-      // Reset message
-      messageBox.style.display = 'none';
-      messageBox.className = 'message';
+        // Reset message
+        messageBox.style.display = 'none';
+        messageBox.className = 'message';
 
-      if (!passportId && selectedAreas.length === 0) {
+        if (!passportId && selectedAreas.length === 0) {
         showMessage('Please enter a Passport ID and select at least one permitted area.', 'error');
-      } else if (passportId && selectedAreas.length === 0) {
+        } else if (passportId && selectedAreas.length === 0) {
         showMessage('Please select at least one permitted area for the entered Passport ID.', 'error');
-      } else if (!passportId && selectedAreas.length > 0) {
+        } else if (!passportId && selectedAreas.length > 0) {
         showMessage('Please enter a Passport ID before selecting permitted areas.', 'error');
-      } else {
-        // All good: for now, just show success message
-        showMessage('Changes applied successfully!', 'success');
-
-        // TODO: here you can add the backend submission logic
-      }
+        } else {
+        // ✅ Submit data to the backend
+        fetch('/frontend/device-access-map', {
+            method: 'POST',
+            headers: {
+            'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+            ePassportId: passportId,
+            permittedAreas: selectedAreas
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.message) {
+            showMessage(data.message, 'success');
+            } else {
+            showMessage('Unexpected response from the server.', 'error');
+            }
+        })
+        .catch(err => {
+            console.error(err);
+            showMessage('Failed to submit data. Please try again later.', 'error');
+        });
+        }
     });
 
     function showMessage(msg, type) {
-      messageBox.textContent = msg;
-      messageBox.classList.add(type);
-      messageBox.style.display = 'block';
+        messageBox.textContent = msg;
+        messageBox.classList.add(type);
+        messageBox.style.display = 'block';
     }
   </script>
+
 </body>
 </html>
