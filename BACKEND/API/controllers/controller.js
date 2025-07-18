@@ -682,7 +682,7 @@ exports.handleAuthTokenValidation = async (req, res) => {
 exports.handleLogout = async (req, res) => {
   try {
     /* Extract the auth token and did from the request body */
-    const { authToken, did: clientDid, deviceID: deviceID, ePassportId: ePassportId } = req.body;
+    const { authToken, did: clientDid, deviceID: deviceID } = req.body;
 
     /* Check if the authToken exists */
     if (!authToken) {
