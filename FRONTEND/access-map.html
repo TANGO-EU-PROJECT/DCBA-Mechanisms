@@ -241,12 +241,8 @@
       messageBox.textContent = msg;
       messageBox.classList.add(type);
       messageBox.style.display = 'block';
-
-      setTimeout(() => {
-        messageBox.style.display = 'none';
-        messageBox.className = 'message';
-      }, 5000);
     }
+
 
     function resetForm() {
       passportInput.value = '';
