@@ -949,6 +949,8 @@ exports.handleAuthCallback = async (req, res) => {
   let vp_token;
   let sessionRequest;
 
+  console.log("REQUEST: ",req.body)
+
   try {
     /* Extract necessary values from the incoming POST request body */
     state = req.body.state;
