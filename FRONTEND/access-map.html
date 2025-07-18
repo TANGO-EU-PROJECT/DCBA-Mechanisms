@@ -9,6 +9,9 @@
       background: linear-gradient(to right, #eef1f5, #dbe2ea);
       margin: 0;
       padding: 0;
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
     }
 
     .wrapper {
@@ -16,6 +19,7 @@
       flex-direction: column;
       align-items: center;
       padding-top: 60px;
+      flex-grow: 1;
     }
 
     h1 {
@@ -70,10 +74,21 @@
       font-size: 16px;
       border-radius: 6px;
       cursor: pointer;
+      box-shadow: 0 5px 0 #3e8e41;
+      transition: all 0.1s ease-in-out;
     }
 
-    .submit-btn:hover {
-      background-color: #45a049;
+    .submit-btn:active {
+      box-shadow: 0 2px 0 #3e8e41;
+      transform: translateY(3px);
+    }
+
+    footer {
+      text-align: center;
+      padding: 20px 0;
+      font-size: 14px;
+      color: #666;
+      background-color: transparent;
     }
   </style>
 </head>
@@ -103,5 +118,9 @@
 
     <button class="submit-btn">Apply Changes</button>
   </div>
+
+  <footer>
+    For support, please contact IT at <a href="mailto:nitlab@inf.uth.gr">nitlab@inf.uth.gr</a>
+  </footer>
 </body>
 </html>
