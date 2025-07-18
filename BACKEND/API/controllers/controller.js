@@ -62,11 +62,13 @@ const LOCALIZATION_ALGORITHM_SCRIPT_PATH = process.env.LOCALIZATION_ALGORITHM_SC
 const deviceModelPath = process.env.MONGO_DB_DEVICE_SCHEME_PATH;
 const sessionRequestModelPath = process.env.MONGO_DB_SESSION_REQUEST_SCHEME_PATH;
 const deviceAlertModelPath = process.env.MONGO_DB_DEVICE_ALERT_SCHEME_PATH;
+const deviceAccessMap = process.env.MONGO_DB_DEVICE_ACCESS_MAP_SCHEME_PATH;
 
 /* Dynamically load the MongoDB schema models based on the paths specified in .env */
 const DEVICE = require(path.resolve(deviceModelPath));
 const SESSION_REQUEST = require(path.resolve(sessionRequestModelPath));
 const ALERT = require(path.resolve(deviceAlertModelPath));
+const DEVICE_ACCESS_MAP = require(path.resolve(deviceAccessMap));
 /*************************************************************************** END OF IMPORT SECTION ***************************************************************************/
 
 
@@ -1778,16 +1780,27 @@ exports.deleteDeviceByDID = async (req, res) => {
 };
 
 
-exports.createOrUpdateDeviceAccessMap = (req, res) => {
-  const { ePassportId, permittedAreas } = req.body;
+exports.createOrUpdateDeviceAccessMap = async (req, res) => {
+  try {
+    const { ePassportId, permittedAreas, restrictedAreas } = req.body;
 
-  console.log('Received Device Access Map Submission:');
-  console.log('ePassportId:', ePassportId);
-  console.log('permittedAreas:', permittedAreas);
+    console.log('Received Device Access Map Submission:');
+    console.log('ePassportId:', ePassportId);
+    console.log('permittedAreas:', permittedAreas);
+    console.log('restrictedAreas:', restrictedAreas);
 
-  return res.status(200).json({ message: 'Device access map updated successfully' });
+    const result = await DEVICE_ACCESS_MAP.findOneAndUpdate(
+      { ePassportId },
+      { permittedAreas, restrictedAreas },
+      { upsert: true, new: true }
+    );
+
+    return res.status(200).json({ message: 'Device access map updated successfully', data: result });
+  } catch (err) {
+    console.error('Error saving device access map:', err);
+    return res.status(500).json({ message: 'Failed to update device access map' });
+  }
 };
-
 
 
 
