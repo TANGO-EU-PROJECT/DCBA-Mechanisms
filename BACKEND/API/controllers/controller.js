@@ -1218,6 +1218,15 @@ exports.fetchDeviceLastLocation = async (req, res) => {
       });
     }
 
+    const ePassportId = device.ePassportId;
+    const deviceAccessMap = await DEVICE_ACCESS_MAP.findOne({ ePassportId });
+    if (!deviceAccessMap) {
+      return res.status(404).json({
+        status: "failed",
+        message: `Access map for device associated with ePassportId ${ePassportId} not found`
+      });
+    }
+
     /* Retrieve its history location */
     const history = device.location_history;
     /* Retrieve its most recent location */
@@ -1330,6 +1339,15 @@ exports.fetchDeviceLocationHistory = async (req, res) => {
       return res.status(404).json({
         status: "failed",
         message: 'Device not found'
+      });
+    }
+
+    const ePassportId = device.ePassportId;
+    const deviceAccessMap = await DEVICE_ACCESS_MAP.findOne({ ePassportId });
+    if (!deviceAccessMap) {
+      return res.status(404).json({
+        status: "failed",
+        message: `Access map for device associated with ePassportId ${ePassportId} not found`
       });
     }
 
