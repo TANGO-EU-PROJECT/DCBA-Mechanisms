@@ -1586,7 +1586,6 @@ exports.fetchDeviceRestrictedLocationHistory = async (req, res) => {
     }
     const deviceRestrictedAreas = deviceAccessMap.restrictedAreas || [];
 
-
     /* Filter entries by UTC timestamp  */
     const restrictedHistory = device.location_history.filter(entry => {
       const entryTime = new Date(entry.first_seen_at).getTime();
