@@ -39,11 +39,6 @@ const resourceControllers = {
 
 
 
-
-
-
-
-
   /************************************************** POST REQUESTS **************************************************/
   /** [5] DONE
    * @route   POST /resource/behavioural-score
@@ -53,7 +48,7 @@ const resourceControllers = {
   "behavioural-score": controller.fetchDeviceBehaviouralScore,
 
 
-  /** [6] done
+  /** [6] DONE
    * @route   POST /resource/last-location
    * @desc    Returns the devices's last location based on provided DIDs.
    * @middleware PEP/PDP
