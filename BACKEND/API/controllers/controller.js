@@ -978,6 +978,8 @@ exports.handleAuthCallback = async (req, res) => {
         const did = decoded.payload.iss;
         const sub = decoded.payload.sub;
 
+        console.log(did, sub)
+
         /* Continue processing the session with the extracted credentials */
         const result = await processSessionRequest(vp_token, state, did, sub, req);
       } catch (decodeError) {

@@ -339,6 +339,8 @@ function malformedLogsExaminator(log) {
  */
 async function processSessionRequest(authToken, state, did, sub, req) {
 
+  console.log("processSessionRequest");
+
   try {
     /* Search for the session request in MongoDB based on the state */
     const sessionRequest = await SESSION_REQUEST.findOne({ state: state });
