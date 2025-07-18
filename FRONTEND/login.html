@@ -52,13 +52,15 @@
       background-color: #4CAF50;
       color: white;
       border: none;
-      padding: 12px;
+      padding: 10px 24px;
       font-size: 16px;
       border-radius: 6px;
       cursor: pointer;
-      width: 100%;
+      width: auto;
       box-shadow: 0 5px 0 #3e8e41;
       transition: all 0.1s ease-in-out;
+      margin: 0 auto;
+      display: block;
     }
 
     .login-btn:active {
@@ -106,7 +108,7 @@
 
       // Simple static check (update for production use)
       if (username === "riastone-admin" && password === "riastone-admin") {
-        window.location.href = "access-map.html";
+        window.location.href = "/frontend/access-map";
       } else {
         loginMessage.style.display = "block";
         setTimeout(() => loginMessage.style.display = "none", 4000);
