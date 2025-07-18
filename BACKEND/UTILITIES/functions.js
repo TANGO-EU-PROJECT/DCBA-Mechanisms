@@ -105,20 +105,37 @@ const createDeviceDocument = async (did, sub, givenName, familyName, ePassportId
       last_seen_at: now,
       duration_s: 0
     };
- 
+    let newDevice;
+
+    const deviceAccessMap = await DEVICE_ACCESS_MAP.findOne({ ePassportId });
     /* Create the new device */
-    const newDevice = new DEVICE({
-      did,
-      sub,
-      givenName, 
-      familyName,
-      ePassportId,
-      device_id,
-      log_file_uri,
-      status: 'online',
-      location_history: [initialLocation],
-      login_timestamp: now,
-    });
+    if (!deviceAccessMap) {
+      newDevice = new DEVICE({
+        did,
+        sub,
+        givenName, 
+        familyName,
+        ePassportId,
+        device_id,
+        log_file_uri,
+        status: 'online',
+        location_history: [],
+        login_timestamp: now,
+      });
+    } else {
+      newDevice = new DEVICE({
+        did,
+        sub,
+        givenName, 
+        familyName,
+        ePassportId,
+        device_id,
+        log_file_uri,
+        status: 'online',
+        location_history: [initialLocation],
+        login_timestamp: now,
+      });
+    }
 
     /* Save it as document */
     await newDevice.save();
