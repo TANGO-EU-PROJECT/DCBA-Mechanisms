@@ -18,6 +18,6 @@ const deviceAccessMapSchema = new mongoose.Schema({
   timestamps: true,
 });
 
-const DeviceAccessMap = mongoose.model('DeviceAccessMap', deviceAccessMapSchema);
+const DeviceAccessMap = mongoose.model('DEVICE_ACCESS_MAP', deviceAccessMapSchema);
 
 module.exports = DeviceAccessMap;
