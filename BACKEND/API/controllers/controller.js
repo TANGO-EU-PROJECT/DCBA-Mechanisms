@@ -1828,7 +1828,7 @@ exports.createOrUpdateDeviceAccessMap = async (req, res) => {
 
     if (authPassword !== expectedPassword) {
       console.warn('Unauthorized access attempt with invalid password');
-      return res.status(401).json({ message: 'Invalid authorization password' });
+      return res.status(401).json({ message: 'Invalid authorization password.' });
     }
 
     console.log('✅ Authorized access');
@@ -1843,11 +1843,14 @@ exports.createOrUpdateDeviceAccessMap = async (req, res) => {
       { upsert: true, new: true }
     );
 
-    return res.status(200).json({ message: 'Device access map updated successfully', data: result });
+    return res.status(200).json({ 
+      message: `Device access map associated with the employee passport ${ePassportId} updated successfully.`, 
+      data: result 
+    });
 
   } catch (err) {
     console.error('❌ Error saving device access map:', err);
-    return res.status(500).json({ message: 'Failed to update device access map' });
+    return res.status(500).json({ message: 'Failed to update device access map.' });
   }
 };
 
