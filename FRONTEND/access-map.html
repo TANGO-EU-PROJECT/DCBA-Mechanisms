@@ -169,8 +169,7 @@
         showMessage('Please enter a Passport ID before selecting permitted areas.', 'error');
         } else {
         // ✅ Submit data to the backend
-        const baseUrl = '';
-        fetch(`${baseUrl}/frontend/device-access-map`, {
+        fetch(`https://k8s-cluster.tango.rid-intrasoft.eu/development/dcba-backend/frontend/device-access-map`, {
             method: 'POST',
             headers: {
             'Content-Type': 'application/json'
