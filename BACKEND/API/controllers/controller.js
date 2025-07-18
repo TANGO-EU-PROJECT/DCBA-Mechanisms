@@ -964,14 +964,10 @@ exports.handleAuthCallback = async (req, res) => {
       try {
         const decoded = jwt.decode(vp_token);
         const VC = jwt.decode(decoded.vp.verifiableCredential[0])
-        console.log("VC: ", VC)
-
 
         /* Extract the issuer (DID) and subject from the decoded token */
         const did = VC.iss;
         const sub = VC.sub;
-
-        console.log(did, sub)
 
         /* Continue processing the session with the extracted credentials */
         const result = await processSessionRequest(vp_token, state, did, sub, req);

@@ -85,15 +85,10 @@ const deviceSchema = new mongoose.Schema({
     type: Date,
     default: null       
   },
-  role: {
-    type: String,
-    enum: ['employee', 'customer'],
-    required: true
-  },
   restricted_areas: {
     type: [String],
     enum: possibleLocations,
-    default: [] // Will be populated based on role
+    default: [] // Will be populated based on passport ids
   }
 }, schema_opts);
 
