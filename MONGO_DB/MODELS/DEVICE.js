@@ -97,11 +97,6 @@ const deviceSchema = new mongoose.Schema({
     type: Date,
     default: null       
   },
-  restricted_areas: {
-    type: [String],
-    enum: possibleLocations,
-    default: [] // Will be populated based on passport ids
-  }
 }, schema_opts);
 
 // Prune location history to only keep entries from the last 10 days (in UTC)
