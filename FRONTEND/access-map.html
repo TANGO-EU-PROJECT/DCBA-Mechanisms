@@ -177,7 +177,6 @@
 
     applyBtn.addEventListener('click', () => {
       const passportId = passportInput.value.trim();
-      const authPassword = authPasswordInput.value.trim();
       const permittedAreas = Array.from(checkboxes).filter(chk => chk.checked).map(chk => chk.value);
       const restrictedAreas = Array.from(checkboxes).filter(chk => !chk.checked).map(chk => chk.value);
 
