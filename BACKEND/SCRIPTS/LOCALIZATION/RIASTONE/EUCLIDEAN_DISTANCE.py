@@ -227,7 +227,7 @@ def load_reference_data(filename):
         tuple: DataFrame and list of BSSID column names
     """
     df = pd.read_csv(filename)
-    bssid_columns = df.columns[2:]  # First two columns are 'AREA' and 'ACCESS_STATUS'
+    bssid_columns = df.columns[1:]  # Skip only 'AREA' column
     return df, list(bssid_columns)
 
 def compute_euclidean_distance(vec1, vec2):
@@ -255,7 +255,6 @@ def find_best_area(log_rssi_dict):
     """
     min_distance = float('inf')     # Initialize the minimum distance to infinity
     best_areas = []                 # List to store areas with the minimum distance
-    access_status_map = {}         # Mapping from area to its access status
     error_messages = []            # List of error messages encountered during processing
     any_distance_computed = False  # Flag to check if any distance was calculated
 
@@ -286,30 +285,26 @@ def find_best_area(log_rssi_dict):
                 any_distance_computed = True
 
                 area = row['AREA']
-                access_status = row['ACCESS_STATUS']
 
                 if distance < min_distance:
                     min_distance = distance
                     best_areas = [area]
-                    access_status_map[area] = access_status
                 elif distance == min_distance:
                     best_areas.append(area)
-                    access_status_map[area] = access_status
             except Exception as e:
                 error_messages.append(f"Error processing row {index} in {file}: {str(e)}")
 
     # If no distance could be computed, return UNKNOWN
     if not any_distance_computed:
-        return "UNKNOWN", "Unknown", None, error_messages
+        return "UNKNOWN", None, error_messages
+
 
     # Final decision logic
     if "PERMITTED_AREA" in best_areas:
-        return "PERMITTED_AREA", access_status_map["PERMITTED_AREA"], min_distance, error_messages
-    elif len(best_areas) == 1:
-        area = best_areas[0]
-        return area, access_status_map[area], min_distance, error_messages
+        return "PERMITTED_AREA", min_distance, error_messages
     else:
-        return best_areas, None, min_distance, error_messages
+        # Final decision logic: always return the first best area
+        return best_areas[0], min_distance, error_messages
 
 
 def main():
@@ -322,9 +317,9 @@ def main():
         "Device ID": None,
         "Employee DID": None,
         "Estimated Location": None,
-        "Access Status": None,
         "Error": None
     }
+
 
     try:
         # Ensure the correct number of arguments are provided
@@ -347,15 +342,11 @@ def main():
             raise FileNotFoundError(f"Missing reference files: {', '.join(missing_files)}")
 
         # Predict the best area based on the observed signal levels
-        predicted_area, access_status, distance, errors = find_best_area(log_rssi_dict)
+        predicted_area, distance, errors = find_best_area(log_rssi_dict)
 
         # If multiple best areas are found, label as ambiguous
-        if isinstance(predicted_area, list):
-            output["Estimated Location"] = predicted_area
-            output["Access Status"] = "Ambiguous"
-        else:
-            output["Estimated Location"] = predicted_area
-            output["Access Status"] = access_status
+        output["Estimated Location"] = predicted_area
+
 
         # Add any error messages to the output
         if errors:
@@ -378,7 +369,6 @@ if __name__ == "__main__":
             "Device ID": None,
             "Employee DID": None,
             "Estimated Location": None,
-            "Access Status": None,
             "Error": f"Unhandled Exception: {str(e)}"
         }
         print(json.dumps(error_output))

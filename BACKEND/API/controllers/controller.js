@@ -124,6 +124,8 @@ exports.handlePostLogs = async (req, res) => {
   const logData = req.body.log;
   const authToken = req.body.authToken;
 
+  console.log(req.body)
+
   /* First check: if req.body.log is missing */
   if (!logData) {
     logEvent({
@@ -414,39 +416,26 @@ const processRequest = async (req, res, did, deviceID) => {
 
         console.log(`\n${yellow}*** LOCALIZATION APPLIED ***${reset}`);
         console.log(JSON.stringify(result, null, 2));
-        //const accessStatus = result['Access Status'];
+        const currentLocation = result["Estimated Location"];
         const now = moment().utc().toDate();
 
         if (LOCALIZATION_ALGORITHM_APPLIED === 'RIA-ED') {
-          //const estimatedLocation = result['Estimated Location'];
-          const possibleLocations = [
-            'PACKAGING_LINES',
-            'PERMITTED_AREA',
-            'SORTING_LINES_1_TO_3',
-            'SORTING_LINES_4_AND_5',
-            'SORTING_LINES_6_TO_8',
-            'WAREHOUSE'
-          ];
-          const estimatedLocation = possibleLocations[Math.floor(Math.random() * possibleLocations.length)];
-          const currentLocation = Array.isArray(estimatedLocation)
-            ? estimatedLocation.join(' | ')
-            : estimatedLocation;
-
-          console.log("ESTIMATED LOCATION (MOCK): ", currentLocation)
+          // //const estimatedLocation = result['Estimated Location'];
+          // const possibleLocations = [
+          //   'PACKAGING_LINES',
+          //   'PERMITTED_AREA',
+          //   'SORTING_LINES_1_TO_3',
+          //   'SORTING_LINES_4_AND_5',
+          //   'SORTING_LINES_6_TO_8',
+          //   'WAREHOUSE'
+          // ];
+          // const estimatedLocation = possibleLocations[Math.floor(Math.random() * possibleLocations.length)];
+          // const currentLocation = Array.isArray(estimatedLocation)
+          //   ? estimatedLocation.join(' | ')
+          //   : estimatedLocation;
+          // console.log("ESTIMATED LOCATION (MOCK): ", currentLocation)
         
           const device = await DEVICE.findOne({ did: did, device_id: deviceID });
-          // if (accessStatus === "ACCESS_RESTRICTED") {
-          //   const alertDoc = new ALERT({
-          //     deviceID,
-          //     did,
-          //     locations: {
-          //       estimated_location: result['Estimated Location'],
-          //       first_seen_at: new Date(),
-          //       last_seen_at: new Date(),
-          //       duration_s: 0
-          //     }
-          //   });
-          // }
           if (!device) {
             logEvent({
               event: 'PERFORMING LOCALIZATION (RIA)',
