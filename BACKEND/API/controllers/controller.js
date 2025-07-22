@@ -521,6 +521,7 @@ const processRequest = async (req, res, did, deviceID) => {
 };
 
 
+
 /* [9]
  * Function to execute the localization ED-RIA
 */
