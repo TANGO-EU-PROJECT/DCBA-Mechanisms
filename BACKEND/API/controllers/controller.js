@@ -124,8 +124,6 @@ exports.handlePostLogs = async (req, res) => {
   const logData = req.body.log;
   const authToken = req.body.authToken;
 
-  //console.log(req.body)
-
   /* First check: if req.body.log is missing */
   if (!logData) {
     logEvent({
@@ -153,7 +151,6 @@ exports.handlePostLogs = async (req, res) => {
     return res.status(200).json({ status: "failed", message: "Malformed log detected." });
   }
 
-
   /* Third check: if req.body.authToken is missing */
   if (!authToken) {
     logEvent({
@@ -169,19 +166,17 @@ exports.handlePostLogs = async (req, res) => {
 
   let decodedToken;
   try {
-
     /* Fourth check: if req.body.authToken is valid */
     decodedToken = jwt.decode(authToken, { complete: true });
   } catch (error) {
     logEvent({
       event: 'ANDROID LOG CAPTURE',
       status: 'FAILED ❌',
-      cause: `AN ERROR OCCURRED DURING ANDROID LOG CAPTURE. INVALID AUTHENTICATION TOKEN FORMAT: ${error.stack}`,
+      cause: `INVALID AUTHENTICATION TOKEN FORMAT: ${error.stack}`,
       did: did,
       device_id: deviceID,
       ip: req.ip
     });
-    
     return res.status(200).json({ status: "failed", message: 'Invalid authentication token format.' });
   }
 
@@ -199,7 +194,7 @@ exports.handlePostLogs = async (req, res) => {
 
   /* Fifth check: if req.body.authToken is not expired */
   const currentTime = Math.floor(Date.now() / 1000);
-  if (decodedToken.exp && decodedToken.exp < currentTime) {
+  if (decodedToken.payload.exp && decodedToken.payload.exp < currentTime) {
     logEvent({
       event: 'ANDROID LOG CAPTURE',
       status: 'FAILED ❌',
@@ -224,6 +219,39 @@ exports.handlePostLogs = async (req, res) => {
     return res.status(200).json({ status: "failed", message: 'Authentication token did does not match the provided did.' });
   }
 
+  /* Seventh check: Query device in DB and verify online status */
+  try {
+    const device = await DEVICE.findOne({ device_id: deviceID, did });
+
+    if (!device) {
+      logEvent({
+        event: 'ANDROID LOG CAPTURE',
+        status: 'FAILED ❌',
+        cause: 'DEVICE NOT FOUND IN DATABASE',
+        did: did,
+        device_id: deviceID,
+        ip: req.ip
+      });
+      return res.status(200).json({ status: "failed", message: 'Device not found in the database.' });
+    }
+
+    if (device.status === 'offline') {
+      logEvent({
+        event: 'ANDROID LOG CAPTURE',
+        status: 'FAILED ❌',
+        cause: 'DEVICE IS OFFLINE',
+        did: did,
+        device_id: deviceID,
+        ip: req.ip
+      });
+      return res.status(200).json({ status: "failed", message: 'Device is offline.' });
+    }
+
+  } catch (err) {
+    console.error("MongoDB lookup error:", err);
+    return res.status(200).json({ status: "failed", message: 'Database error while validating device.' });
+  }
+
   /* Extract the timestamp of the log */
   const timestamp = extractTimestamp(logData);
   if (!timestamp) {
@@ -240,7 +268,7 @@ exports.handlePostLogs = async (req, res) => {
 
   /* Append the log for examination, associated with the queue of this specific device */
   const deviceQueue = getDeviceQueue(deviceID);
-  deviceQueue.enqueue({ req, res, timestamp, did, deviceID});
+  deviceQueue.enqueue({ req, res, timestamp, did, deviceID });
   processDeviceQueue(deviceID);
 };
 
