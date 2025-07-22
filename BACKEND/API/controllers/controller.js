@@ -124,7 +124,7 @@ exports.handlePostLogs = async (req, res) => {
   const logData = req.body.log;
   const authToken = req.body.authToken;
 
-  console.log(req.body)
+  //console.log(req.body)
 
   /* First check: if req.body.log is missing */
   if (!logData) {

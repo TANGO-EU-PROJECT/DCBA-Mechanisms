@@ -2,12 +2,12 @@ apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
   name: dcba-backend-ingress-rule  # Name of the ingress resource
-  namespace: tango-development     # Namespace where the ingress resource is deployed
+  namespace: smart-manufacturing   # Namespace where the ingress resource is deployed
   labels: 
     app: back-end                  # Label to categorize the resource for the application
   annotations:
     nginx.ingress.kubernetes.io/use-regex: "true"       # Enables regular expression-based path matching
-    nginx.ingress.kubernetes.io/rewrite-target: /$2     # Rewrites the incoming request path, preserving the captured groups
+    nginx.ingress.kubernetes.io/rewrite-target: /$1     # Rewrites the incoming request path, preserving the captured groups
     cert-manager.io/cluster-issuer: "letsencrypt-prod"  # Specifies the cluster issuer for Let's Encrypt certificate management
     kubernetes.io/ingress.class: "nginx"                # Specifies the ingress controller to be used, in this case, NGINX
     
@@ -19,14 +19,14 @@ spec:
   ingressClassName: nginx  # Defines the class of the ingress (nginx in this case)
   tls:
     - hosts:
-        - k8s-cluster.tango.rid-intrasoft.eu  # The domain for which TLS is being configured
+        - dcba-tango.riastone.eu  # The domain for which TLS is being configured
       secretName: dcba-backend-cert-tls       # Name of the secret containing the TLS certificate
 
   rules:
-    - host: k8s-cluster.tango.rid-intrasoft.eu  # Defines the domain for the ingress rule
+    - host: dcba-tango.riastone.eu # Defines the domain for the ingress rule
       http:
         paths:
-          - path: /development/dcba-backend(/|$)(.*)  # Regex path matching, captures the rest of the URL after this prefix
+          - path: /(.*)                               # Regex path matching, captures the rest of the URL after this prefix
             pathType: ImplementationSpecific          # Allows path matching based on the ingress controller's specific implementation
             backend:
               service:
