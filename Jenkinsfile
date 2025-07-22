@@ -48,7 +48,7 @@ pipeline {
         BACKEND_CONTAINER_NAME = "dcba-backend"                             /* Application Name */
         ARTIFACTORY_SERVER = "harbor.tango.rid-intrasoft.eu"                /* Docker registry server URL */
         ARTIFACTORY_DOCKER_REGISTRY = "harbor.tango.rid-intrasoft.eu/dcba/" /* Docker image registry path */
-        BRANCH_NAME = "rias-tango-development"                              /* Git branch to checkout */
+        BRANCH_NAME = "rias-smart-manufacturing"                              /* Git branch to checkout */
         BACKEND_DOCKER_IMAGE_TAG = "${BACKEND_CONTAINER_NAME}:R${env.BUILD_ID}" /* Docker image tag using the application name and Jenkins build ID */
 
         // MongoDB
