@@ -137,13 +137,11 @@
 <body>
   <div class="wrapper">
     <h1>EMPLOYEE ACCESS MAP</h1>
-    <p class="description">  Provide the <strong>Authorization Password</strong>, the employee's <strong>Passport ID</strong>, and select the <strong>areas</strong> the employee is permitted to access.</p>
+    <p class="description">  Provide the the employee's <strong>Passport ID</strong>, and select the <strong>areas</strong> the employee is permitted to access.</p>
 
     <div class="container">
       <!-- Left section -->
       <div class="left">
-        <h2>Authorization Password</h2>
-        <input type="password" placeholder="Enter authorization password" id="authPassword" />
 
         <h2 style="margin-top: 20px;">Passport ID</h2>
         <input type="text" placeholder="Enter passport ID" id="passportId" />
@@ -173,7 +171,6 @@
   <script>
     const applyBtn = document.getElementById('applyBtn');
     const passportInput = document.getElementById('passportId');
-    const authPasswordInput = document.getElementById('authPassword');
     const checkboxes = document.querySelectorAll('.right input[type="checkbox"]');
     const messageBox = document.getElementById('messageBox');
     const spinner = document.getElementById('spinner');
@@ -187,17 +184,6 @@
       // Reset message
       messageBox.style.display = 'none';
       messageBox.className = 'message';
-
-      // New condition: Neither password nor passport ID entered
-      if (!authPassword && !passportId) {
-        showMessage('Please enter both Authorization Password and Passport ID.', 'error');
-        return;
-      }
-
-      if (!authPassword) {
-        showMessage('Please enter the Authorization Password.', 'error');
-        return;
-      }
 
       if (!passportId && permittedAreas.length === 0) {
         showMessage('Please enter a Passport ID and select at least one permitted area.', 'error');
@@ -217,7 +203,6 @@
             ePassportId: passportId,
             permittedAreas: permittedAreas,
             restrictedAreas: restrictedAreas,
-            authPassword: authPassword
           })
         })
         .then(async response => {
