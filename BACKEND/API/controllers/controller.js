@@ -1839,15 +1839,7 @@ exports.deleteDeviceByDID = async (req, res) => {
 
 exports.createOrUpdateDeviceAccessMap = async (req, res) => {
   try {
-    const { ePassportId, permittedAreas, restrictedAreas, authPassword } = req.body;
-
-    // 🔒 STEP 1: Validate the authorization password
-    const expectedPassword = process.env.FRONTEND_AUTH_PASSWORD; // Change this to your actual secret
-
-    if (authPassword !== expectedPassword) {
-      console.warn('Unauthorized access attempt with invalid password');
-      return res.status(401).json({ message: 'Invalid authorization password.' });
-    }
+    const { ePassportId, permittedAreas, restrictedAreas } = req.body;
 
     console.log('✅ Authorized access');
     console.log('ePassportId:', ePassportId);
