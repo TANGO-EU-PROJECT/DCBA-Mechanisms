@@ -37,6 +37,8 @@
       align-items: center;
       padding-top: 60px;
       flex-grow: 1;
+      visibility: hidden; 
+
     }
 
     h1 {
@@ -206,7 +208,7 @@
       } else {
         // ✅ Submit data to the backend
         spinner.style.display = 'block';
-        fetch('https://dcba-tango.riastone.eu/frontend/device-access-map', {
+        fetch('https://dcba-tango.riastone.eu/device-access-map', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json'
@@ -252,5 +254,12 @@
       // 🔐 Don't clear the authPassword field
     }
   </script>
+
+  <script>
+    window.onload = () => {
+      document.querySelector('.wrapper').style.visibility = 'visible';
+    };
+  </script>
+
 </body>
 </html>
