@@ -7,7 +7,7 @@ This repository contains the deployment code for the TANGO project, specifically
 ## Branches
 
 - **development**: This branch is used for ongoing deployment work, where all new features and changes will be committed.
-- **rias-smart-manufacturing**: This branch contains the finalized deployment code, which has been thoroughly tested and is ready for production use. **The Jenkins pipeline will automatically trigger deployments from this branch!**
+- **rias-tango-development**: This branch contains the finalized deployment code, which has been thoroughly tested and is ready for production use. **The Jenkins pipeline will automatically trigger deployments from this branch!**
 
 ## 📁 DCBA-Component Directory Structure
 
