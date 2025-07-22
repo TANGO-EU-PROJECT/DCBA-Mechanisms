@@ -193,18 +193,18 @@ exports.handlePostLogs = async (req, res) => {
   }
 
   /* Fifth check: if req.body.authToken is not expired */
-  const currentTime = Math.floor(Date.now() / 1000);
-  if (decodedToken.payload.exp && decodedToken.payload.exp < currentTime) {
-    logEvent({
-      event: 'ANDROID LOG CAPTURE',
-      status: 'FAILED ❌',
-      cause: 'ACCESS TOKEN EXPIRED',
-      did: did,
-      device_id: deviceID,
-      ip: req.ip
-    });
-    return res.status(200).json({ status: "failed", message: 'Authentication token has expired.' });
-  }
+  // const currentTime = Math.floor(Date.now() / 1000);
+  // if (decodedToken.payload.exp && decodedToken.payload.exp < currentTime) {
+  //   logEvent({
+  //     event: 'ANDROID LOG CAPTURE',
+  //     status: 'FAILED ❌',
+  //     cause: 'ACCESS TOKEN EXPIRED',
+  //     did: did,
+  //     device_id: deviceID,
+  //     ip: req.ip
+  //   });
+  //   return res.status(200).json({ status: "failed", message: 'Authentication token has expired.' });
+  // }
 
   /* Sixth check: if req.body.authToken is not associated with this device */
   if (decodedToken.payload.iss !== did) {
