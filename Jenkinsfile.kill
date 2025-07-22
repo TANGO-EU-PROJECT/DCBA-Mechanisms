@@ -17,7 +17,7 @@ pipeline {
                 withKubeConfig([credentialsId: 'RIAS-K8s-config-file',         /* refers to a Jenkins credential that stores the Kubernetes configuration file (the kubeconfig file), 
                                                                              which grants access to the cluster. */
                                 serverUrl: 'https://api.riastone.eu:6443', /* The URL of the Kubernetes API server. */
-                                namespace: 'smart-manufacturing'            /* Specifies that commands should be executed in the tango-development namespace. */
+                                namespace: 'tango-development'            /* Specifies that commands should be executed in the tango-development namespace. */
                 ]) {
                     /* Run a shell command to delete the deployment specified in the YAML file */
                     sh 'kubectl delete -f dcba-backend-deployment.yml'
