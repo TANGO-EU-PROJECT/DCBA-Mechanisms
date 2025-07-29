@@ -961,9 +961,11 @@ exports.handleAuthCallback = async (req, res) => {
   let vp_token;
   let sessionRequest;
 
-  console.log(req.body)
-
   try {
+    console.log("---- AUTH CALLBACK HIT ----");
+    console.log("Headers:", req.headers);
+    console.log("Raw body:", req.body);
+
     /* Extract necessary values from the incoming POST request body */
     state = req.body.state;
     vp_token = req.body.vp_token;
