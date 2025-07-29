@@ -957,7 +957,7 @@ exports.beginSession = async (req, res) => {
     const clientCallbackUrl = process.env.REDIRECT_BACKEND_CALLBACK_URL; // use this env var as client_callback
 
     // Build the verifier URL exactly as specified
-    const verifierBaseUrl = 'https://ips-verifier.tango.nadiaplatform.com/api/v1/startsiop';
+    const verifierBaseUrl = process.env.HOSTNAME_VERIFIER_NADIA_PLATFORM_STARTSIOP_URL;
     const verifierUrl = new URL(verifierBaseUrl);
     verifierUrl.searchParams.set('state', state);
     verifierUrl.searchParams.set('client_callback', clientCallbackUrl);
