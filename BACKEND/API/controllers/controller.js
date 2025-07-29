@@ -887,7 +887,7 @@ exports.beginSession = async (req, res) => {
 
 
     /* Extract the openid URL string */
-    const originalUrl = response.data; // Assumes response.data is the full openid://?... string
+    const originalUrl = response.data; 
 
     // Sanity check
     if (typeof originalUrl !== 'string' || !originalUrl.startsWith('openid://?')) {
