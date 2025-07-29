@@ -963,10 +963,15 @@ exports.beginSession = async (req, res) => {
     verifierUrl.searchParams.set('client_callback', clientCallbackUrl);
     verifierUrl.searchParams.set('client_id', clientId);
 
+    console.log(verifierBaseUrl)
+
     // Make the GET request to the verifier
     const response = await axios.get(verifierUrl.toString());
 
     const originalUrl = response.data;
+
+    console.log(originalUrl)
+
 
     if (typeof originalUrl !== 'string' || !originalUrl.startsWith('openid://?')) {
       return res.status(500).json({
