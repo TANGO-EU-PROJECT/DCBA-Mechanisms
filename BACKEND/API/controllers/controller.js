@@ -952,7 +952,7 @@ exports.beginSession = async (req, res) => {
     const { device_id, log_file_uri } = req.body;
 
     // Use the specified values
-    const clientId = 'SERVICE'; // changed from 'pre-registration-service'
+    const clientId = 'pre-registration-service'; 
     const state = device_id;
     const clientCallbackUrl = process.env.REDIRECT_BACKEND_CALLBACK_URL; // use this env var as client_callback
 
