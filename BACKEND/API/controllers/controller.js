@@ -1037,22 +1037,23 @@ exports.handleAuthCallback = async (req, res) => {
   try {
     console.log("---- AUTH CALLBACK HIT ----");
     console.log("Headers:", req.headers);
-    console.log("Query params:", req.query);
+    console.log("Body:", req.body);
 
     // Optionally log raw URL for clarity
     console.log("Full URL:", req.originalUrl);
 
-    // You can also log specific expected query params, e.g.:
-    // console.log("state:", req.query.state);
-    // console.log("vp_token:", req.query.vp_token);
+    // You can also log specific expected body params:
+    // console.log("state:", req.body.state);
+    // console.log("vp_token:", req.body.vp_token);
 
     // Just respond with 200 OK and a simple message for now
-    res.status(200).send('Auth callback received');
+    res.status(200).send('Auth callback (POST) received');
   } catch (error) {
     console.error('Error in auth callback:', error);
     res.status(500).send('Internal Server Error');
   }
 };
+
 
 // exports.handleAuthCallback = async (req, res) => {
 //   let state;
