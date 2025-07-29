@@ -888,7 +888,6 @@ exports.beginSession = async (req, res) => {
 
     /* Extract the openid URL string */
     const originalUrl = response.data; 
-    console.log("ORIGINAL URL: ", originalUrl)
 
 
     // Sanity check
@@ -919,8 +918,6 @@ exports.beginSession = async (req, res) => {
 
     /* Rebuild the OpenID URL */
     const updatedUrl = `openid://?${params.toString()}`;
-
-    console.log("UPDATED URL: ", updatedUrl)
 
     /* Save or update session request */
     await SESSION_REQUEST.replaceOne(
@@ -1041,7 +1038,7 @@ exports.handleAuthCallback = async (req, res) => {
     return res.status(response.status).json(response.data);
 
   } catch (error) {
-    console.log("BAD REQUEST ERROR")
+    console.log("BAD REQUEST ERROR: ", error)
 
     /* Catch any unexpected errors and return appropriate HTTP status */
     /* Invalid Verifiable Credentials */
