@@ -20,7 +20,7 @@ spec:
         type: back-end
     spec:
       imagePullSecrets:
-        - name: regcred-rias
+        - name: regcred
       
       containers:
         - name: dcba-backend
@@ -91,7 +91,7 @@ spec:
         app: dcba-mongo-db
     spec:
       imagePullSecrets:
-        - name: regcred-rias
+        - name: regcred
       containers:
         - name: dcba-mongo-db
           image: harbor.tango.rid-intrasoft.eu/dcba/dcba-mongo-db:latest-prod
@@ -171,7 +171,7 @@ spec:
         app: dcba-influx-db
     spec:
       imagePullSecrets:
-        - name: regcred-rias
+        - name: regcred
       containers:
         - name: dcba-influx-db
           image: harbor.tango.rid-intrasoft.eu/dcba/dcba-influx-db:latest-prod
