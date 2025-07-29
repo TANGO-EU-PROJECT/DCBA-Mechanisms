@@ -888,6 +888,8 @@ exports.beginSession = async (req, res) => {
 
     /* Extract the openid URL string */
     const originalUrl = response.data; 
+    console.log("ORIGINAL URL: ", originalUrl)
+
 
     // Sanity check
     if (typeof originalUrl !== 'string' || !originalUrl.startsWith('openid://?')) {
@@ -917,6 +919,8 @@ exports.beginSession = async (req, res) => {
 
     /* Rebuild the OpenID URL */
     const updatedUrl = `openid://?${params.toString()}`;
+
+    console.log("UPDATED URL: ", updatedUrl)
 
     /* Save or update session request */
     await SESSION_REQUEST.replaceOne(
@@ -983,7 +987,7 @@ exports.handleAuthCallback = async (req, res) => {
 
     /* Send the verification request to the external verifier, with state in query param */
     const response = await axios.post(
-      `${process.env.HOSTNAME_VERIFIER_NADIA_PLATFORM_AUTH_RESPONSE}${state}`,
+      `${process.env.HOSTNAME_VERIFIER_NADIA_PLATFORM_AUTH_RESPONSE}${encodeURIComponent(state)}`,
       params.toString(),
       { headers: { 'Content-Type': 'application/x-www-form-urlencoded' } }
     );
