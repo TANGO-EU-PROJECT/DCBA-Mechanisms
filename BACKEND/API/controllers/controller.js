@@ -977,7 +977,8 @@ exports.handleAuthCallback = async (req, res) => {
       state: state,
     });
 
-    console.log("Sending payload to verifier:", payload);
+    console.log("Sending payload to verifier:", params.toString());
+
 
 
     /* Send the verification request to the external verifier, with state in query param */
