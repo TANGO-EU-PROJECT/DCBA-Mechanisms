@@ -973,9 +973,12 @@ exports.handleAuthCallback = async (req, res) => {
     /* Construct the form-urlencoded payload to send to the verification service */
     const params = new URLSearchParams({
       vp_token: vp_token,
-      presentation_submission: req.body.presentation_submission,
+      presentation_submission: JSON.parse(req.body.presentation_submission),
       state: state,
     });
+
+    console.log("Sending payload to verifier:", payload);
+
 
     /* Send the verification request to the external verifier, with state in query param */
     const response = await axios.post(
