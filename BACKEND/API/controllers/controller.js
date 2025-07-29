@@ -973,7 +973,7 @@ exports.handleAuthCallback = async (req, res) => {
     /* Construct the form-urlencoded payload to send to the verification service */
     const params = new URLSearchParams({
       vp_token: vp_token,
-      presentation_submission: JSON.parse(req.body.presentation_submission),
+      presentation_submission: req.body.presentation_submission,
       state: state,
     });
 
@@ -1020,6 +1020,7 @@ exports.handleAuthCallback = async (req, res) => {
         }
       }
     } else if (response.status === 400 && response.statusText === 'Bad Request') {
+      console.log("BAD REQUEST")
       /* Catch any unexpected errors and return appropriate HTTP status */
       /* Invalid Verifiable Credentials */
       /* Search for the session request in MongoDB based on the state */
@@ -1036,6 +1037,8 @@ exports.handleAuthCallback = async (req, res) => {
     return res.status(response.status).json(response.data);
 
   } catch (error) {
+    console.log("BAD REQUEST ERROR")
+
     /* Catch any unexpected errors and return appropriate HTTP status */
     /* Invalid Verifiable Credentials */
     /* Search for the session request in MongoDB based on the state */
