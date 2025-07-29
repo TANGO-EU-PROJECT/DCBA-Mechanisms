@@ -865,32 +865,109 @@ exports.getHealthStatus = (req, res) => {
  * The QR code is extracted from an external authentication service (ips-verifier.tango.nadiaplatform.com).  
  * * @route   POST /authenticator/begin-session
  */
-exports.beginSession = async (req, res) => {
+// exports.beginSession = async (req, res) => {
 
-  /* Extract the device_id, the log_file_uri */
+//   /* Extract the device_id, the log_file_uri */
+//   try {
+//     const { device_id, log_file_uri } = req.body;
+
+//     /* Select the clientID */
+//     const clientId = 'pre-registration-service';
+
+//     /* Make the post request to the auth init endpoint of the verifier */
+//     const verifierBaseUrl = process.env.HOSTNAME_VERIFIER_NADIA_PLATFORM_STARTSIOP_URL;
+//     const clientCallbackUrl = process.env.HOSTNAME_VERIFIER_NADIA_VERIFIER_CALLBACK_URL;
+
+//     // Build the full URL with query parameters safely
+//     const verifierUrl = new URL(verifierBaseUrl);
+//     verifierUrl.searchParams.set('state', device_id);
+//     verifierUrl.searchParams.set('client_callback', clientCallbackUrl);
+//     verifierUrl.searchParams.set('client_id', clientId);
+//     const response = await axios.get(verifierUrl.toString());
+
+
+//     /* Extract the openid URL string */
+//     const originalUrl = response.data; 
+
+
+//     // Sanity check
+//     if (typeof originalUrl !== 'string' || !originalUrl.startsWith('openid://?')) {
+//       return res.status(500).json({
+//         status: 'failed',
+//         message: 'Invalid OpenID response from verifier.'
+//       });
+//     }
+
+//     /* Remove the openid://? prefix to parse the query params */
+//     const queryString = originalUrl.replace('openid://?', '');
+//     const params = new URLSearchParams(queryString);
+
+//     /* Extract the state */
+//     const state = params.get('state');
+
+//     if (!state) {
+//       return res.status(500).json({
+//         status: 'failed',
+//         message: 'Missing "state" in OpenID URL.'
+//       });
+//     }
+
+//     /* Replace the redirect_uri param */
+//     const dcbaBackendRedirectUri = process.env.REDIRECT_BACKEND_CALLBACK_URL;
+//     params.set('redirect_uri', dcbaBackendRedirectUri);
+
+//     /* Rebuild the OpenID URL */
+//     const updatedUrl = `openid://?${params.toString()}`;
+
+//     /* Save or update session request */
+//     await SESSION_REQUEST.replaceOne(
+//       { device_id },
+//       {
+//         device_id,
+//         state,
+//         log_file_uri,
+//         timestamp: new Date()
+//       },
+//       { upsert: true }
+//     );
+
+//     /* Return session info to client */
+//     return res.status(200).json({
+//       status: 'success',
+//       message: 'QR Code generated successfully.',
+//       state: state,
+//       openid_url: updatedUrl
+//     });
+//   }
+//   catch (error) {
+//       console.error('Error starting session:', error);
+//       return res.status(500).json({
+//         status: 'failed',
+//         message: 'Internal server error while initiating the session.'
+//       });
+//     }
+// };
+exports.beginSession = async (req, res) => {
   try {
     const { device_id, log_file_uri } = req.body;
 
-    /* Select the clientID */
-    const clientId = 'pre-registration-service';
+    // Use the specified values
+    const clientId = 'SERVICE'; // changed from 'pre-registration-service'
+    const state = device_id;
+    const clientCallbackUrl = process.env.REDIRECT_BACKEND_CALLBACK_URL; // use this env var as client_callback
 
-    /* Make the post request to the auth init endpoint of the verifier */
-    const verifierBaseUrl = process.env.HOSTNAME_VERIFIER_NADIA_PLATFORM_STARTSIOP_URL;
-    const clientCallbackUrl = process.env.HOSTNAME_VERIFIER_NADIA_VERIFIER_CALLBACK_URL;
-
-    // Build the full URL with query parameters safely
+    // Build the verifier URL exactly as specified
+    const verifierBaseUrl = 'https://ips-verifier.tango.nadiaplatform.com/api/v1/startsiop';
     const verifierUrl = new URL(verifierBaseUrl);
-    verifierUrl.searchParams.set('state', device_id);
+    verifierUrl.searchParams.set('state', state);
     verifierUrl.searchParams.set('client_callback', clientCallbackUrl);
     verifierUrl.searchParams.set('client_id', clientId);
+
+    // Make the GET request to the verifier
     const response = await axios.get(verifierUrl.toString());
 
+    const originalUrl = response.data;
 
-    /* Extract the openid URL string */
-    const originalUrl = response.data; 
-
-
-    // Sanity check
     if (typeof originalUrl !== 'string' || !originalUrl.startsWith('openid://?')) {
       return res.status(500).json({
         status: 'failed',
@@ -898,54 +975,49 @@ exports.beginSession = async (req, res) => {
       });
     }
 
-    /* Remove the openid://? prefix to parse the query params */
+    // Parse OpenID URL query parameters
     const queryString = originalUrl.replace('openid://?', '');
     const params = new URLSearchParams(queryString);
 
-    /* Extract the state */
-    const state = params.get('state');
-
-    if (!state) {
+    const returnedState = params.get('state');
+    if (!returnedState) {
       return res.status(500).json({
         status: 'failed',
         message: 'Missing "state" in OpenID URL.'
       });
     }
 
-    /* Replace the redirect_uri param */
-    const dcbaBackendRedirectUri = process.env.REDIRECT_BACKEND_CALLBACK_URL;
-    params.set('redirect_uri', dcbaBackendRedirectUri);
+    // Update redirect_uri param to the backend callback URL (same as clientCallbackUrl)
+    params.set('redirect_uri', clientCallbackUrl);
 
-    /* Rebuild the OpenID URL */
     const updatedUrl = `openid://?${params.toString()}`;
 
-    /* Save or update session request */
+    // Save or update session request
     await SESSION_REQUEST.replaceOne(
       { device_id },
       {
         device_id,
-        state,
+        state: returnedState,
         log_file_uri,
         timestamp: new Date()
       },
       { upsert: true }
     );
 
-    /* Return session info to client */
     return res.status(200).json({
       status: 'success',
       message: 'QR Code generated successfully.',
-      state: state,
+      state: returnedState,
       openid_url: updatedUrl
     });
   }
   catch (error) {
-      console.error('Error starting session:', error);
-      return res.status(500).json({
-        status: 'failed',
-        message: 'Internal server error while initiating the session.'
-      });
-    }
+    console.error('Error starting session:', error);
+    return res.status(500).json({
+      status: 'failed',
+      message: 'Internal server error while initiating the session.'
+    });
+  }
 };
 
 
@@ -956,114 +1028,134 @@ exports.beginSession = async (req, res) => {
  * @param req - Request object
  * @param res - Response object
  */
-
 exports.handleAuthCallback = async (req, res) => {
-  let state;
-  let vp_token;
-  let sessionRequest;
-
   try {
     console.log("---- AUTH CALLBACK HIT ----");
     console.log("Headers:", req.headers);
-    console.log("Raw body:", req.body);
+    console.log("Query params:", req.query);
 
-    /* Extract necessary values from the incoming POST request body */
-    state = req.body.state;
-    vp_token = req.body.vp_token;
+    // Optionally log raw URL for clarity
+    console.log("Full URL:", req.originalUrl);
 
-    /* Construct the form-urlencoded payload to send to the verification service */
-    const params = new URLSearchParams({
-      vp_token: vp_token,
-      presentation_submission: req.body.presentation_submission,
-      state: state,
-    });
+    // You can also log specific expected query params, e.g.:
+    // console.log("state:", req.query.state);
+    // console.log("vp_token:", req.query.vp_token);
 
-    console.log("Sending payload to verifier:", params.toString());
-
-
-
-    /* Send the verification request to the external verifier, with state in query param */
-    const response = await axios.post(
-      `${process.env.HOSTNAME_VERIFIER_NADIA_PLATFORM_AUTH_RESPONSE}${encodeURIComponent(state)}`,
-      params.toString(),
-      { headers: { 'Content-Type': 'application/x-www-form-urlencoded' } }
-    );
-
-    console.log(response)
-
-    /* If authentication is successful, proceed to decode the vp_token */
-    if (response.status === 200 && response.statusText === 'OK') {
-      try {
-        const decoded = jwt.decode(vp_token);
-        const VC = jwt.decode(decoded.vp.verifiableCredential[0])
-
-        /* Extract the issuer (DID) and subject from the decoded token */
-        const sub = VC.sub;
-        const did = VC.vc.credentialSubject.id;
-        const givenName = VC.vc.credentialSubject.givenName;
-        const familyName = VC.vc.credentialSubject.familyName;
-        const ePassportId = VC.vc.credentialSubject.passportNumber;
-
-        /* Continue processing the session with the extracted credentials */
-        const result = await processSessionRequest(vp_token, state, did, sub, givenName, familyName, ePassportId, req);
-      } catch (decodeError) {
-        /* Handle decoding errors */
-        /* Catch any unexpected errors and return appropriate HTTP status */
-        /* Invalid Verifiable Credentials */
-        /* Search for the session request in MongoDB based on the state */
-        sessionRequest = await SESSION_REQUEST.findOne({ state: state });
-        if (sessionRequest) {
-          const device_id = sessionRequest.device_id;
-          const log_file_uri = sessionRequest.log_file_uri;
-          /* Remove the processed session request from the database */
-          await SESSION_REQUEST.deleteOne({ _id: sessionRequest._id });
-          notifyDevice("", state, device_id, "", "", log_file_uri, "invalid-verifiable-credentials");        
-        }
-      }
-    } else if (response.status === 400 && response.statusText === 'Bad Request') {
-      console.log("BAD REQUEST")
-      /* Catch any unexpected errors and return appropriate HTTP status */
-      /* Invalid Verifiable Credentials */
-      /* Search for the session request in MongoDB based on the state */
-      sessionRequest = await SESSION_REQUEST.findOne({ state: state });
-      if (sessionRequest) {
-        const device_id = sessionRequest.device_id;
-        const log_file_uri = sessionRequest.log_file_uri;
-        /* Remove the processed session request from the database */
-        await SESSION_REQUEST.deleteOne({ _id: sessionRequest._id });
-        notifyDevice("", state, device_id, "", "", log_file_uri, "invalid-verifiable-credentials");
-      }
-    }
-    /* Return the verifier service's response to the client */
-    return res.status(response.status).json(response.data);
-
+    // Just respond with 200 OK and a simple message for now
+    res.status(200).send('Auth callback received');
   } catch (error) {
-    console.log("BAD REQUEST ERROR: ", error)
-
-    /* Catch any unexpected errors and return appropriate HTTP status */
-    /* Invalid Verifiable Credentials */
-    /* Search for the session request in MongoDB based on the state */
-    sessionRequest = await SESSION_REQUEST.findOne({ state: state });
-    if (sessionRequest) {
-      const device_id = sessionRequest.device_id;
-      const log_file_uri = sessionRequest.log_file_uri;
-      /* Remove the processed session request from the database */
-      await SESSION_REQUEST.deleteOne({ _id: sessionRequest._id });
-      notifyDevice("", state, device_id, "", "", log_file_uri, "invalid-verifiable-credentials");
-    }
-
-    /* If verifier responded with an error (e.g., 400/500), return its data */
-    if (error.response) {
-      return res.status(error.response.status).json(error.response.data);
-    }
-
-    /* Otherwise, fallback error handling */
-    return res.status(500).json({
-      status: 'failed',
-      message: 'Invalid Verifiable Credentials.',
-    });
+    console.error('Error in auth callback:', error);
+    res.status(500).send('Internal Server Error');
   }
 };
+
+// exports.handleAuthCallback = async (req, res) => {
+//   let state;
+//   let vp_token;
+//   let sessionRequest;
+
+//   try {
+//     console.log("---- AUTH CALLBACK HIT ----");
+//     console.log("Headers:", req.headers);
+//     console.log("Raw body:", req.body);
+
+//     /* Extract necessary values from the incoming POST request body */
+//     state = req.body.state;
+//     vp_token = req.body.vp_token;
+
+//     /* Construct the form-urlencoded payload to send to the verification service */
+//     const params = new URLSearchParams({
+//       vp_token: vp_token,
+//       presentation_submission: req.body.presentation_submission,
+//       state: state,
+//     });
+
+//     console.log("Sending payload to verifier:", params.toString());
+
+
+
+//     /* Send the verification request to the external verifier, with state in query param */
+//     const response = await axios.post(
+//       `${process.env.HOSTNAME_VERIFIER_NADIA_PLATFORM_AUTH_RESPONSE}${encodeURIComponent(state)}`,
+//       params.toString(),
+//       { headers: { 'Content-Type': 'application/x-www-form-urlencoded' } }
+//     );
+
+//     console.log(response)
+
+//     /* If authentication is successful, proceed to decode the vp_token */
+//     if (response.status === 200 && response.statusText === 'OK') {
+//       try {
+//         const decoded = jwt.decode(vp_token);
+//         const VC = jwt.decode(decoded.vp.verifiableCredential[0])
+
+//         /* Extract the issuer (DID) and subject from the decoded token */
+//         const sub = VC.sub;
+//         const did = VC.vc.credentialSubject.id;
+//         const givenName = VC.vc.credentialSubject.givenName;
+//         const familyName = VC.vc.credentialSubject.familyName;
+//         const ePassportId = VC.vc.credentialSubject.passportNumber;
+
+//         /* Continue processing the session with the extracted credentials */
+//         const result = await processSessionRequest(vp_token, state, did, sub, givenName, familyName, ePassportId, req);
+//       } catch (decodeError) {
+//         /* Handle decoding errors */
+//         /* Catch any unexpected errors and return appropriate HTTP status */
+//         /* Invalid Verifiable Credentials */
+//         /* Search for the session request in MongoDB based on the state */
+//         sessionRequest = await SESSION_REQUEST.findOne({ state: state });
+//         if (sessionRequest) {
+//           const device_id = sessionRequest.device_id;
+//           const log_file_uri = sessionRequest.log_file_uri;
+//           /* Remove the processed session request from the database */
+//           await SESSION_REQUEST.deleteOne({ _id: sessionRequest._id });
+//           notifyDevice("", state, device_id, "", "", log_file_uri, "invalid-verifiable-credentials");        
+//         }
+//       }
+//     } else if (response.status === 400 && response.statusText === 'Bad Request') {
+//       console.log("BAD REQUEST")
+//       /* Catch any unexpected errors and return appropriate HTTP status */
+//       /* Invalid Verifiable Credentials */
+//       /* Search for the session request in MongoDB based on the state */
+//       sessionRequest = await SESSION_REQUEST.findOne({ state: state });
+//       if (sessionRequest) {
+//         const device_id = sessionRequest.device_id;
+//         const log_file_uri = sessionRequest.log_file_uri;
+//         /* Remove the processed session request from the database */
+//         await SESSION_REQUEST.deleteOne({ _id: sessionRequest._id });
+//         notifyDevice("", state, device_id, "", "", log_file_uri, "invalid-verifiable-credentials");
+//       }
+//     }
+//     /* Return the verifier service's response to the client */
+//     return res.status(response.status).json(response.data);
+
+//   } catch (error) {
+//     console.log("BAD REQUEST ERROR: ", error)
+
+//     /* Catch any unexpected errors and return appropriate HTTP status */
+//     /* Invalid Verifiable Credentials */
+//     /* Search for the session request in MongoDB based on the state */
+//     sessionRequest = await SESSION_REQUEST.findOne({ state: state });
+//     if (sessionRequest) {
+//       const device_id = sessionRequest.device_id;
+//       const log_file_uri = sessionRequest.log_file_uri;
+//       /* Remove the processed session request from the database */
+//       await SESSION_REQUEST.deleteOne({ _id: sessionRequest._id });
+//       notifyDevice("", state, device_id, "", "", log_file_uri, "invalid-verifiable-credentials");
+//     }
+
+//     /* If verifier responded with an error (e.g., 400/500), return its data */
+//     if (error.response) {
+//       return res.status(error.response.status).json(error.response.data);
+//     }
+
+//     /* Otherwise, fallback error handling */
+//     return res.status(500).json({
+//       status: 'failed',
+//       message: 'Invalid Verifiable Credentials.',
+//     });
+//   }
+// };
 
 
 
