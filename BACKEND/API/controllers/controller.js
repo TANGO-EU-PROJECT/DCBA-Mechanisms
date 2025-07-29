@@ -968,25 +968,26 @@ exports.handleAuthCallback = async (req, res) => {
     console.log("Raw body:", req.body);
 
     /* Extract necessary values from the incoming POST request body */
-    const state = req.body.state;
-    const vp_token = req.body.vp_token;
+    state = req.body.state;
+    vp_token = req.body.vp_token;
 
-    /* Construct the JSON payload */
-    const payload = {
+    /* Construct the form-urlencoded payload to send to the verification service */
+    const params = new URLSearchParams({
       vp_token: vp_token,
       presentation_submission: req.body.presentation_submission,
       state: state,
-    };
+    });
 
-    console.log("Sending JSON payload to verifier:", JSON.stringify(payload));
+    console.log("Sending payload to verifier:", params.toString());
 
-    /* Send the verification request as JSON */
+
+
+    /* Send the verification request to the external verifier, with state in query param */
     const response = await axios.post(
       `${process.env.HOSTNAME_VERIFIER_NADIA_PLATFORM_AUTH_RESPONSE}${encodeURIComponent(state)}`,
-      payload,
-      { headers: { 'Content-Type': 'application/json' } }
+      params.toString(),
+      { headers: { 'Content-Type': 'application/x-www-form-urlencoded' } }
     );
-
 
     console.log(response)
 
