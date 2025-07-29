@@ -963,7 +963,7 @@ exports.beginSession = async (req, res) => {
     verifierUrl.searchParams.set('client_callback', clientCallbackUrl);
     verifierUrl.searchParams.set('client_id', clientId);
 
-    console.log(verifierBaseUrl)
+    console.log(verifierUrl)
 
     // Make the GET request to the verifier
     const response = await axios.get(verifierUrl.toString());
