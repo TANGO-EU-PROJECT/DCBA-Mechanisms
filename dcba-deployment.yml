@@ -4,7 +4,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: dcba-backend
-  namespace: smart-manufacturing
+  namespace: tango-development
   labels:
     app: dcba-backend
     type: back-end
@@ -39,7 +39,7 @@ apiVersion: v1
 kind: Service
 metadata:
   name: dcba-backend
-  namespace: smart-manufacturing
+  namespace: tango-development
   labels:
     app: dcba-backend
 spec:
@@ -76,7 +76,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: dcba-mongo-db
-  namespace: smart-manufacturing
+  namespace: tango-development
   labels:
     app: dcba-mongo-db
     type: database
@@ -119,7 +119,7 @@ apiVersion: v1
 kind: Service
 metadata:
   name: dcba-mongo-db
-  namespace: smart-manufacturing
+  namespace: tango-development
   labels:
     app: dcba-mongo-db
 spec:
@@ -156,7 +156,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: dcba-influx-db
-  namespace: smart-manufacturing
+  namespace: tango-development
   labels:
     app: dcba-influx-db
     type: database
@@ -205,7 +205,7 @@ apiVersion: v1
 kind: Service
 metadata:
   name: dcba-influx-db
-  namespace: smart-manufacturing
+  namespace: tango-development
   labels:
     app: dcba-influx-db
 spec:
