@@ -872,7 +872,7 @@ exports.beginSession = async (req, res) => {
     const { device_id, log_file_uri } = req.body;
 
     /* Select the clientID */
-    const clientId = 'smart-hospitality-checkin-service';
+    const clientId = 'pre-registration-service';
 
     /* Make the post request to the auth init endpoint of the verifier */
     const verifierBaseUrl = process.env.HOSTNAME_VERIFIER_NADIA_PLATFORM_STARTSIOP_URL;
