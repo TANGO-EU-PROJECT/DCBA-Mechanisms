@@ -992,11 +992,6 @@ exports.beginSession = async (req, res) => {
       });
     }
 
-    // Update redirect_uri param to the backend callback URL (same as clientCallbackUrl)
-    params.set('redirect_uri', clientCallbackUrl);
-
-    const updatedUrl = `openid://?${params.toString()}`;
-
     // Save or update session request
     await SESSION_REQUEST.replaceOne(
       { device_id },
@@ -1013,7 +1008,7 @@ exports.beginSession = async (req, res) => {
       status: 'success',
       message: 'QR Code generated successfully.',
       state: returnedState,
-      openid_url: updatedUrl
+      openid_url: originalUrl
     });
   }
   catch (error) {
@@ -1035,24 +1030,25 @@ exports.beginSession = async (req, res) => {
  */
 exports.handleAuthCallback = async (req, res) => {
   try {
-    console.log("---- AUTH CALLBACK HIT ----");
+    console.log("---- AUTH CALLBACK HIT (GET) ----");
     console.log("Headers:", req.headers);
-    console.log("Body:", req.body);
+    console.log("Query:", req.query);
 
     // Optionally log raw URL for clarity
     console.log("Full URL:", req.originalUrl);
 
-    // You can also log specific expected body params:
-    // console.log("state:", req.body.state);
-    // console.log("vp_token:", req.body.vp_token);
+    // You can also log specific expected query params:
+    // console.log("state:", req.query.state);
+    // console.log("vp_token:", req.query.vp_token);
 
     // Just respond with 200 OK and a simple message for now
-    res.status(200).send('Auth callback (POST) received');
+    res.status(200).send('Auth callback (GET) received');
   } catch (error) {
     console.error('Error in auth callback:', error);
     res.status(500).send('Internal Server Error');
   }
 };
+
 
 
 // exports.handleAuthCallback = async (req, res) => {
