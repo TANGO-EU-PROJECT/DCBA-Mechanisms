@@ -875,8 +875,8 @@ exports.beginSession = async (req, res) => {
     const clientId = 'pre-registration-service';
 
     /* Make the post request to the auth init endpoint of the verifier */
-    const verifierBaseUrl = process.env.HOSTNAME_VERIFIER_NADIA_PLATFORM_STARTSIOP_URL;
-    const clientCallbackUrl = process.env.HOSTNAME_VERIFIER_NADIA_VERIFIER_CALLBACK_URL;
+    const verifierBaseUrl = process.env.HOSTNAME_RIAS_VERIFIER_STARTSIOP_URL;
+    const clientCallbackUrl = process.env.HOSTNAME_RIAS_VERIFIER_CALLBACK_URL;
 
     // Build the full URL with query parameters safely
     const verifierUrl = new URL(verifierBaseUrl);
@@ -947,6 +947,8 @@ exports.beginSession = async (req, res) => {
       });
     }
 };
+
+// for GET Request
 // exports.beginSession = async (req, res) => {
 //   try {
 //     const { device_id, log_file_uri } = req.body;
@@ -957,7 +959,7 @@ exports.beginSession = async (req, res) => {
 //     const clientCallbackUrl = process.env.REDIRECT_BACKEND_CALLBACK_URL; // use this env var as client_callback
 
 //     // Build the verifier URL exactly as specified
-//     const verifierBaseUrl = process.env.HOSTNAME_VERIFIER_NADIA_PLATFORM_STARTSIOP_URL;
+//     const verifierBaseUrl = process.env.HOSTNAME_RIAS_VERIFIER_STARTSIOP_URL;
 //     const verifierUrl = new URL(verifierBaseUrl);
 //     verifierUrl.searchParams.set('state', state);
 //     verifierUrl.searchParams.set('client_callback', clientCallbackUrl);
@@ -1028,6 +1030,8 @@ exports.beginSession = async (req, res) => {
  * @param req - Request object
  * @param res - Response object
  */
+
+// for GET Request
 // exports.handleAuthCallback = async (req, res) => {
 //   try {
 //     console.log("---- AUTH CALLBACK HIT (GET) ----");
@@ -1078,7 +1082,7 @@ exports.handleAuthCallback = async (req, res) => {
 
     /* Send the verification request to the external verifier, with state in query param */
     const response = await axios.post(
-      `${process.env.HOSTNAME_VERIFIER_NADIA_PLATFORM_AUTH_RESPONSE}${encodeURIComponent(state)}`,
+      `${process.env.HOSTNAME_RIAS_VERIFIER_AUTH_RESPONSE}${encodeURIComponent(state)}`,
       params.toString(),
       { headers: { 'Content-Type': 'application/x-www-form-urlencoded' } }
     );
