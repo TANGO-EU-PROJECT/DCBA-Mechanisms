@@ -417,6 +417,7 @@ const processRequest = async (req, res, did, deviceID) => {
     });
   }
 
+  
   const logLines = logData.split('\n');
 
   for (const line of logLines) {
