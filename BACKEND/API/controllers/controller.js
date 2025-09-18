@@ -600,50 +600,50 @@ exports.handleAuthTokenValidation = async (req, res) => {
     /* Valid Token Format. Extract its payload */
     const { exp, sub, iss } = decoded.payload;
     const did = iss;
-    const currentTime = Math.floor(Date.now() / 1000);
+    // const currentTime = Math.floor(Date.now() / 1000);
 
-    /* 2. Check if the token is expired */
-    if (exp && currentTime > exp) {
-      if (did) {
-        /* Search for a device associated with this device ID */
-        const device = await findDeviceByDID(did);
+    // /* 2. Check if the token is expired */
+    // if (exp && currentTime > exp) {
+    //   if (did) {
+    //     /* Search for a device associated with this device ID */
+    //     const device = await findDeviceByDID(did);
 
-        if (device) {
-          /* Device found */
-          /* Mark it as offline */
-          device.status = 'offline';
-          await device.save();
+    //     if (device) {
+    //       /* Device found */
+    //       /* Mark it as offline */
+    //       device.status = 'offline';
+    //       await device.save();
 
-          logEvent({
-            event: 'RE-AUTHENTICATION ATTEMPT WITH AUTH-TOKEN',
-            status: 'FAILED ❌',
-            cause: 'AUTH-TOKEN EXPIRED > DEVICE MARKED AS OFFLINE',
-            did,
-            device_id: device.device_id,
-            ip,
-          });
-        } else {
-          /* Device not found */
-          logEvent({
-            event: 'RE-AUTHENTICATION ATTEMPT WITH AUTH-TOKEN',
-            status: 'FAILED ❌',
-            cause: `DEVICE ASSOCIATED WITH DID ${did} NOT FOUND IN DATABASE`,
-            device_id: deviceID,
-            ip,
-          });
+    //       logEvent({
+    //         event: 'RE-AUTHENTICATION ATTEMPT WITH AUTH-TOKEN',
+    //         status: 'FAILED ❌',
+    //         cause: 'AUTH-TOKEN EXPIRED > DEVICE MARKED AS OFFLINE',
+    //         did,
+    //         device_id: device.device_id,
+    //         ip,
+    //       });
+    //     } else {
+    //       /* Device not found */
+    //       logEvent({
+    //         event: 'RE-AUTHENTICATION ATTEMPT WITH AUTH-TOKEN',
+    //         status: 'FAILED ❌',
+    //         cause: `DEVICE ASSOCIATED WITH DID ${did} NOT FOUND IN DATABASE`,
+    //         device_id: deviceID,
+    //         ip,
+    //       });
 
-          return res.status(404).json({
-            status: "failed",
-            message: "Device not found."
-          });
-        }
-      }
+    //       return res.status(404).json({
+    //         status: "failed",
+    //         message: "Device not found."
+    //       });
+    //     }
+    //   }
 
-      return res.status(401).json({
-        status: "failed",
-        message: 'Authentication token has expired.'
-      });
-    }
+    //   return res.status(401).json({
+    //     status: "failed",
+    //     message: 'Authentication token has expired.'
+    //   });
+    // }
 
     /* 3. Token is not expired */
     if (did) {
@@ -1078,8 +1078,6 @@ exports.handleAuthCallback = async (req, res) => {
     });
 
     console.log("Sending payload to verifier:", params.toString());
-
-
 
     /* Send the verification request to the external verifier, with state in query param */
     const response = await axios.post(
