@@ -1328,6 +1328,75 @@ paths:
                   message:
                     type: string
                     example: Internal server error while deleting the device associated with this 'did'
+
+
+  # [11] GET /resource/access-maps
+  /resource/access-maps:
+    get:
+      tags:
+        - Resource API Endpoints
+      summary: Get all access maps
+      description: Returns all the access maps associated with the ePassport of the employees.
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Access maps retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: success
+                  message:
+                    type: string
+                    example: Access maps retrieved successfully
+                  data:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        ePassportId:
+                          type: string
+                          example: "EMP123456"
+                        permittedAreas:
+                          type: array
+                          items:
+                            type: string
+                          example: ["Lab A", "Server Room"]
+                        restrictedAreas:
+                          type: array
+                          items:
+                            type: string
+                          example: ["HR Office", "Finance Dept"]
+        '404':
+          description: No access maps found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: failed
+                  message:
+                    type: string
+                    example: No access maps found in the database
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: failed
+                  message:
+                    type: string
+                    example: Internal server error while fetching access maps
   # Resource API Endpoints # 
 
 

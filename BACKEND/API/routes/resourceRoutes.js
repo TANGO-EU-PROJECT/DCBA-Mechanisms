@@ -76,6 +76,14 @@ const resourceControllers = {
    * @middleware PEP/PDP
    */
   "restricted-location-history": controller.fetchDeviceRestrictedLocationHistory,
+
+
+  /** [10] DONE
+   * @route   GET /resource/access-maps
+   * @desc    Returns all the access maps associated with the ePassport of the employees.
+   * @middleware PEP/PDP
+   */
+  "access-maps": controller.fetchAccessMaps,
   /************************************************** POST REQUESTS **************************************************/
 
 

@@ -201,7 +201,6 @@ pipeline {
                     // Delete old PVC to apply new storageClass/accessMode
                    // sh 'kubectl delete pvc dcba-influx-pvc -n smart-manufacturing || true' // Uncomment the following line ONLY if i want to delete the existing PVC and erase all MongoDB data.
                                                                                              // This will remove the persistent storage, causing data loss in MongoDB replicas.
-
                 }
             }
         }
