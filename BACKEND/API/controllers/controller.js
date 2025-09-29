@@ -1947,7 +1947,9 @@ exports.deleteDeviceByDID = async (req, res) => {
   }
 };
 
-
+/**
+ * [24]
+ * */
 exports.createOrUpdateDeviceAccessMap = async (req, res) => {
   try {
     const { ePassportId, permittedAreas, restrictedAreas } = req.body;
@@ -1974,6 +1976,47 @@ exports.createOrUpdateDeviceAccessMap = async (req, res) => {
     return res.status(500).json({ message: 'Failed to update device access map.' });
   }
 };
+
+
+/**
+ * [25]
+ * Returns all the access maps associated with the ePassport of the employees.
+ * @route   GET /resource/access-maps
+ * @middleware PEP/PDP
+ * @param {Object} req - Express request object
+ * @param {Object} res - Express response object
+ * @returns {JSON} Response with status, message, and list of access maps
+ */
+exports.fetchAccessMaps = async (req, res) => {
+  try {
+    const accessMaps = await DEVICE_ACCESS_MAP.find({});
+
+    if (!accessMaps || accessMaps.length === 0) {
+      return res.status(404).json({
+        status: 'failed',
+        message: 'No access maps found in the database',
+      });
+    }
+
+    return res.status(200).json({
+      status: 'success',
+      message: 'Access maps retrieved successfully',
+      data: accessMaps.map(map => ({
+        ePassportId: map.ePassportId,
+        permittedAreas: map.permittedAreas,
+        restrictedAreas: map.restrictedAreas,
+      }))
+    });
+
+  } catch (error) {
+    console.error('[fetchAccessMaps] Error:', error);
+    return res.status(500).json({
+      status: 'failed',
+      message: 'Internal server error while fetching access maps',
+    });
+  }
+};
+
 
 
 
