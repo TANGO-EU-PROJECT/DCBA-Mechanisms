@@ -19,3 +19,5 @@ router.post('/post-debugging-logs', controller.postDebugLogs);
  * @query   device_id (required), optional: log_level, startDate, endDate
  */
 router.get('/get-debugging-logs', controller.getDebugLogs);
+
+module.exports = router;
