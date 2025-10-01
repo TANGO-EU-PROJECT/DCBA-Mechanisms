@@ -63,12 +63,15 @@ const deviceModelPath = process.env.MONGO_DB_DEVICE_SCHEME_PATH;
 const sessionRequestModelPath = process.env.MONGO_DB_SESSION_REQUEST_SCHEME_PATH;
 const deviceAlertModelPath = process.env.MONGO_DB_DEVICE_ALERT_SCHEME_PATH;
 const deviceAccessMap = process.env.MONGO_DB_DEVICE_ACCESS_MAP_SCHEME_PATH;
+const debuggingLogs = process.env.MONGO_DB_DEBUGGING_LOGS_SCHEME_PATH;
+
 
 /* Dynamically load the MongoDB schema models based on the paths specified in .env */
 const DEVICE = require(path.resolve(deviceModelPath));
 const SESSION_REQUEST = require(path.resolve(sessionRequestModelPath));
 const ALERT = require(path.resolve(deviceAlertModelPath));
 const DEVICE_ACCESS_MAP = require(path.resolve(deviceAccessMap));
+const DEBUGGING_LOGS = require(path.resolve(debuggingLogs));
 /*************************************************************************** END OF IMPORT SECTION ***************************************************************************/
 
 
@@ -2043,7 +2046,7 @@ exports.postDebugLogs = async (req, res) => {
       return res.status(400).json({ error: 'device_id and message are required.' });
     }
 
-    const newLog = new DebugLogMessages({
+    const newDebugLog = new DEBUGGING_LOGS({
       device_id,
       did,
       log_level,
@@ -2053,7 +2056,7 @@ exports.postDebugLogs = async (req, res) => {
       ip
     });
 
-    await newLog.save();
+    await newDebugLog.save();
     return res.status(201).json({ message: 'Debug log saved successfully.' });
   } catch (error) {
     console.error('[postDebugLogs] Error saving log:', error);
@@ -2101,7 +2104,7 @@ exports.getDebugLogs = async (req, res) => {
     if (startDate) filter.timestamp.$gte = moment.tz(startDate, tz).toDate();
     if (endDate) filter.timestamp.$lte = moment.tz(endDate, tz).toDate();
 
-    const logs = await DebugLogMessages.find(filter)
+    const logs = await DEBUGGING_LOGS.find(filter)
       .sort({ timestamp: -1 })
       .limit(logsLimit);
 
