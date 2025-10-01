@@ -1402,103 +1402,102 @@ paths:
 
 
 
-# Debugging Endpoints #
-
-# [1] GET /debugging/get-debugging-logs
-/debugging/get-debugging-logs:
-  get:
-    summary: Fetch all debugging logs for a specific device
-    description: Fetches all debugging logs for a given device, filtered by device_id, date range, limit, and optional timezone.
-    tags:
-      - Debugging Endpoints
-    parameters:
-      - in: query
-        name: device_id
-        schema:
-          type: string
-        required: true
-        description: Unique ID of the device to fetch logs for
-        example: "5c487cb4a62cb29d"
-      - in: query
-        name: startDate
-        schema:
-          type: string
-        required: false
-        description: Optional start date to filter logs (inclusive), in local time
-        example: "2025-09-01 00:00:00"
-      - in: query
-        name: endDate
-        schema:
-          type: string
-        required: false
-        description: Optional end date to filter logs (inclusive), in local time
-        example: "2025-09-30 23:59:59"
-      - in: query
-        name: limit
-        schema:
-          type: integer
-          minimum: 1
-          maximum: 1000
-        required: true
-        description: Maximum number of logs to return
-        example: 100
-      - in: query
-        name: timezone
-        schema:
-          type: string
-        required: false
-        description: IANA timezone name for interpreting startDate/endDate and formatting logs (e.g., 'Europe/Athens')
-        example: "Europe/Athens"
-    responses:
-      '200':
-        description: Debugging logs fetched successfully
-        content:
-          application/json:
-            examples:
-              Success:
-                summary: Logs fetched successfully
-                value:
-                  status: success
-                  message: Debugging logs fetched successfully
-                  logs:
-                    - device_id: "5c487cb4a62cb29d"
-                      log_level: "ERROR"
-                      message: "Failed to connect to server"
-                      timestamp: "2025-09-01 12:34:56"
-                    - device_id: "5c487cb4a62cb29d"
-                      log_level: "INFO"
-                      message: "Device started successfully"
-                      timestamp: "2025-09-01 12:30:00"
-      '400':
-        description: Invalid request (missing device_id or invalid limit)
-        content:
-          application/json:
-            examples:
-              MissingDeviceID:
-                summary: Missing device_id
-                value:
-                  status: failed
-                  message: Device ID is required.
-              InvalidLimit:
-                summary: Invalid limit
-                value:
-                  status: failed
-                  message: Limit is required and must be a positive number.
-              InvalidTimezone:
-                summary: Invalid timezone
-                value:
-                  status: failed
-                  message: Invalid timezone. Please provide a valid IANA timezone name (e.g., 'Europe/Athens').
-      '500':
-        description: Internal server error
-        content:
-          application/json:
-            examples:
-              InternalError:
-                summary: Server error fetching logs
-                value:
-                  status: failed
-                  message: Internal server error.
+  # Debugging Endpoints #
+  # [1] GET /debugging/get-debugging-logs
+  /debugging/get-debugging-logs:
+    get:
+      summary: Fetch all debugging logs for a specific device
+      description: Fetches all debugging logs for a given device, filtered by device_id, date range, limit, and optional timezone.
+      tags:
+        - Debugging Endpoints
+      parameters:
+        - in: query
+          name: device_id
+          schema:
+            type: string
+          required: true
+          description: Unique ID of the device to fetch logs for
+          example: "5c487cb4a62cb29d"
+        - in: query
+          name: startDate
+          schema:
+            type: string
+          required: false
+          description: Optional start date to filter logs (inclusive), in local time
+          example: "2025-09-01 00:00:00"
+        - in: query
+          name: endDate
+          schema:
+            type: string
+          required: false
+          description: Optional end date to filter logs (inclusive), in local time
+          example: "2025-09-30 23:59:59"
+        - in: query
+          name: limit
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 1000
+          required: true
+          description: Maximum number of logs to return
+          example: 100
+        - in: query
+          name: timezone
+          schema:
+            type: string
+          required: false
+          description: IANA timezone name for interpreting startDate/endDate and formatting logs (e.g., 'Europe/Athens')
+          example: "Europe/Athens"
+      responses:
+        '200':
+          description: Debugging logs fetched successfully
+          content:
+            application/json:
+              examples:
+                Success:
+                  summary: Logs fetched successfully
+                  value:
+                    status: success
+                    message: Debugging logs fetched successfully
+                    logs:
+                      - device_id: "5c487cb4a62cb29d"
+                        log_level: "ERROR"
+                        message: "Failed to connect to server"
+                        timestamp: "2025-09-01 12:34:56"
+                      - device_id: "5c487cb4a62cb29d"
+                        log_level: "INFO"
+                        message: "Device started successfully"
+                        timestamp: "2025-09-01 12:30:00"
+        '400':
+          description: Invalid request (missing device_id or invalid limit)
+          content:
+            application/json:
+              examples:
+                MissingDeviceID:
+                  summary: Missing device_id
+                  value:
+                    status: failed
+                    message: Device ID is required.
+                InvalidLimit:
+                  summary: Invalid limit
+                  value:
+                    status: failed
+                    message: Limit is required and must be a positive number.
+                InvalidTimezone:
+                  summary: Invalid timezone
+                  value:
+                    status: failed
+                    message: Invalid timezone. Please provide a valid IANA timezone name (e.g., 'Europe/Athens').
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              examples:
+                InternalError:
+                  summary: Server error fetching logs
+                  value:
+                    status: failed
+                    message: Internal server error.
 
 
 
