@@ -14,6 +14,8 @@ const cors = require('cors');
 const authenticatorRoutes = require('./BACKEND/API/routes/authenticatorRoutes'); /* Import AUTHENTICATOR routes */
 const resourceRoutes = require('./BACKEND/API/routes/resourceRoutes'); /* Import resource SERVICES routes */
 const frontendRoutes = require('./BACKEND/API/routes/frontendRoutes'); /* Import frontend routes */
+const debuggingRoutes = require('./BACKEND/API/routes/debuggingRoutes'); /* Import debugging routes */
+
 const path = require('path');
 const cookieParser = require('cookie-parser');
 
@@ -120,6 +122,7 @@ async function startServer() {
     res.sendFile(path.join(__dirname, '/FRONTEND/access-map.html'));
   });
   DCBA_SERVER.use('/frontend', frontendRoutes);
+  DCBA_SERVER.use('/debugging', debuggingRoutes);
   // Serve static files from the frontend folder
   DCBA_SERVER.use('/frontend', express.static(path.join(__dirname, 'FRONTEND')));
 

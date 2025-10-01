@@ -2017,11 +2017,116 @@ exports.fetchAccessMaps = async (req, res) => {
   }
 };
 
+/**
+ * [26]
+ * Saves a debugging log from a device into the database.
+ * @route   POST /debugging/post-debugging-logs
+ * @access  Public
+ * @param {Object} req - Express request object containing log details in req.body:
+ *   - device_id {String} - Unique ID of the device generating the log (required)
+ *   - did {String} - Optional DID of the employee associated with the device
+ *   - log_level {String} - Log severity: INFO, WARN, ERROR, DEBUG (default: INFO)
+ *   - message {String} - Log message describing the event (required)
+ *   - stack {String} - Optional error stack trace
+ *   - app_version {String} - Version of the mobile app
+ *   - ip {String} - Optional IP address of the client
+ * @param {Object} res - Express response object returning JSON with:
+ *   - status {Number} - HTTP status code
+ *   - message {String} - Success or error message
+ * @returns {JSON} Response indicating success or failure of log saving
+ */
+exports.postDebugLogs = async (req, res) => {
+  try {
+    const { device_id, did, log_level, message, stack, app_version, ip } = req.body;
 
+    if (!device_id || !message) {
+      return res.status(400).json({ error: 'device_id and message are required.' });
+    }
 
+    const newLog = new DebugLogMessages({
+      device_id,
+      did,
+      log_level,
+      message,
+      stack,
+      app_version,
+      ip
+    });
 
+    await newLog.save();
+    return res.status(201).json({ message: 'Debug log saved successfully.' });
+  } catch (error) {
+    console.error('[postDebugLogs] Error saving log:', error);
+    return res.status(500).json({ error: 'Internal server error.' });
+  }
+};
 
+/**
+ * [27]
+ * Fetches debugging logs for a specific device, filtered by log level, date range, and required limit.
+ * @route   GET /debugging/get-debugging-logs
+ * @access  Public
+ * @query   device_id {String} - Unique ID of the device to fetch logs for (required)
+ * @query   log_level {String} - Optional log level to filter by: INFO, WARN, ERROR, DEBUG
+ * @query   startDate {String|Date} - Optional start date to filter logs (inclusive)
+ * @query   endDate {String|Date} - Optional end date to filter logs (inclusive)
+ * @query   limit {Number} - Maximum number of logs to return (required, must be a positive integer, max 1000)
+ * @param {Object} req - Express request object containing query parameters
+ * @param {Object} res - Express response object returning JSON with:
+ *   - status {Number} - HTTP status code
+ *   - message {String} - Status message
+ *   - logs {Array} - List of debug log objects matching the filter
+ * @returns {JSON} Response containing a message and an array of debug logs or an error message
+ */
+exports.getDebugLogs = async (req, res) => {
+  try {
+    const { device_id, log_level, startDate, endDate, limit, timezone } = req.query;
 
+    if (!device_id) {
+      return res.status(400).json({ status: 'failed', message: 'Device ID is required.' });
+    }
+
+    if (!limit || isNaN(limit) || parseInt(limit) <= 0) {
+      return res.status(400).json({ status: 'failed', message: 'Limit is required and must be a positive number.' });
+    }
+
+    // Validate timezone
+    const tz = timezone && moment.tz.zone(timezone) ? timezone : 'UTC';
+
+    const logsLimit = Math.min(parseInt(limit), 1000); // max 1000
+
+    const filter = { device_id };
+    if (log_level) filter.log_level = log_level.toUpperCase();
+    if (startDate || endDate) filter.timestamp = {};
+    if (startDate) filter.timestamp.$gte = moment.tz(startDate, tz).toDate();
+    if (endDate) filter.timestamp.$lte = moment.tz(endDate, tz).toDate();
+
+    const logs = await DebugLogMessages.find(filter)
+      .sort({ timestamp: -1 })
+      .limit(logsLimit);
+
+    // Format timestamps in response
+    const formattedLogs = logs.map(log => ({
+      device_id: log.device_id,
+      log_level: log.log_level,
+      message: log.message,
+      timestamp: moment(log.timestamp).tz(tz).format('YYYY-MM-DD HH:mm:ss'),
+      stack: log.stack || null,
+      app_version: log.app_version || null,
+      ip: log.ip || null,
+    }));
+
+    return res.status(200).json({
+      status: 'success',
+      message: 'Debugging logs fetched successfully',
+      logs: formattedLogs
+    });
+
+  } catch (error) {
+    console.error('[getDebugLogs] Error fetching logs:', error);
+    return res.status(500).json({ status: 'failed', message: 'Internal server error.' });
+  }
+};
 /*************************************************************************** START OF API ENDPOINTS IMPLEMENTATION ***************************************************************************/
 
 
