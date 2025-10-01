@@ -14,5 +14,5 @@ const debugLogSchema = new mongoose.Schema({
 // Index for fast lookups (device + recent logs first)
 debugLogSchema.index({ device_id: 1, timestamp: -1 });
 
-const DebugLogMessages = mongoose.model('DEBUG_LOGS', debugLogSchema);
+const DebugLogMessages = mongoose.model('DEBUGGING_LOGS', debugLogSchema);
 module.exports = DebugLogMessages;
