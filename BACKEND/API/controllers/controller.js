@@ -2040,11 +2040,14 @@ exports.fetchAccessMaps = async (req, res) => {
  */
 exports.postDebugLogs = async (req, res) => {
   try {
-    const { device_id, did, log_level, message, stack, app_version, ip } = req.body;
+    const { device_id, did, log_level, message, stack, app_version } = req.body;
 
     if (!device_id || !message) {
-      return res.status(400).json({ error: 'device_id and message are required.' });
+      return res.status(400).json({ error: 'device_id and message are required' });
     }
+
+    // Fallback for client IP
+    const ip = req.body.ip || req.ip || req.headers['x-forwarded-for'] || null;
 
     const newDebugLog = new DEBUGGING_LOGS({
       device_id,
@@ -2057,12 +2060,13 @@ exports.postDebugLogs = async (req, res) => {
     });
 
     await newDebugLog.save();
-    return res.status(201).json({ message: 'Debug log saved successfully.' });
+    return res.status(200).json({ message: 'Debug log saved successfully' });
   } catch (error) {
     console.error('[postDebugLogs] Error saving log:', error);
-    return res.status(500).json({ error: 'Internal server error.' });
+    return res.status(500).json({ error: 'Internal server error' });
   }
 };
+
 
 /**
  * [27]
