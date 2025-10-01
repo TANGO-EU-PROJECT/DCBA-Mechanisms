@@ -1477,7 +1477,7 @@ paths:
                   summary: Missing device_id
                   value:
                     status: failed
-                    message: Device ID is required.
+                    message: Device ID is required
                 InvalidLimit:
                   summary: Invalid limit
                   value:
@@ -1497,7 +1497,7 @@ paths:
                   summary: Server error fetching logs
                   value:
                     status: failed
-                    message: Internal server error.
+                    message: Internal server error
 
 
 
