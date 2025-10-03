@@ -1461,13 +1461,21 @@ paths:
                     message: Debugging logs fetched successfully
                     logs:
                       - device_id: "5c487cb4a62cb29d"
+                        did: "abc123xyz"              # ✅ Added DID field
                         log_level: "ERROR"
                         message: "Failed to connect to server"
                         timestamp: "2025-09-01 12:34:56"
+                        stack: null
+                        app_version: "1.0-stable"
+                        ip: "192.168.1.10"
                       - device_id: "5c487cb4a62cb29d"
+                        did: "abc123xyz"              # ✅ Added DID field
                         log_level: "INFO"
                         message: "Device started successfully"
                         timestamp: "2025-09-01 12:30:00"
+                        stack: null
+                        app_version: "1.0-stable"
+                        ip: "192.168.1.10"
         '400':
           description: Invalid request (missing device_id or invalid limit)
           content:
@@ -1499,7 +1507,8 @@ paths:
                     status: failed
                     message: Internal server error
 
-  # [3] DELETE /debugging/clear-debugging-logs
+
+  # [2] DELETE /debugging/clear-debugging-logs
   /debugging/clear-debugging-logs:
     delete:
       summary: Delete all debugging logs for a specific device
@@ -1509,16 +1518,16 @@ paths:
       requestBody:
         required: true
         content:
-          application/json:
+          application/x-www-form-urlencoded:
             schema:
               type: object
+              required:
+                - device_id
               properties:
                 device_id:
                   type: string
                   description: Unique ID of the device whose logs should be deleted
                   example: "5c487cb4a62cb29d"
-            example:
-              device_id: "5c487cb4a62cb29d"
       responses:
         '200':
           description: Logs deleted successfully
@@ -1560,8 +1569,6 @@ paths:
                   value:
                     status: failed
                     message: Internal server error
-
-
 
 
 
