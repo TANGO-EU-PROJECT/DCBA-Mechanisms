@@ -2115,6 +2115,7 @@ exports.getDebugLogs = async (req, res) => {
     // Format timestamps in response
     const formattedLogs = logs.map(log => ({
       device_id: log.device_id,
+      did: log.did,
       log_level: log.log_level,
       message: log.message,
       timestamp: moment(log.timestamp).tz(tz).format('YYYY-MM-DD HH:mm:ss'),
