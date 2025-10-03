@@ -1499,6 +1499,67 @@ paths:
                     status: failed
                     message: Internal server error
 
+  # [3] DELETE /debugging/clear-debugging-logs
+  /debugging/clear-debugging-logs:
+    delete:
+      summary: Delete all debugging logs for a specific device
+      description: Deletes all stored debugging logs associated with the given device_id.
+      tags:
+        - Debugging Endpoints
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                device_id:
+                  type: string
+                  description: Unique ID of the device whose logs should be deleted
+                  example: "5c487cb4a62cb29d"
+            example:
+              device_id: "5c487cb4a62cb29d"
+      responses:
+        '200':
+          description: Logs deleted successfully
+          content:
+            application/json:
+              examples:
+                Success:
+                  summary: Logs cleared
+                  value:
+                    status: success
+                    message: All debugging logs for device 5c487cb4a62cb29d were deleted successfully.
+        '400':
+          description: Invalid request (missing device_id)
+          content:
+            application/json:
+              examples:
+                MissingDeviceID:
+                  summary: Missing device_id
+                  value:
+                    status: failed
+                    message: device_id is required to delete logs
+        '404':
+          description: No logs found for the given device_id
+          content:
+            application/json:
+              examples:
+                NoLogsFound:
+                  summary: No logs found
+                  value:
+                    status: failed
+                    message: No logs found for device 5c487cb4a62cb29d
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              examples:
+                InternalError:
+                  summary: Server error deleting logs
+                  value:
+                    status: failed
+                    message: Internal server error
 
 
 

@@ -20,4 +20,12 @@ router.post('/post-debugging-logs', controller.postDebugLogs);
  */
 router.get('/get-debugging-logs', controller.getDebugLogs);
 
+/** [3] DELETE
+ * @route   DELETE /debugging/clear-debugging-logs
+ * @desc    Delete all debugging logs for a specific device
+ * @access  Public
+ * @body    device_id (required)
+ */
+router.delete('/clear-debugging-logs', controller.clearDebugLogs);
+
 module.exports = router;

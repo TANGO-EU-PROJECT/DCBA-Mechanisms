@@ -2134,6 +2134,44 @@ exports.getDebugLogs = async (req, res) => {
     return res.status(500).json({ status: 'failed', message: 'Internal server error.' });
   }
 };
+
+
+/**
+ * [28]
+ * Deletes all debugging logs for a specific device.
+ * @route   DELETE /debugging/clear-debugging-logs
+ * @access  Public
+ * @body    device_id {String} - Unique ID of the device whose logs should be deleted (required)
+ * @param {Object} req - Express request object containing device_id in body
+ * @param {Object} res - Express response object returning JSON with:
+ *   - status {String} - Success or failure status
+ *   - message {String} - Success or error message
+ *   - deletedCount {Number} - Number of logs deleted
+ * @returns {JSON} Response indicating success/failure and count of deleted logs
+ */
+exports.clearDebugLogs = async (req, res) => {
+  try {
+    const { device_id } = req.body;
+
+    if (!device_id) {
+      return res.status(400).json({ status: 'failed', message: 'Device ID is required' });
+    }
+
+    // Delete logs for given device
+    const result = await DEBUGGING_LOGS.deleteMany({ device_id });
+
+    return res.status(200).json({
+      status: 'success',
+      message: `Deleted ${result.deletedCount} log(s) for device ${device_id}`,
+      deletedCount: result.deletedCount
+    });
+
+  } catch (error) {
+    console.error('[clearDebugLogs] Error deleting logs:', error);
+    return res.status(500).json({ status: 'failed', message: 'Internal server error' });
+  }
+};
+
 /*************************************************************************** START OF API ENDPOINTS IMPLEMENTATION ***************************************************************************/
 
 
