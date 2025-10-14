@@ -2117,7 +2117,6 @@ exports.getDebugLogs = async (req, res) => {
         |> filter(fn: (r) => r["device_id"] == "${device_id}")
     `;
 
-
     if (log_level) {
       fluxQuery += `\n|> filter(fn: (r) => r["log_level"] == "${log_level.toUpperCase()}")`;
     }
@@ -2130,33 +2129,23 @@ exports.getDebugLogs = async (req, res) => {
     console.log(`[InfluxDB] Executing query:\n${fluxQuery}`);
 
     /* ✅ Execute query and collect results */
-    const logs = [];
-    await queryApi.collectRows(fluxQuery, {
-      next(row, tableMeta) {
-        const o = tableMeta.toObject(row);
-        logs.push({
-          device_id: o.device_id,
-          did: o.did,
-          log_level: o.log_level,
-          message: o._field === 'message' ? o._value : undefined,
-          timestamp: moment(o._time).tz(tz).format('YYYY-MM-DD HH:mm:ss'),
-          stack: o.stack || null,
-          app_version: o.app_version || null,
-          ip: o.client_ip || null,
-        });
-      },
-      error(err) {
-        console.error('[getDebugLogs] InfluxDB query error:', err);
-        return res.status(500).json({ status: 'failed', message: 'Error querying InfluxDB.' });
-      },
-      complete() {
-        /* ✅ Return formatted logs */
-        return res.status(200).json({
-          status: 'success',
-          message: `Fetched ${logs.length} debugging logs for device ${device_id}`,
-          logs: logs.filter(l => l.message !== undefined)
-        });
-      }
+    const rows = await queryApi.collectRows(fluxQuery);
+
+    const logs = rows.map(o => ({
+      device_id: o.device_id,
+      did: o.did,
+      log_level: o.log_level,
+      message: o._field === 'message' ? o._value : undefined,
+      timestamp: moment(o._time).tz(tz).format('YYYY-MM-DD HH:mm:ss'),
+      stack: o.stack || null,
+      app_version: o.app_version || null,
+      ip: o.client_ip || null,
+    })).filter(l => l.message !== undefined);
+
+    return res.status(200).json({
+      status: 'success',
+      message: `Fetched ${logs.length} debugging logs for device ${device_id}`,
+      logs
     });
 
   } catch (error) {
