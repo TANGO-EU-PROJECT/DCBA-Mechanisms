@@ -11,7 +11,7 @@ const fs = require('fs');
 const qs = require('qs');
 const csv = require('csv-parser');
 const puppeteer = require('puppeteer');
-const { InfluxDB, Point } = require('@influxdata/influxdb-client');  /* InfluxDB Client for logging and storing time-series data              */
+const { InfluxDB, Point, DeleteAPI } = require('@influxdata/influxdb-client');  /* InfluxDB Client for logging and storing time-series data              */
 
 /* ────────────────────────────────────────────────────────────────────────────── */
 /* ANSI escape codes for colored console output to improve log readability        */
@@ -2187,7 +2187,6 @@ exports.clearDebugLogs = async (req, res) => {
   try {
     const { device_id } = req.body;
 
-    // ✅ Basic validation
     if (!device_id) {
       return res.status(400).json({
         status: 'failed',
@@ -2195,32 +2194,23 @@ exports.clearDebugLogs = async (req, res) => {
       });
     }
 
-
-
-    // ✅ Initialize InfluxDB client
     const influxDB = new InfluxDB({
       url: process.env.INFLUX_DB_URI,
       token: process.env.INFLUX_INITDB_AUTH_TOKEN
     });
 
-    const deleteAPI = influxDB.getDeleteApi(
-      process.env.INFLUX_INITDB_ORG,
-      process.env.INFLUX_INITDB_BUCKET
-    );
+    // ✅ Create DeleteAPI instance
+    const deleteAPI = new DeleteAPI(influxDB);
 
-    // ✅ Define delete range (everything up to now)
-    const start = new Date(0).toISOString(); // from epoch start
-    const stop = new Date().toISOString();   // until now
+    const start = new Date(0).toISOString();
+    const stop = new Date().toISOString();
 
-    // ✅ Predicate: delete only debugging logs for this device
     const predicate = `_measurement="ANDROID_DEBUGGING_LOGS_MEASUREMENT" AND device_id="${device_id}"`;
 
     console.log(`[InfluxDB] Deleting all debugging logs for device: ${device_id}`);
 
-    // ✅ Perform delete
-    await deleteAPI.delete(start, stop, predicate);
+    await deleteAPI.delete(start, stop, predicate, process.env.INFLUX_INITDB_BUCKET, process.env.INFLUX_INITDB_ORG);
 
-    // ✅ Respond success
     return res.status(200).json({
       status: 'success',
       message: `All debugging logs deleted successfully for device ${device_id}`
@@ -2235,7 +2225,6 @@ exports.clearDebugLogs = async (req, res) => {
     });
   }
 };
-
 /*************************************************************************** START OF API ENDPOINTS IMPLEMENTATION ***************************************************************************/
 
 
