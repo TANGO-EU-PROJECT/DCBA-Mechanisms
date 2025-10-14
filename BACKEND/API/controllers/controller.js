@@ -2197,7 +2197,7 @@ exports.clearDebugLogs = async (req, res) => {
       token: process.env.INFLUX_INITDB_AUTH_TOKEN
     });
 
-    // ✅ Correct: pass influxDB instance directly
+    // ✅ Correct instantiation
     const deleteAPI = new DeleteAPI(influxDB);
 
     const start = new Date(0).toISOString();
@@ -2206,7 +2206,8 @@ exports.clearDebugLogs = async (req, res) => {
 
     console.log(`[InfluxDB] Deleting all debugging logs for device: ${device_id}`);
 
-    await deleteAPI.delete(
+    // ✅ Use the correct method
+    await deleteAPI.deleteWithHttpInfo(
       start,
       stop,
       predicate,
