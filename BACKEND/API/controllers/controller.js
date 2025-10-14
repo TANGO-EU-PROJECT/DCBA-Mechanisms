@@ -2115,6 +2115,7 @@ exports.getDebugLogs = async (req, res) => {
         |> range(start: ${startDate ? `time(v: "${moment.tz(startDate, tz).toISOString()}")` : "-30d"}, stop: ${endDate ? `time(v: "${moment.tz(endDate, tz).toISOString()}")` : "now()"})
         |> filter(fn: (r) => r["_measurement"] == "ANDROID_DEBUGGING_LOGS_MEASUREMENT")
         |> filter(fn: (r) => r["device_id"] == "${device_id}")
+        |> group(columns: ["_measurement", "device_id", "did"])   // ✅ ensure tags like 'did' are preserved
     `;
 
     if (log_level) {
@@ -2131,10 +2132,11 @@ exports.getDebugLogs = async (req, res) => {
     /* ✅ Execute query and collect results */
     const rows = await queryApi.collectRows(fluxQuery);
 
+    // ✅ Map the rows into clean log objects
     const logs = rows.map(o => ({
-      device_id: o.device_id,
-      did: o.did,
-      log_level: o.log_level,
+      device_id: o.device_id || 'unknown',
+      did: o.did || 'unknown',                           // ✅ now should correctly return stored DID
+      log_level: o.log_level || 'INFO',
       message: o._field === 'message' ? o._value : undefined,
       timestamp: moment(o._time).tz(tz).format('YYYY-MM-DD HH:mm:ss'),
       stack: o.stack || null,
@@ -2157,6 +2159,7 @@ exports.getDebugLogs = async (req, res) => {
     });
   }
 };
+
 
 
 /**
