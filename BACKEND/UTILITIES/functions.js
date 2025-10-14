@@ -283,6 +283,50 @@ async function storeLogsToInfluxDB(device_id, did, log, onComplete) {
 }
 
 
+/**
+ * Stores a debugging log in InfluxDB.
+ * Each log entry is tagged with `log_type = "debugging"`.
+ */
+async function storeDebuggingLogsToInfluxDB(device_id, did, log_level, message, stack, app_version, ip) {
+  try {
+    const influxDB = new InfluxDB({
+      url: process.env.INFLUX_DB_URI,
+      token: process.env.INFLUX_INITDB_AUTH_TOKEN,
+    });
+
+    const writeApi = influxDB.getWriteApi(
+      process.env.INFLUX_INITDB_ORG,
+      process.env.INFLUX_INITDB_BUCKET,
+      'ns'
+    );
+
+    // ✅ Create the data point
+    const point = new Point('ANDROID_LOGS_MEASUREMENT')
+      .tag('device_id', device_id)
+      .tag('did', did || 'unknown')
+      .tag('log_type', 'debugging')           // <<<<< important tag
+      .tag('log_level', log_level || 'INFO')
+      .tag('app_version', app_version || 'unknown')
+      .tag('client_ip', ip || 'unknown')
+      .stringField('message', message)
+      .stringField('stack', stack || 'null')
+      .timestamp(new Date());
+
+    // ✅ Write the point
+    writeApi.writePoint(point);
+    await writeApi.flush();
+    await writeApi.close();
+
+    console.log(`[InfluxDB] ✅ Debugging log stored for device ${device_id}`);
+  } catch (err) {
+    console.error(`[InfluxDB] ❌ Failed to store debugging log for ${device_id}:`, err);
+    throw err;
+  }
+}
+
+
+
+
 
 
 /** [5]
@@ -1088,6 +1132,7 @@ module.exports = {
   notifyDevice,                   // Notify the devices using the web socket connection
   initializeWebSocketServer,      // Initialize the web socket server connection
   handleDeviceLocationUpdate,
-  delay
+  delay,
+  storeDebuggingLogsToInfluxDB
 };
 
