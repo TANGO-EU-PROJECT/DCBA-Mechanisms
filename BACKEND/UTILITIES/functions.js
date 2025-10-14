@@ -301,16 +301,16 @@ async function storeDebuggingLogsToInfluxDB(device_id, did, log_level, message, 
     );
 
     // ✅ Create the data point
-    const point = new Point('ANDROID_LOGS_MEASUREMENT')
+    const point = new Point('ANDROID_DEBUGGING_LOGS_MEASUREMENT')
       .tag('device_id', device_id)
       .tag('did', did || 'unknown')
-      .tag('log_type', 'debugging')           // <<<<< important tag
       .tag('log_level', log_level || 'INFO')
       .tag('app_version', app_version || 'unknown')
       .tag('client_ip', ip || 'unknown')
       .stringField('message', message)
       .stringField('stack', stack || 'null')
       .timestamp(new Date());
+
 
     // ✅ Write the point
     writeApi.writePoint(point);
