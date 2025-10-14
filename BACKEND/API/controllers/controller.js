@@ -2099,6 +2099,12 @@ exports.getDebugLogs = async (req, res) => {
       return res.status(400).json({ status: 'failed', message: 'Limit is required and must be a positive number.' });
     }
 
+    const device = await findDeviceByDeviceID(device_id);
+    if (!device) {
+      return res.status(400).json({ status: 'failed', message: 'No device exists associated with this Device ID.' });
+    }
+
+
     const logsLimit = Math.min(parseInt(limit), 1000); // Max 1000 logs
     const tz = timezone && moment.tz.zone(timezone) ? timezone : 'UTC';
 
@@ -2137,7 +2143,7 @@ exports.getDebugLogs = async (req, res) => {
     // ✅ Map the rows into clean log objects
     const logs = rows.map(o => ({
       device_id: o.device_id || 'unknown',
-      did: o.did || 'unknown',                           // ✅ now should correctly return stored DID
+      did: device.did || 'unknown',                           // ✅ now should correctly return stored DID
       log_level: o.log_level || 'INFO',
       message: o._field === 'message' ? o._value : undefined,
       timestamp: moment(o._time).tz(tz).format('YYYY-MM-DD HH:mm:ss'),
@@ -2188,6 +2194,8 @@ exports.clearDebugLogs = async (req, res) => {
         message: 'Device ID is required'
       });
     }
+
+
 
     // ✅ Initialize InfluxDB client
     const influxDB = new InfluxDB({
