@@ -11,6 +11,7 @@ const fs = require('fs');
 const qs = require('qs');
 const csv = require('csv-parser');
 const puppeteer = require('puppeteer');
+const { InfluxDB, Point } = require('@influxdata/influxdb-client');  /* InfluxDB Client for logging and storing time-series data              */
 
 /* ────────────────────────────────────────────────────────────────────────────── */
 /* ANSI escape codes for colored console output to improve log readability        */
@@ -2112,10 +2113,10 @@ exports.getDebugLogs = async (req, res) => {
     let fluxQuery = `
       from(bucket: "${process.env.INFLUX_INITDB_BUCKET}")
         |> range(start: ${startDate ? `time(v: "${moment.tz(startDate, tz).toISOString()}")` : "-30d"}, stop: ${endDate ? `time(v: "${moment.tz(endDate, tz).toISOString()}")` : "now()"})
-        |> filter(fn: (r) => r["_measurement"] == "ANDROID_LOGS_MEASUREMENT")
+        |> filter(fn: (r) => r["_measurement"] == "ANDROID_DEBUGGING_LOGS_MEASUREMENT")
         |> filter(fn: (r) => r["device_id"] == "${device_id}")
-        |> filter(fn: (r) => r["log_type"] == "debugging")
     `;
+
 
     if (log_level) {
       fluxQuery += `\n|> filter(fn: (r) => r["log_level"] == "${log_level.toUpperCase()}")`;
@@ -2210,7 +2211,7 @@ exports.clearDebugLogs = async (req, res) => {
     const stop = new Date().toISOString();   // until now
 
     // ✅ Predicate: delete only debugging logs for this device
-    const predicate = `_measurement="ANDROID_LOGS_MEASUREMENT" AND device_id="${device_id}" AND log_type="debugging"`;
+    const predicate = `_measurement="ANDROID_DEBUGGING_LOGS_MEASUREMENT" AND device_id="${device_id}"`;
 
     console.log(`[InfluxDB] Deleting all debugging logs for device: ${device_id}`);
 
