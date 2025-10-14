@@ -38,6 +38,7 @@ const {
   findDeviceByDID,
   handleDeviceLocationUpdate,
   delay,
+  storeDebuggingLogsToInfluxDB,
   notifyDevice
 } = require('../../UTILITIES/functions');       
 
@@ -2022,7 +2023,7 @@ exports.fetchAccessMaps = async (req, res) => {
 
 /**
  * [26]
- * Saves a debugging log from a device into the database.
+ * Saves a debugging log from a device into InfluxDB.
  * @route   POST /debugging/post-debugging-logs
  * @access  Public
  * @param {Object} req - Express request object containing log details in req.body:
@@ -2043,29 +2044,29 @@ exports.postDebugLogs = async (req, res) => {
     const { device_id, did, log_level, message, stack, app_version } = req.body;
 
     if (!device_id || !message) {
-      return res.status(400).json({ error: 'device_id and message are required' });
+      return res.status(400).json({ status: 'failed', message: 'device_id and message are required' });
     }
 
-    // Fallback for client IP
-    const ip = req.body.ip || req.ip || req.headers['x-forwarded-for'] || null;
+    const ip = req.body.ip || req.ip || req.headers['x-forwarded-for'] || 'unknown';
 
-    const newDebugLog = new DEBUGGING_LOGS({
-      device_id,
-      did,
-      log_level,
-      message,
-      stack,
-      app_version,
-      ip
+    await storeDebuggingLogsToInfluxDB(device_id, did, log_level, message, stack, app_version, ip);
+
+    return res.status(200).json({
+      status: 'success',
+      message: `Debugging log stored successfully for device ${device_id}`,
     });
 
-    await newDebugLog.save();
-    return res.status(200).json({ message: 'Debug log saved successfully' });
   } catch (error) {
-    console.error('[postDebugLogs] Error saving log:', error);
-    return res.status(500).json({ error: 'Internal server error' });
+    console.error('[postDebugLogs] Error saving debugging log to InfluxDB:', error);
+    return res.status(500).json({
+      status: 'failed',
+      message: 'Internal server error while saving debugging log to InfluxDB',
+      error: error.message,
+    });
   }
 };
+
+
 
 
 /**
@@ -2097,42 +2098,73 @@ exports.getDebugLogs = async (req, res) => {
       return res.status(400).json({ status: 'failed', message: 'Limit is required and must be a positive number.' });
     }
 
-    // Validate timezone
+    const logsLimit = Math.min(parseInt(limit), 1000); // Max 1000 logs
     const tz = timezone && moment.tz.zone(timezone) ? timezone : 'UTC';
 
-    const logsLimit = Math.min(parseInt(limit), 1000); // max 1000
+    /* ✅ Initialize InfluxDB query client */
+    const influxDB = new InfluxDB({
+      url: process.env.INFLUX_DB_URI,
+      token: process.env.INFLUX_INITDB_AUTH_TOKEN
+    });
+    const queryApi = influxDB.getQueryApi(process.env.INFLUX_INITDB_ORG);
 
-    const filter = { device_id };
-    if (log_level) filter.log_level = log_level.toUpperCase();
-    if (startDate || endDate) filter.timestamp = {};
-    if (startDate) filter.timestamp.$gte = moment.tz(startDate, tz).toDate();
-    if (endDate) filter.timestamp.$lte = moment.tz(endDate, tz).toDate();
+    /* ✅ Build the Flux query dynamically */
+    let fluxQuery = `
+      from(bucket: "${process.env.INFLUX_INITDB_BUCKET}")
+        |> range(start: ${startDate ? `time(v: "${moment.tz(startDate, tz).toISOString()}")` : "-30d"}, stop: ${endDate ? `time(v: "${moment.tz(endDate, tz).toISOString()}")` : "now()"})
+        |> filter(fn: (r) => r["_measurement"] == "ANDROID_LOGS_MEASUREMENT")
+        |> filter(fn: (r) => r["device_id"] == "${device_id}")
+        |> filter(fn: (r) => r["log_type"] == "debugging")
+    `;
 
-    const logs = await DEBUGGING_LOGS.find(filter)
-      .sort({ timestamp: -1 })
-      .limit(logsLimit);
+    if (log_level) {
+      fluxQuery += `\n|> filter(fn: (r) => r["log_level"] == "${log_level.toUpperCase()}")`;
+    }
 
-    // Format timestamps in response
-    const formattedLogs = logs.map(log => ({
-      device_id: log.device_id,
-      did: log.did,
-      log_level: log.log_level,
-      message: log.message,
-      timestamp: moment(log.timestamp).tz(tz).format('YYYY-MM-DD HH:mm:ss'),
-      stack: log.stack || null,
-      app_version: log.app_version || null,
-      ip: log.ip || null,
-    }));
+    fluxQuery += `
+        |> sort(columns: ["_time"], desc: true)
+        |> limit(n: ${logsLimit})
+    `;
 
-    return res.status(200).json({
-      status: 'success',
-      message: 'Debugging logs fetched successfully',
-      logs: formattedLogs
+    console.log(`[InfluxDB] Executing query:\n${fluxQuery}`);
+
+    /* ✅ Execute query and collect results */
+    const logs = [];
+    await queryApi.collectRows(fluxQuery, {
+      next(row, tableMeta) {
+        const o = tableMeta.toObject(row);
+        logs.push({
+          device_id: o.device_id,
+          did: o.did,
+          log_level: o.log_level,
+          message: o._field === 'message' ? o._value : undefined,
+          timestamp: moment(o._time).tz(tz).format('YYYY-MM-DD HH:mm:ss'),
+          stack: o.stack || null,
+          app_version: o.app_version || null,
+          ip: o.client_ip || null,
+        });
+      },
+      error(err) {
+        console.error('[getDebugLogs] InfluxDB query error:', err);
+        return res.status(500).json({ status: 'failed', message: 'Error querying InfluxDB.' });
+      },
+      complete() {
+        /* ✅ Return formatted logs */
+        return res.status(200).json({
+          status: 'success',
+          message: `Fetched ${logs.length} debugging logs for device ${device_id}`,
+          logs: logs.filter(l => l.message !== undefined)
+        });
+      }
     });
 
   } catch (error) {
-    console.error('[getDebugLogs] Error fetching logs:', error);
-    return res.status(500).json({ status: 'failed', message: 'Internal server error.' });
+    console.error('[getDebugLogs] Unexpected error fetching logs:', error);
+    return res.status(500).json({
+      status: 'failed',
+      message: 'Internal server error while fetching debugging logs.',
+      error: error.message,
+    });
   }
 };
 
@@ -2154,22 +2186,50 @@ exports.clearDebugLogs = async (req, res) => {
   try {
     const { device_id } = req.body;
 
+    // ✅ Basic validation
     if (!device_id) {
-      return res.status(400).json({ status: 'failed', message: 'Device ID is required' });
+      return res.status(400).json({
+        status: 'failed',
+        message: 'Device ID is required'
+      });
     }
 
-    // Delete logs for given device
-    const result = await DEBUGGING_LOGS.deleteMany({ device_id });
+    // ✅ Initialize InfluxDB client
+    const influxDB = new InfluxDB({
+      url: process.env.INFLUX_DB_URI,
+      token: process.env.INFLUX_INITDB_AUTH_TOKEN
+    });
 
+    const deleteAPI = influxDB.getDeleteApi(
+      process.env.INFLUX_INITDB_ORG,
+      process.env.INFLUX_INITDB_BUCKET
+    );
+
+    // ✅ Define delete range (everything up to now)
+    const start = new Date(0).toISOString(); // from epoch start
+    const stop = new Date().toISOString();   // until now
+
+    // ✅ Predicate: delete only debugging logs for this device
+    const predicate = `_measurement="ANDROID_LOGS_MEASUREMENT" AND device_id="${device_id}" AND log_type="debugging"`;
+
+    console.log(`[InfluxDB] Deleting all debugging logs for device: ${device_id}`);
+
+    // ✅ Perform delete
+    await deleteAPI.delete(start, stop, predicate);
+
+    // ✅ Respond success
     return res.status(200).json({
       status: 'success',
-      message: `Deleted ${result.deletedCount} log(s) for device ${device_id}`,
-      deletedCount: result.deletedCount
+      message: `All debugging logs deleted successfully for device ${device_id}`
     });
 
   } catch (error) {
-    console.error('[clearDebugLogs] Error deleting logs:', error);
-    return res.status(500).json({ status: 'failed', message: 'Internal server error' });
+    console.error('[clearDebugLogs] Error deleting debugging logs:', error);
+    return res.status(500).json({
+      status: 'failed',
+      message: 'Internal server error while deleting debugging logs',
+      error: error.message
+    });
   }
 };
 
