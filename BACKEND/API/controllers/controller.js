@@ -2189,10 +2189,7 @@ exports.clearDebugLogs = async (req, res) => {
     const { device_id } = req.body;
 
     if (!device_id) {
-      return res.status(400).json({
-        status: 'failed',
-        message: 'Device ID is required'
-      });
+      return res.status(400).json({ status: 'failed', message: 'Device ID is required' });
     }
 
     const influxDB = new InfluxDB({
@@ -2200,17 +2197,22 @@ exports.clearDebugLogs = async (req, res) => {
       token: process.env.INFLUX_INITDB_AUTH_TOKEN
     });
 
-    // ✅ Create DeleteAPI instance from influxdb-client-apis
-    const deleteAPI = new DeleteAPI({ influxDB });
+    // ✅ Correct: pass influxDB instance directly
+    const deleteAPI = new DeleteAPI(influxDB);
 
     const start = new Date(0).toISOString();
     const stop = new Date().toISOString();
-
     const predicate = `_measurement="ANDROID_DEBUGGING_LOGS_MEASUREMENT" AND device_id="${device_id}"`;
 
     console.log(`[InfluxDB] Deleting all debugging logs for device: ${device_id}`);
 
-    await deleteAPI.delete(start, stop, predicate, process.env.INFLUX_INITDB_BUCKET, process.env.INFLUX_INITDB_ORG);
+    await deleteAPI.delete(
+      start,
+      stop,
+      predicate,
+      process.env.INFLUX_INITDB_BUCKET,
+      process.env.INFLUX_INITDB_ORG
+    );
 
     return res.status(200).json({
       status: 'success',
@@ -2226,6 +2228,7 @@ exports.clearDebugLogs = async (req, res) => {
     });
   }
 };
+
 
 /*************************************************************************** START OF API ENDPOINTS IMPLEMENTATION ***************************************************************************/
 
