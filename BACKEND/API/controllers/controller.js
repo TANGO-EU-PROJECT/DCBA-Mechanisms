@@ -11,7 +11,8 @@ const fs = require('fs');
 const qs = require('qs');
 const csv = require('csv-parser');
 const puppeteer = require('puppeteer');
-const { InfluxDB, Point, DeleteAPI } = require('@influxdata/influxdb-client');  /* InfluxDB Client for logging and storing time-series data              */
+const { InfluxDB, Point } = require('@influxdata/influxdb-client');  /* InfluxDB Client for logging and storing time-series data              */
+const { DeleteAPI } = require('@influxdata/influxdb-client-apis');
 
 /* ────────────────────────────────────────────────────────────────────────────── */
 /* ANSI escape codes for colored console output to improve log readability        */
@@ -2199,8 +2200,8 @@ exports.clearDebugLogs = async (req, res) => {
       token: process.env.INFLUX_INITDB_AUTH_TOKEN
     });
 
-    // ✅ Create DeleteAPI instance
-    const deleteAPI = new DeleteAPI(influxDB);
+    // ✅ Create DeleteAPI instance from influxdb-client-apis
+    const deleteAPI = new DeleteAPI({ influxDB });
 
     const start = new Date(0).toISOString();
     const stop = new Date().toISOString();
