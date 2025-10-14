@@ -2189,31 +2189,33 @@ exports.clearDebugLogs = async (req, res) => {
     const { device_id } = req.body;
 
     if (!device_id) {
-      return res.status(400).json({ status: 'failed', message: 'Device ID is required' });
+      return res.status(400).json({
+        status: 'failed',
+        message: 'Device ID is required'
+      });
     }
 
-    const influxDB = new InfluxDB({
-      url: process.env.INFLUX_DB_URI,
-      token: process.env.INFLUX_INITDB_AUTH_TOKEN
-    });
-
-    // ✅ Correct instantiation
-    const deleteAPI = new DeleteAPI(influxDB);
-
+    // Define delete time range (all time)
     const start = new Date(0).toISOString();
     const stop = new Date().toISOString();
-    const predicate = `_measurement="ANDROID_DEBUGGING_LOGS_MEASUREMENT" AND device_id="${device_id}"`;
 
-    console.log(`[InfluxDB] Deleting all debugging logs for device: ${device_id}`);
+    // InfluxDB API endpoint for deletion
+    const url = `${process.env.INFLUX_DB_URI}/api/v2/delete?org=${process.env.INFLUX_INITDB_ORG}&bucket=${process.env.INFLUX_INITDB_BUCKET}`;
 
-    // ✅ Use the correct method
-    await deleteAPI.deleteWithHttpInfo(
+    // Predicate: delete only debugging logs for this device
+    const data = {
       start,
       stop,
-      predicate,
-      process.env.INFLUX_INITDB_BUCKET,
-      process.env.INFLUX_INITDB_ORG
-    );
+      predicate: `_measurement="ANDROID_DEBUGGING_LOGS_MEASUREMENT" AND device_id="${device_id}"`
+    };
+
+    // HTTP DELETE request
+    await axios.post(url, data, {
+      headers: {
+        'Authorization': `Token ${process.env.INFLUX_INITDB_AUTH_TOKEN}`,
+        'Content-Type': 'application/json'
+      }
+    });
 
     return res.status(200).json({
       status: 'success',
@@ -2221,11 +2223,11 @@ exports.clearDebugLogs = async (req, res) => {
     });
 
   } catch (error) {
-    console.error('[clearDebugLogs] Error deleting debugging logs:', error);
+    console.error('[clearDebugLogs] Error deleting debugging logs:', error.response?.data || error.message);
     return res.status(500).json({
       status: 'failed',
       message: 'Internal server error while deleting debugging logs',
-      error: error.message
+      error: error.response?.data || error.message
     });
   }
 };
