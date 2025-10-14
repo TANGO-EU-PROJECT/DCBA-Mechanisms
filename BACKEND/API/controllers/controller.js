@@ -2115,8 +2115,10 @@ exports.getDebugLogs = async (req, res) => {
         |> range(start: ${startDate ? `time(v: "${moment.tz(startDate, tz).toISOString()}")` : "-30d"}, stop: ${endDate ? `time(v: "${moment.tz(endDate, tz).toISOString()}")` : "now()"})
         |> filter(fn: (r) => r["_measurement"] == "ANDROID_DEBUGGING_LOGS_MEASUREMENT")
         |> filter(fn: (r) => r["device_id"] == "${device_id}")
-        |> group(columns: ["_measurement", "device_id", "did"])   // ✅ ensure tags like 'did' are preserved
+        |> group(columns: ["_measurement", "device_id", "did"])
+        |> keep(columns: ["_time", "device_id", "did", "log_level", "_field", "_value", "stack", "app_version", "client_ip"])
     `;
+
 
     if (log_level) {
       fluxQuery += `\n|> filter(fn: (r) => r["log_level"] == "${log_level.toUpperCase()}")`;
