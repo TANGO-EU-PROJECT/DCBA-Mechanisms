@@ -199,7 +199,11 @@ CSV_FILES = [
     os.path.join(SCRIPT_DIR, "SORTING_LINES_1_TO_3.csv"),
     os.path.join(SCRIPT_DIR, "SORTING_LINES_4_AND_5.csv"),
     os.path.join(SCRIPT_DIR, "SORTING_LINES_6_TO_8.csv"),
-    os.path.join(SCRIPT_DIR, "WAREHOUSE.csv")
+    os.path.join(SCRIPT_DIR, "WAREHOUSE.csv"),
+
+    os.path.join(SCRIPT_DIR, "EKETA_204.csv"),
+    os.path.join(SCRIPT_DIR, "EKETA_201.csv"),
+    os.path.join(SCRIPT_DIR, "SERVER_ROOM.csv"),
 ]
 
 
