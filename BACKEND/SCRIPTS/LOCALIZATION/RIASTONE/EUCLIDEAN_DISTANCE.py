@@ -185,7 +185,6 @@ import numpy as np
 from glob import glob
 import json
 
-
 # Signal strength to assign when an Access Point (BSSID) is unobserved in the current scan
 UNOBSERVED_AP_SIGNAL = -120
 
@@ -205,7 +204,6 @@ CSV_FILES = [
     os.path.join(SCRIPT_DIR, "EKETA_201.csv"),
     os.path.join(SCRIPT_DIR, "SERVER_ROOM.csv"),
 ]
-
 
 def parse_log(log_str):
     """
