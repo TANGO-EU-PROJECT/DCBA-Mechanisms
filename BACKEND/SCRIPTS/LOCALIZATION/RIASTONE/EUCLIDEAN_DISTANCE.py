@@ -188,6 +188,7 @@ import json
 # Signal strength to assign when an Access Point (BSSID) is unobserved in the current scan
 UNOBSERVED_AP_SIGNAL = -120
 
+
 # Get the absolute path of the directory where the script is located
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 
