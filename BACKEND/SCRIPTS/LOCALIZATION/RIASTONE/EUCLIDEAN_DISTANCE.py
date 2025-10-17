@@ -185,6 +185,7 @@ import numpy as np
 from glob import glob
 import json
 
+
 # Signal strength to assign when an Access Point (BSSID) is unobserved in the current scan
 UNOBSERVED_AP_SIGNAL = -120
 
