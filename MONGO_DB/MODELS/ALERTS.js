@@ -13,15 +13,15 @@ const schema_opts = {
 
 // Allowed values for estimated_location (reuse from DEVICE schema)
 const possibleLocations = [
-  // 'PACKAGING_LINES',
-  // 'PERMITTED_AREA',
-  // 'SORTING_LINES_1_TO_3',
-  // 'SORTING_LINES_4_AND_5',
-  // 'SORTING_LINES_6_TO_8',
-  // 'WAREHOUSE',
-  'EKETA-OFFICE-204',
-  'EKETA-OFFICE-201',
-  'SERVER-ROOM',
+  'PACKAGING_LINES',
+  'PERMITTED_AREA',
+  'SORTING_LINES_1_TO_3',
+  'SORTING_LINES_4_AND_5',
+  'SORTING_LINES_6_TO_8',
+  'WAREHOUSE',
+  // 'EKETA-OFFICE-204',
+  // 'EKETA-OFFICE-201',
+  // 'SERVER-ROOM',
   'UNKNOWN'
 ];
 
